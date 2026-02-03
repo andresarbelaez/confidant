@@ -1,0 +1,21 @@
+{
+  "name": "dant - Offline AI Assistant",
+  "short_name": "dant",
+  "description": "Privacy-first offline AI assistant for health consultation",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
+  "icons": [
+    {
+      "src": "pwa-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+# Optional dependencies - may have build requirements
+llama-cpp-python>=0.2.0
+faster-whisper>=0.10.0
+TTS>=0.22.0
+pyaudio>=0.2.14
+PyQt6>=6.6.0

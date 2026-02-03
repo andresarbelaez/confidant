@@ -1,0 +1,37 @@
+{
+  "productName": "Confidant",
+  "version": "0.1.0",
+  "identifier": "com.confidant.app",
+  "build": {
+    "beforeDevCommand": "npm run vite",
+    "beforeBuildCommand": "npm run build",
+    "devUrl": "http://localhost:1420",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Confidant - Offline AI Assistant",
+        "width": 1200,
+        "height": 800,
+        "resizable": true,
+        "fullscreen": false
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": ["icons/icon.png"],
+    "resources": [],
+    "externalBin": [],
+    "copyright": "",
+    "category": "Productivity",
+    "shortDescription": "Privacy-first offline AI assistant",
+    "longDescription": "Confidant is a privacy-first, offline AI assistant for health consultation. All processing happens locally on your device with no internet connection required."
+  },
+  "plugins": {}
+}

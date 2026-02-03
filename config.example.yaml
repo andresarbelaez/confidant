@@ -1,0 +1,26 @@
+# Example configuration for Confidant (root Python/legacy tooling).
+# Copy to config.yaml and adjust paths for your system.
+# The desktop app uses its own data directory (project root data/ or app data).
+
+paths:
+  models_dir: data/models
+  knowledge_dir: data/knowledge
+  llm_model: data/models/llama-3.2-3b-instruct-q4_0.gguf
+  stt_model: data/models/whisper-base
+  tts_model: data/models/tts
+  embedding_model: sentence-transformers/all-MiniLM-L6-v2
+llm:
+  context_size: 4096
+  temperature: 0.7
+  top_p: 0.9
+  top_k: 40
+  repeat_penalty: 1.1
+  n_threads: 4
+rag:
+  chunk_size: 512
+  chunk_overlap: 50
+  top_k: 3
+  similarity_threshold: 0.7
+knowledge:
+  collection_name: dant_knowledge
+  persist_directory: data/knowledge/chroma_db

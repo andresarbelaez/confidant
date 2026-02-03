@@ -1,0 +1,37 @@
+# Core dependencies
+python-dotenv>=1.0.0
+
+# LLM inference
+llama-cpp-python>=0.2.0
+
+# Vector database
+chromadb>=0.4.0
+
+# Embeddings
+sentence-transformers>=2.2.0
+torch>=2.0.0
+
+# Speech-to-Text
+faster-whisper>=0.10.0
+
+# Text-to-Speech
+TTS>=0.22.0
+
+# Audio I/O
+pyaudio>=0.2.14
+sounddevice>=0.4.6
+numpy>=1.24.0
+keyboard>=0.13.5
+soundfile>=0.12.0
+
+# GUI
+PyQt6>=6.6.0
+
+# Utilities
+pyyaml>=6.0
+tqdm>=4.66.0
+
+# Knowledge bank building (optional)
+beautifulsoup4>=4.12.0
+markdown>=3.4.0
+requests>=2.31.0

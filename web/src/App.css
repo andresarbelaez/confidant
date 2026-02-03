@@ -1,0 +1,116 @@
+.App {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  min-height: 100vh;
+}
+
+.App-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.App-header h1 {
+  font-size: 3.5em;
+  margin: 0;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.subtitle {
+  color: #888;
+  font-size: 1.3em;
+  margin: 0.5em 0;
+}
+
+.tagline {
+  color: #666;
+  font-size: 1em;
+  margin: 0;
+}
+
+.App-main {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.tabs button {
+  padding: 0.75rem 1.5rem;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: #888; /* Gray for unselected - visible in both modes */
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.2s;
+  margin-bottom: -2px;
+  border-radius: 6px 6px 0 0;
+}
+
+.tabs button:hover {
+  color: #666; /* Darker gray on hover */
+  background: rgba(0, 0, 0, 0.05); /* Subtle background */
+}
+
+.tabs button.active {
+  color: #667eea; /* Purple for active */
+  border-bottom-color: #667eea;
+  font-weight: 600;
+}
+
+@media (prefers-color-scheme: light) {
+  .tabs {
+    border-bottom-color: rgba(0, 0, 0, 0.1);
+  }
+
+  .tabs button {
+    color: #666; /* Darker gray in light mode */
+  }
+  
+  .tabs button:hover {
+    background: rgba(0, 0, 0, 0.05);
+    color: #333;
+  }
+
+  .tabs button.active {
+    color: #667eea;
+  }
+}
+
+.status-card {
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.status-card h2 {
+  margin-top: 0;
+  font-size: 1.5em;
+}
+
+.status-card p {
+  margin: 0.5em 0;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+@media (prefers-color-scheme: light) {
+  .status-card {
+    background: rgba(0, 0, 0, 0.05);
+    border-color: rgba(0, 0, 0, 0.1);
+  }
+
+  .status-card p {
+    color: rgba(0, 0, 0, 0.8);
+  }
+}

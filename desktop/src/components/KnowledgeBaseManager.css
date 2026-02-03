@@ -1,0 +1,150 @@
+.knowledge-base-manager {
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  margin: 1.5rem 0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.knowledge-base-manager h2 {
+  margin-top: 0;
+  font-size: 1.5em;
+}
+
+.kb-stats {
+  margin: 1.5rem 0;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+}
+
+.kb-stats h3 {
+  margin-top: 0;
+  font-size: 1.2em;
+}
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.stat-label {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.stat-value {
+  font-size: 1.2rem;
+  font-weight: 600;
+  font-family: monospace;
+  color: #667eea;
+}
+
+.kb-actions {
+  margin: 2rem 0;
+}
+
+.kb-actions h3 {
+  margin-top: 0;
+  font-size: 1.2em;
+}
+
+.info-note {
+  margin-top: 2rem;
+  padding: 1rem;
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 8px;
+}
+
+.info-note p {
+  margin: 0.5rem 0;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.info-note p:first-child {
+  margin-top: 0;
+}
+
+.info-note p:last-child {
+  margin-bottom: 0;
+}
+
+@media (prefers-color-scheme: light) {
+  .knowledge-base-manager {
+    background: rgba(0, 0, 0, 0.05);
+    border-color: rgba(0, 0, 0, 0.1);
+  }
+
+  .kb-stats {
+    background: rgba(0, 0, 0, 0.03);
+  }
+
+  .stat-label {
+    color: rgba(0, 0, 0, 0.7);
+  }
+
+  .stat-value {
+    color: #667eea;
+  }
+
+  .info-note {
+    background: rgba(59, 130, 246, 0.15);
+    border-color: rgba(59, 130, 246, 0.4);
+  }
+
+  .info-note p {
+    color: rgba(0, 0, 0, 0.8);
+  }
+
+  .error-message {
+    background: rgba(239, 68, 68, 0.15);
+    border-color: rgba(239, 68, 68, 0.4);
+    color: #dc2626;
+  }
+}
+
+.error-message {
+  padding: 1rem;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 8px;
+  color: #f87171;
+  margin-bottom: 1.5rem;
+}
+
+.error-message strong {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+}
+
+.error-message p {
+  margin: 0.5rem 0;
+  line-height: 1.5;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(255, 255, 255, 0.1);
+  border-top-color: #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

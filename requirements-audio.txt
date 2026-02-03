@@ -1,0 +1,4 @@
+# Audio dependencies
+sounddevice>=0.4.6
+soundfile>=0.12.0
+keyboard>=0.13.5
