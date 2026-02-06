@@ -39,7 +39,7 @@
   margin: 0;
   font-size: 1.5em;
   color: #333;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--color-primary);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -116,7 +116,7 @@
 }
 
 .selector-dropdown:hover:not(:disabled) {
-  border-color: #667eea;
+  border-color: var(--color-primary);
 }
 
 .selector-dropdown:disabled {
@@ -190,7 +190,7 @@
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  background: var(--color-primary);
   transition: width 0.3s ease;
 }
 
@@ -225,7 +225,7 @@
 }
 
 .browse-button {
-  background: #667eea;
+  background: var(--color-primary);
   color: white;
   border: none;
   padding: 0.5rem 1.5rem;
@@ -236,7 +236,7 @@
 }
 
 .browse-button:hover {
-  background: #5568d3;
+  background: var(--color-primary-hover);
 }
 
 .existing-models-list {
@@ -281,7 +281,7 @@
 }
 
 .download-button {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--color-primary);
   color: white;
   border: none;
   padding: 0.75rem 1.5rem;
@@ -289,7 +289,7 @@
   font-size: 1em;
   font-weight: 500;
   cursor: pointer;
-  transition: opacity 0.2s, transform 0.2s;
+  transition: background 0.2s, transform 0.2s;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -297,7 +297,7 @@
 }
 
 .download-button:hover:not(:disabled) {
-  opacity: 0.9;
+  background: var(--color-primary-hover);
   transform: translateY(-1px);
 }
 
@@ -329,7 +329,7 @@
 }
 
 .proceed-button {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--color-primary);
   color: white;
   border: none;
   padding: 0.75rem 2rem;
@@ -337,11 +337,11 @@
   font-size: 1.1em;
   font-weight: 600;
   cursor: pointer;
-  transition: opacity 0.2s, transform 0.2s;
+  transition: background 0.2s, transform 0.2s;
 }
 
 .proceed-button:hover {
-  opacity: 0.9;
+  background: var(--color-primary-hover);
   transform: translateY(-1px);
 }
 
@@ -387,7 +387,7 @@
   }
 
   .selector-dropdown:hover:not(:disabled) {
-    border-color: #667eea;
+    border-color: var(--color-primary);
   }
 
   .selector-dropdown:disabled {

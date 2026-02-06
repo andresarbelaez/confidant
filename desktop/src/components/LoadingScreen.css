@@ -7,7 +7,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #ffffff;
+  background: var(--color-bg);
   z-index: 9999;
   animation: fadeOut 0.5s ease-out forwards;
   animation-delay: 1s;
@@ -42,7 +42,7 @@
 .loading-title {
   font-size: 4em;
   margin: 0;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--color-primary);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -50,14 +50,14 @@
 }
 
 .loading-subtitle {
-  color: #888;
+  color: var(--color-text-muted);
   font-size: 1.5em;
   margin: 0.5em 0;
   font-weight: 300;
 }
 
 .loading-tagline {
-  color: #666;
+  color: var(--color-text-faint);
   font-size: 1.1em;
   margin: 0.5em 0 2em 0;
   font-weight: 300;
@@ -66,8 +66,8 @@
 .loading-spinner {
   width: 40px;
   height: 40px;
-  border: 3px solid #f3f3f3;
-  border-top: 3px solid #667eea;
+  border: 3px solid var(--color-border-subtle);
+  border-top: 3px solid var(--color-primary);
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin: 2rem auto 0;
@@ -80,19 +80,19 @@
 
 @media (prefers-color-scheme: dark) {
   .loading-screen {
-    background: #1a1a1a;
+    background: var(--color-bg);
   }
 
   .loading-subtitle {
-    color: #aaa;
+    color: var(--color-text-muted);
   }
 
   .loading-tagline {
-    color: #888;
+    color: var(--color-text-faint);
   }
 
   .loading-spinner {
-    border-color: #333;
-    border-top-color: #667eea;
+    border-color: var(--color-border);
+    border-top-color: var(--color-primary);
   }
 }

@@ -198,12 +198,10 @@ export default function SetupSection({ onModelReady, onKBReady }: SetupSectionPr
   return (
     <div className="setup-section">
       <div className="setup-header">
-        <h2>Get Started with Confidant</h2>
+        <h2>Get started with Confidant</h2>
         <div className="privacy-info">
           <p>
-            <strong>Privacy-first AI assistant:</strong> All processing happens completely offline on your device. 
-            Your conversations never leave your computer, and no data is sent to external servers. 
-            This one-time setup downloads the AI model and knowledge base to your device.
+            Everything runs on your device—your conversations and data never leave your computer. This one-time setup downloads the AI model and knowledge base you need.
           </p>
         </div>
       </div>
@@ -256,7 +254,7 @@ export default function SetupSection({ onModelReady, onKBReady }: SetupSectionPr
 
           {existingModels.length > 0 && !showExistingModels && modelStatus !== 'downloading' && (
             <div className="existing-models-notice">
-              <p>Found {existingModels.length} existing model file{existingModels.length > 1 ? 's' : ''} on your system.</p>
+              <p>We found {existingModels.length} model file{existingModels.length > 1 ? 's' : ''} on your computer.</p>
               <button
                 onClick={() => setShowExistingModels(true)}
                 className="browse-button"
@@ -269,7 +267,7 @@ export default function SetupSection({ onModelReady, onKBReady }: SetupSectionPr
 
           {showExistingModels && (
             <div className="existing-models-list">
-              <h4>Select an existing model:</h4>
+              <h4>Choose a model already on your computer</h4>
               <select
                 className="existing-model-selector"
                 onChange={async (e) => {
@@ -299,7 +297,7 @@ export default function SetupSection({ onModelReady, onKBReady }: SetupSectionPr
                   }
                 }}
               >
-                <option value="">-- Select a model --</option>
+                <option value="">Choose a model…</option>
                 {existingModels.map((path, idx) => {
                   const filename = path.split('/').pop() || path;
                   // Show file size if available

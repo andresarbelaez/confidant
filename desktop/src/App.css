@@ -44,11 +44,11 @@
 
 @media (prefers-color-scheme: light) {
   .subtitle {
-    color: #666;
+    color: var(--color-text-muted);
   }
 
   .tagline {
-    color: #888;
+    color: var(--color-text-faint);
   }
 }
 

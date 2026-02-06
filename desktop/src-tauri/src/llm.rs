@@ -497,9 +497,9 @@ pub async fn find_existing_models() -> Result<Vec<String>, String> {
                         }
                     }
                 }
-                Err(e) => {
+                Err(_e) => {
                     #[cfg(debug_assertions)]
-                    eprintln!("[Find Models] Error reading directory {:?}: {}", dir, e);
+                    eprintln!("[Find Models] Error reading directory {:?}: {}", dir, _e);
                 }
             }
         }
@@ -559,10 +559,10 @@ pub async fn download_model(url: String, output_path: String) -> Result<(), Stri
         downloaded += chunk.len() as u64;
         
         if let Some(total) = total_size {
-            let percent = (downloaded as f64 / total as f64 * 100.0) as u32;
+            let _percent = (downloaded as f64 / total as f64 * 100.0) as u32;
             #[cfg(debug_assertions)]
-            if percent % 10 == 0 || downloaded == total {
-                eprintln!("[Download] Progress: {}% ({}/{})", percent, downloaded, total);
+            if _percent % 10 == 0 || downloaded == total {
+                eprintln!("[Download] Progress: {}% ({}/{})", _percent, downloaded, total);
             }
         }
     }

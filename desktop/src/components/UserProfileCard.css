@@ -1,0 +1,94 @@
+.user-profile-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 1rem;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.user-profile-card:hover {
+  transform: scale(1.05);
+}
+
+.user-profile-card:active {
+  transform: scale(0.98);
+}
+
+.profile-avatar {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: var(--color-surface-input);
+  border: 3px solid transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+  transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
+}
+
+.user-profile-card:hover .profile-avatar {
+  border-color: var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.user-profile-card.new-user .profile-avatar {
+  background: var(--color-surface-subtle);
+}
+
+.user-profile-card.new-user:hover .profile-avatar {
+  background: var(--color-surface);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.user-profile-card.guest .profile-avatar {
+  background: var(--color-warning-bg);
+  border-color: var(--color-warning-text);
+  color: var(--color-warning-text);
+}
+
+.user-profile-card.guest:hover .profile-avatar {
+  background: var(--color-warning-bg);
+  border-color: var(--color-warning-text);
+  opacity: 0.9;
+}
+
+.profile-name {
+  font-size: 1rem;
+  color: var(--color-text-muted);
+  font-weight: 500;
+  text-align: center;
+  transition: color 0.2s ease;
+}
+
+.user-profile-card:hover .profile-name {
+  color: var(--color-text);
+}
+
+.user-profile-card.new-user:hover .profile-name {
+  color: var(--color-primary);
+}
+
+.user-profile-card.guest .profile-name {
+  color: var(--color-warning-text);
+}
+
+@media (prefers-color-scheme: light) {
+  .profile-avatar {
+    background: var(--color-surface-input);
+  }
+
+  .user-profile-card:hover .profile-avatar {
+    background: var(--color-surface-subtle);
+  }
+
+  .user-profile-card.new-user .profile-avatar {
+    background: rgba(0, 0, 0, 0.03);
+  }
+}

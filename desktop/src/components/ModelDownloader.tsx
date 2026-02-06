@@ -46,30 +46,22 @@ export default function ModelDownloader() {
     }
   };
 
-  const formatBytes = (bytes: number): string => {
-    if (bytes === 0) return '0 B';
-    const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
-  };
-
   return (
     <div className="model-downloader">
-      <h2>LLM Model Manager</h2>
+      <h2>AI model</h2>
       
       {error && (
         <div className="error-message">
           <strong>Error:</strong>
           <pre style={{ whiteSpace: 'pre-wrap', fontFamily: 'inherit', marginTop: '0.5rem' }}>{error}</pre>
           <p style={{ marginTop: '0.75rem', fontSize: '0.9rem', opacity: 0.8 }}>
-            Troubleshooting: Ensure the model path is correct and the file exists. Check that Python and llama-cpp-python are installed.
+            Check that the path is correct and the file exists. You need Python and llama-cpp-python installed.
           </p>
         </div>
       )}
 
       <div className="model-selector">
-        <label htmlFor="model-path">Model File Path:</label>
+        <label htmlFor="model-path">Path to model file</label>
         <input
           id="model-path"
           type="text"
@@ -89,7 +81,7 @@ export default function ModelDownloader() {
           }}
         />
         <p style={{ fontSize: '0.85rem', color: 'rgba(255, 255, 255, 0.6)', marginTop: '0.5rem' }}>
-          Enter the full path to a GGUF model file (e.g., Llama-3.2-3B-Instruct Q4_0)
+          Enter the full path to your GGUF model file.
         </p>
       </div>
 
@@ -104,7 +96,7 @@ export default function ModelDownloader() {
         </p>
         {isModelLoaded && (
           <p style={{ color: '#4ade80', marginTop: '0.5rem' }}>
-            ✓ Model is loaded and ready to use
+            Model is loaded and ready to use.
           </p>
         )}
       </div>
@@ -130,17 +122,10 @@ export default function ModelDownloader() {
 
       <div className="info-note">
         <p>
-          <strong>How it works:</strong> Enter the path to a GGUF model file and click "Initialize Model". 
-          The model will be loaded into memory and ready for text generation.
+          <strong>How it works:</strong> Enter the path to your GGUF model file and click Initialize Model. The model loads into memory for chat.
         </p>
         <p>
-          <strong>Recommended Model:</strong> Llama-3.2-3B-Instruct (Q4_0 or Q4_K_M quantization)
-          <br />
-          Download from: <a href="https://huggingface.co/bartowski/Llama-3.2-3B-Instruct-GGUF" target="_blank" rel="noopener noreferrer">HuggingFace</a>
-        </p>
-        <p>
-          <strong>Note:</strong> Full llama.cpp integration (actual text generation) will be completed in the next step.
-          Currently, this tests the model initialization and path validation.
+          <strong>Recommended:</strong> Llama-3.2-3B-Instruct (Q4_0 or Q4_K_M). <a href="https://huggingface.co/bartowski/Llama-3.2-3B-Instruct-GGUF" target="_blank" rel="noopener noreferrer">Download from HuggingFace</a>.
         </p>
       </div>
     </div>

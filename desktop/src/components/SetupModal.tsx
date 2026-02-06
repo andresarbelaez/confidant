@@ -219,9 +219,15 @@ export default function SetupModal({
         <div className="modal-content">
           <div className="privacy-info">
             <p>
-              <strong>Privacy-first AI assistant:</strong> All processing happens completely offline on your device. 
-              Your conversations never leave your computer, and no data is sent to external servers. 
-              This one-time setup downloads the AI model and knowledge base to your device.
+              {showProceedButton ? (
+                <>
+                  Everything runs on your device—your conversations and data never leave your computer. This one-time setup downloads the AI model and knowledge base you need.
+                </>
+              ) : (
+                <>
+                  Here you can download AI models and manage your knowledge bases. Everything runs on your device—your conversations and data never leave your computer.
+                </>
+              )}
             </p>
           </div>
 
@@ -273,7 +279,7 @@ export default function SetupModal({
 
               {existingModels.length > 0 && !showExistingModels && modelStatus !== 'downloading' && (
                 <div className="existing-models-notice">
-                  <p>Found {existingModels.length} existing model file{existingModels.length > 1 ? 's' : ''} on your system.</p>
+                  <p>We found {existingModels.length} model file{existingModels.length > 1 ? 's' : ''} on your computer.</p>
                   <button
                     onClick={() => setShowExistingModels(true)}
                     className="browse-button"
@@ -286,7 +292,7 @@ export default function SetupModal({
 
               {showExistingModels && (
                 <div className="existing-models-list">
-                  <h4>Select an existing model:</h4>
+                  <h4>Choose a model already on your computer</h4>
                   <select
                     className="existing-model-selector"
                     onChange={async (e) => {
@@ -314,7 +320,7 @@ export default function SetupModal({
                       }
                     }}
                   >
-                    <option value="">-- Select a model --</option>
+                    <option value="">Choose a model…</option>
                     {existingModels.map((path, idx) => {
                       const filename = path.split('/').pop() || path;
                       return (

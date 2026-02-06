@@ -31,12 +31,13 @@ export class DantAgent {
     query: string,
     options: { stream?: boolean; useRAG?: boolean } = {}
   ): Promise<AgentResponse> {
+    const startMs = performance.now();
     const useRAG = options.useRAG ?? true;
 
     // Check if model is loaded
     const isLoaded = await invoke<boolean>('is_model_loaded');
     if (!isLoaded) {
-      throw new Error('LLM model not initialized. Please initialize a model first in the Model Manager tab.');
+      throw new Error('Model not initialized. Open Settings and initialize a model.');
     }
 
     // If RAG is enabled, search for relevant context
@@ -111,21 +112,19 @@ export class DantAgent {
 
     // For first message, use hardcoded messages instead of generating
     // This is more reliable than trying to get the LLM to generate with separators
-    let isFirst = this.isFirstMessage;
-    
     if (this.isFirstMessage) {
       // Hardcode the first messages for reliability
       const hardcodedMessages = [
         "Hi! I'm Confidant, your privacy-first AI assistant for health questions.",
-        "Everything I do happens completely offline on your device - your conversations stay private and never leave your computer.",
-        "I should mention that I'm not a substitute for professional medical advice. If you have serious health concerns, please consult a qualified healthcare professional.",
-        "Feel free to ask me anything about health - I'm here to help with information and support!"
+        "Everything runs on your device—your conversations stay private and never leave your computer.",
+        "I'm not a substitute for professional medical advice. If you have serious health concerns, please see a healthcare professional.",
+        "Ask me anything about health—I'm here to help."
       ];
       
       this.isFirstMessage = false;
       this.conversationHistory.push({ role: 'user', content: query });
-      
-      // Return hardcoded messages
+      const firstMsgMs = Math.round(performance.now() - startMs);
+      console.log(`[Confidant] Agent response: ${firstMsgMs}ms (initial greeting, no RAG)`);
       return {
         response: hardcodedMessages[0],
         sources: undefined,
@@ -213,12 +212,17 @@ Assistant:`;
         this.conversationHistory = this.conversationHistory.slice(-this.maxHistoryLength * 2);
       }
 
+      const responseMs = Math.round(performance.now() - startMs);
+      const usedRAGFlag = useRAG && sources.length > 0;
+      console.log(`[Confidant] Agent response: ${responseMs}ms (RAG: ${usedRAGFlag})`);
       return {
         response: assistantMessage,
         sources: sources.length > 0 ? sources : undefined,
-        usedRAG: useRAG && sources.length > 0
+        usedRAG: usedRAGFlag
       };
     } catch (err) {
+      const errorMs = Math.round(performance.now() - startMs);
+      console.log(`[Confidant] Agent error after ${errorMs}ms`);
       // Extract the actual error message
       let errorMessage = 'Failed to generate response';
       if (err instanceof Error) {

@@ -3,9 +3,60 @@
   line-height: 1.5;
   font-weight: 400;
 
+  /* Brand */
+  --color-primary: #667eea;
+  --color-primary-hover: #5a4fd6;
+
+  /* Surfaces */
+  --color-bg: #242424;
+  --color-surface: rgba(255, 255, 255, 0.05);
+  --color-surface-subtle: rgba(255, 255, 255, 0.03);
+  --color-surface-input: #3a3a3a;
+
+  /* Borders */
+  --color-border: rgba(255, 255, 255, 0.2);
+  --color-border-subtle: rgba(255, 255, 255, 0.1);
+
+  /* Text */
+  --color-text: rgba(255, 255, 255, 0.87);
+  --color-text-secondary: rgba(255, 255, 255, 0.8);
+  --color-text-muted: rgba(255, 255, 255, 0.7);
+  --color-text-faint: rgba(255, 255, 255, 0.6);
+
+  /* Semantic */
+  --color-info-bg: rgba(59, 130, 246, 0.1);
+  --color-info-border: rgba(59, 130, 246, 0.3);
+  --color-success: #4ade80;
+  --color-success-bg: rgba(74, 222, 128, 0.2);
+  --color-success-text: #16a34a;
+  --color-error: #f87171;
+  --color-error-bg: rgba(239, 68, 68, 0.1);
+  --color-error-border: rgba(239, 68, 68, 0.3);
+  --color-error-text: #dc2626;
+  --color-warning-bg: rgba(156, 163, 175, 0.2);
+  --color-warning-text: rgba(255, 255, 255, 0.7);
+
+  /* Overlay / modal */
+  --color-overlay: rgba(0, 0, 0, 0.5);
+  --color-overlay-strong: rgba(0, 0, 0, 0.7);
+
+  /* Chat */
+  --color-assistant-bubble: #f0f0f0;
+  --color-assistant-bubble-text: rgba(0, 0, 0, 0.88);
+  --color-user-bubble: #2d2d2d;
+  --color-user-bubble-text: rgba(255, 255, 255, 0.95);
+  --color-send-button-bg: #000000;
+  --color-send-button-icon: #ffffff;
+  --color-tooltip-bg: #1a1a1a;
+  --color-tooltip-text: #ffffff;
+  --color-chat-input-wrap-bg: #2f2f2f;
+  --color-chat-input-wrap-border: rgba(255, 255, 255, 0.12);
+  --color-chat-input-wrap-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  --color-placeholder: #8e8e8e;
+
   color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  color: var(--color-text);
+  background-color: var(--color-bg);
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -65,8 +116,39 @@ button:focus-visible {
 
 @media (prefers-color-scheme: light) {
   :root {
-    color: #213547;
-    background-color: #ffffff;
+    --color-primary: #5568d3;
+    --color-primary-hover: #4356b8;
+    --color-bg: #ffffff;
+    --color-surface: rgba(0, 0, 0, 0.05);
+    --color-surface-subtle: rgba(0, 0, 0, 0.03);
+    --color-surface-input: #f0f0f0;
+    --color-border: rgba(0, 0, 0, 0.2);
+    --color-border-subtle: rgba(0, 0, 0, 0.1);
+    --color-text: #213547;
+    --color-text-secondary: rgba(0, 0, 0, 0.8);
+    --color-text-muted: rgba(0, 0, 0, 0.7);
+    --color-text-faint: rgba(0, 0, 0, 0.6);
+    --color-info-bg: rgba(59, 130, 246, 0.15);
+    --color-info-border: rgba(59, 130, 246, 0.4);
+    --color-success-bg: rgba(74, 222, 128, 0.15);
+    --color-error-bg: rgba(239, 68, 68, 0.15);
+    --color-error-border: rgba(239, 68, 68, 0.4);
+    --color-warning-bg: rgba(0, 0, 0, 0.05);
+    --color-warning-text: rgba(0, 0, 0, 0.7);
+    --color-assistant-bubble: #e8e8e8;
+    --color-assistant-bubble-text: rgba(0, 0, 0, 0.88);
+    --color-user-bubble: #2d2d2d;
+    --color-user-bubble-text: rgba(255, 255, 255, 0.95);
+    --color-send-button-bg: #000000;
+    --color-send-button-icon: #ffffff;
+    --color-tooltip-bg: #1a1a1a;
+    --color-tooltip-text: #ffffff;
+    --color-chat-input-wrap-bg: #ffffff;
+    --color-chat-input-wrap-border: #e0e0e0;
+    --color-chat-input-wrap-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    --color-placeholder: #8e8e8e;
+    color: var(--color-text);
+    background-color: var(--color-bg);
   }
   a:hover {
     color: #747bff;

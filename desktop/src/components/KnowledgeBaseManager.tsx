@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { KnowledgeBaseLoader } from '../knowledge/knowledge-loader';
-import { formatBytes } from '../utils/storage';
 import './KnowledgeBaseManager.css';
 
 export default function KnowledgeBaseManager() {
@@ -47,7 +46,7 @@ export default function KnowledgeBaseManager() {
     setLoadProgress(0);
 
     try {
-      const manifest = await loader.getManifest(file);
+      await loader.getManifest(file);
 
       await loader.loadFromFile(file, (progress) => {
         setLoadProgress(progress);
@@ -85,7 +84,7 @@ export default function KnowledgeBaseManager() {
   };
 
   const handleClear = async () => {
-    if (!confirm('Clear all knowledge base documents? This cannot be undone.')) {
+    if (!confirm('Clear all documents? This cannot be undone.')) {
       return;
     }
 
@@ -102,7 +101,7 @@ export default function KnowledgeBaseManager() {
       <div className="knowledge-base-manager">
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '2rem' }}>
           <div className="loading-spinner"></div>
-          <p style={{ marginTop: '1rem' }}>Initializing knowledge base system...</p>
+          <p style={{ marginTop: '1rem' }}>Preparing knowledge base…</p>
         </div>
       </div>
     );
@@ -110,38 +109,38 @@ export default function KnowledgeBaseManager() {
 
   return (
     <div className="knowledge-base-manager">
-      <h2>Knowledge Base Manager</h2>
+      <h2>Knowledge base</h2>
       
       {error && (
         <div className="error-message">
           <strong>Error:</strong>
           <p style={{ marginTop: '0.5rem', marginBottom: 0 }}>{error}</p>
           <p style={{ marginTop: '0.75rem', fontSize: '0.9rem', opacity: 0.8 }}>
-            Troubleshooting: Ensure the file is a valid knowledge base JSON file. Check that Python, ChromaDB, and sentence-transformers are installed.
+            Use a valid knowledge base JSON file. You need Python, ChromaDB, and sentence-transformers installed.
           </p>
         </div>
       )}
 
       <div className="kb-stats">
-        <h3>Current Status</h3>
+        <h3>Status</h3>
         <div className="stat-grid">
           <div className="stat-item">
-            <span className="stat-label">Documents:</span>
+            <span className="stat-label">Documents</span>
             <span className="stat-value">{documentCount.toLocaleString()}</span>
           </div>
           <div className="stat-item">
-            <span className="stat-label">Status:</span>
-            <span className="stat-value" style={{ color: '#4ade80' }}>Initialized</span>
+            <span className="stat-label">Status</span>
+            <span className="stat-value" style={{ color: '#4ade80' }}>Ready</span>
           </div>
         </div>
       </div>
 
       <div className="kb-actions">
-        <h3>Load Knowledge Base</h3>
+        <h3>Load knowledge base</h3>
         
         <div className="load-option">
-          <h4>From File</h4>
-          <p>Upload a knowledge base package file (.json or .zst)</p>
+          <h4>From file</h4>
+          <p>Upload a .json or .zst package file.</p>
           <input
             ref={fileInputRef}
             type="file"
@@ -161,7 +160,7 @@ export default function KnowledgeBaseManager() {
 
         <div className="load-option">
           <h4>From URL</h4>
-          <p>Download knowledge base from a URL</p>
+          <p>Enter a URL to download a knowledge base file.</p>
           <div className="url-input-group">
             <input
               type="url"
@@ -193,7 +192,7 @@ export default function KnowledgeBaseManager() {
                 style={{ width: `${loadProgress * 100}%` }}
               />
             </div>
-            <p>Loading knowledge base... {Math.round(loadProgress * 100)}%</p>
+            <p>Loading… {Math.round(loadProgress * 100)}%</p>
           </div>
         )}
       </div>
@@ -206,21 +205,20 @@ export default function KnowledgeBaseManager() {
             disabled={isLoading}
             className="clear-button"
           >
-            Clear All Documents
+            Clear all documents
           </button>
           <p className="warning-text">
-            Warning: Clearing will remove all documents from the knowledge base. This action cannot be undone.
+            This removes all documents and cannot be undone.
           </p>
         </div>
       )}
 
       <div className="info-note">
         <p>
-          <strong>Knowledge Base Format:</strong> Knowledge bases are distributed as JSON files 
-          (or compressed .zst files) containing documents, pre-computed embeddings, and metadata.
+          <strong>Format:</strong> Knowledge bases are JSON (or .zst) files with documents and embeddings.
         </p>
         <p>
-          <strong>Note:</strong> ZSTD decompression support is coming soon. For now, use uncompressed JSON files.
+          ZSTD support is coming soon; use uncompressed JSON for now.
         </p>
       </div>
     </div>

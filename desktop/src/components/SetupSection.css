@@ -11,7 +11,7 @@
 .setup-header h2 {
   margin-top: 0;
   font-size: 2em;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--color-primary);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -20,14 +20,14 @@
 .privacy-info {
   margin-top: 1rem;
   padding: 1rem;
-  background: rgba(59, 130, 246, 0.1);
-  border: 1px solid rgba(59, 130, 246, 0.3);
+  background: var(--color-info-bg);
+  border: 1px solid var(--color-info-border);
   border-radius: 8px;
 }
 
 .privacy-info p {
   margin: 0;
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--color-text-secondary);
   line-height: 1.6;
   font-size: 0.95rem;
 }
@@ -47,14 +47,14 @@
 .selector-group label {
   font-weight: 600;
   font-size: 1.1rem;
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--color-text-secondary);
 }
 
 .selector-dropdown {
   padding: 0.75rem;
   border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-input);
   color: inherit;
   font-size: 1rem;
   font-family: inherit;
@@ -63,12 +63,12 @@
 }
 
 .selector-dropdown:hover:not(:disabled) {
-  border-color: rgba(255, 255, 255, 0.3);
+  border-color: var(--color-text-faint);
 }
 
 .selector-dropdown:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: var(--color-primary);
 }
 
 .selector-dropdown:disabled {
@@ -79,14 +79,14 @@
 .selector-description {
   margin: 0;
   font-size: 0.9rem;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--color-text-muted);
   line-height: 1.4;
 }
 
 .selector-meta {
   margin: 0;
   font-size: 0.85rem;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--color-text-faint);
   font-style: italic;
 }
 
@@ -103,28 +103,28 @@
 }
 
 .status-badge.checking {
-  background: rgba(156, 163, 175, 0.2);
-  color: rgba(255, 255, 255, 0.7);
+  background: var(--color-warning-bg);
+  color: var(--color-warning-text);
 }
 
 .status-badge.not-started {
-  background: rgba(156, 163, 175, 0.2);
-  color: rgba(255, 255, 255, 0.7);
+  background: var(--color-warning-bg);
+  color: var(--color-warning-text);
 }
 
 .status-badge.downloading {
-  background: rgba(59, 130, 246, 0.2);
+  background: var(--color-info-bg);
   color: #60a5fa;
 }
 
 .status-badge.downloaded {
-  background: rgba(74, 222, 128, 0.2);
-  color: #4ade80;
+  background: var(--color-success-bg);
+  color: var(--color-success);
 }
 
 .status-badge.error {
-  background: rgba(239, 68, 68, 0.2);
-  color: #f87171;
+  background: var(--color-error-bg);
+  color: var(--color-error);
 }
 
 .progress-container {
@@ -134,30 +134,30 @@
 .progress-bar {
   width: 100%;
   height: 8px;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--color-border-subtle);
   border-radius: 4px;
   overflow: hidden;
 }
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  background: var(--color-primary);
   transition: width 0.3s ease;
 }
 
 .progress-text {
   margin: 0.25rem 0 0 0;
   font-size: 0.85rem;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--color-text-muted);
   text-align: center;
 }
 
 .error-message {
   padding: 0.75rem;
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: var(--color-error-bg);
+  border: 1px solid var(--color-error-border);
   border-radius: 6px;
-  color: #f87171;
+  color: var(--color-error);
   font-size: 0.9rem;
 }
 
@@ -168,14 +168,14 @@
 
 .download-button {
   padding: 0.75rem 1.5rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--color-primary);
   color: white;
   border: none;
   border-radius: 8px;
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  transition: opacity 0.2s;
+  transition: background 0.2s;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -184,7 +184,7 @@
 }
 
 .download-button:hover:not(:disabled) {
-  opacity: 0.9;
+  background: var(--color-primary-hover);
 }
 
 .download-button:disabled {
@@ -208,23 +208,23 @@
 
 .existing-models-notice {
   padding: 1rem;
-  background: rgba(59, 130, 246, 0.1);
-  border: 1px solid rgba(59, 130, 246, 0.3);
+  background: var(--color-info-bg);
+  border: 1px solid var(--color-info-border);
   border-radius: 8px;
   margin-top: 0.5rem;
 }
 
 .existing-models-notice p {
   margin: 0 0 0.75rem 0;
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--color-text-secondary);
   font-size: 0.9rem;
 }
 
 .browse-button {
   padding: 0.5rem 1rem;
-  background: rgba(59, 130, 246, 0.2);
+  background: var(--color-info-bg);
   color: #60a5fa;
-  border: 1px solid rgba(59, 130, 246, 0.4);
+  border: 1px solid var(--color-info-border);
   border-radius: 6px;
   font-size: 0.9rem;
   font-weight: 500;
@@ -233,15 +233,15 @@
 }
 
 .browse-button:hover {
-  background: rgba(59, 130, 246, 0.3);
-  border-color: rgba(59, 130, 246, 0.5);
+  background: var(--color-info-border);
+  border-color: var(--color-info-border);
 }
 
 .existing-models-list {
   margin-top: 0.5rem;
   padding: 1rem;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--color-surface-subtle);
+  border: 1px solid var(--color-border-subtle);
   border-radius: 8px;
 }
 
@@ -249,15 +249,15 @@
   margin-top: 0;
   margin-bottom: 0.75rem;
   font-size: 1rem;
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--color-text-secondary);
 }
 
 .existing-model-selector {
   width: 100%;
   padding: 0.75rem;
   border-radius: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-input);
   color: inherit;
   font-size: 0.95rem;
   font-family: inherit;
@@ -266,14 +266,14 @@
 
 .existing-model-selector:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: var(--color-primary);
 }
 
 .cancel-button {
   padding: 0.5rem 1rem;
   background: transparent;
-  color: rgba(255, 255, 255, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border);
   border-radius: 6px;
   font-size: 0.9rem;
   cursor: pointer;
@@ -281,90 +281,90 @@
 }
 
 .cancel-button:hover {
-  background: rgba(255, 255, 255, 0.05);
-  color: rgba(255, 255, 255, 0.9);
+  background: var(--color-surface-subtle);
+  color: var(--color-text-secondary);
 }
 
 @media (prefers-color-scheme: light) {
   .privacy-info {
-    background: rgba(59, 130, 246, 0.15);
-    border-color: rgba(59, 130, 246, 0.4);
+    background: var(--color-info-bg);
+    border-color: var(--color-info-border);
   }
 
   .privacy-info p {
-    color: rgba(0, 0, 0, 0.8);
+    color: var(--color-text-secondary);
   }
 
   .selector-group label {
-    color: rgba(0, 0, 0, 0.9);
+    color: var(--color-text-secondary);
   }
 
   .selector-dropdown {
-    border-color: rgba(0, 0, 0, 0.2);
-    background: rgba(0, 0, 0, 0.05);
+    border-color: var(--color-border);
+    background: var(--color-surface-input);
   }
 
   .selector-dropdown:hover:not(:disabled) {
-    border-color: rgba(0, 0, 0, 0.3);
+    border-color: var(--color-text-faint);
   }
 
   .selector-description {
-    color: rgba(0, 0, 0, 0.7);
+    color: var(--color-text-muted);
   }
 
   .selector-meta {
-    color: rgba(0, 0, 0, 0.6);
+    color: var(--color-text-faint);
   }
 
   .error-message {
-    background: rgba(239, 68, 68, 0.15);
-    border-color: rgba(239, 68, 68, 0.4);
-    color: #dc2626;
+    background: var(--color-error-bg);
+    border-color: var(--color-error-border);
+    color: var(--color-error-text);
   }
 }
 
 @media (prefers-color-scheme: light) {
   .existing-models-notice {
-    background: rgba(59, 130, 246, 0.15);
-    border-color: rgba(59, 130, 246, 0.4);
+    background: var(--color-info-bg);
+    border-color: var(--color-info-border);
   }
 
   .existing-models-notice p {
-    color: rgba(0, 0, 0, 0.8);
+    color: var(--color-text-secondary);
   }
 
   .browse-button {
-    background: rgba(59, 130, 246, 0.2);
+    background: var(--color-info-bg);
     color: #2563eb;
-    border-color: rgba(59, 130, 246, 0.4);
+    border-color: var(--color-info-border);
   }
 
   .browse-button:hover {
-    background: rgba(59, 130, 246, 0.3);
+    background: var(--color-info-border);
   }
 
   .existing-models-list {
-    background: rgba(0, 0, 0, 0.05);
-    border-color: rgba(0, 0, 0, 0.1);
+    background: var(--color-surface);
+    border-color: var(--color-border-subtle);
   }
 
   .existing-models-list h4 {
-    color: rgba(0, 0, 0, 0.9);
+    color: var(--color-text-secondary);
   }
 
   .existing-model-selector {
-    border-color: rgba(0, 0, 0, 0.2);
-    background: rgba(0, 0, 0, 0.05);
+    border-color: var(--color-border);
+    background: var(--color-surface-input);
   }
 
   .cancel-button {
-    color: rgba(0, 0, 0, 0.7);
-    border-color: rgba(0, 0, 0, 0.2);
+    color: var(--color-text-muted);
+    border-color: var(--color-border);
   }
 
   .cancel-button:hover {
-    background: rgba(0, 0, 0, 0.05);
-    color: rgba(0, 0, 0, 0.9);
+    background: var(--color-surface-subtle);
+    color: var(--color-text-secondary);
   }
 }
 

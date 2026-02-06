@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { invoke } from '@tauri-apps/api/core';
-import { DantAgent, AgentResponse } from '../agent/dant-agent';
+import { ArrowUp, Copy, Settings } from 'lucide-react';
+import { DantAgent } from '../agent/dant-agent';
 import ReactMarkdown from 'react-markdown';
 import './ChatInterface.css';
 
@@ -8,10 +9,13 @@ interface ChatInterfaceProps {
   disabled?: boolean;
   modelReady?: boolean;
   kbReady?: boolean;
+  chatVisible?: boolean;
   onOpenSettings?: () => void;
+  userId?: string | null;
+  onSwitchProfile?: () => void;
 }
 
-export default function ChatInterface({ disabled = false, modelReady = false, kbReady = false, onOpenSettings }: ChatInterfaceProps) {
+export default function ChatInterface({ disabled = false, modelReady = false, kbReady = false, chatVisible = false, onOpenSettings, userId = null, onSwitchProfile }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<Array<{ role: 'user' | 'assistant'; content: string }>>([]);
   const [input, setInput] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -20,6 +24,15 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
   const [isInitialized, setIsInitialized] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  const resizeInput = () => {
+    const el = inputRef.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    const h = el.value ? Math.min(el.scrollHeight, 120) : 36;
+    el.style.height = `${h}px`;
+  };
 
   useEffect(() => {
     if (!disabled && modelReady) {
@@ -34,19 +47,86 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
     scrollToBottom();
   }, [messages]);
 
-  // Scroll to bottom when processing starts to show shimmer
+  // Load chat history when userId is available
+  useEffect(() => {
+    if (userId && isInitialized && !disabled) {
+      loadChatHistory();
+    }
+  }, [userId, isInitialized, disabled]);
+
+  // Save chat history when messages change (if user is logged in)
+  useEffect(() => {
+    if (userId && messages.length > 0 && isInitialized && !disabled) {
+      saveChatHistory();
+    }
+  }, [messages, userId, isInitialized, disabled]);
+
+  const loadChatHistory = async () => {
+    if (!userId) return;
+    
+    try {
+      const chatMessages = await invoke<Array<{ role: string; content: string; timestamp: string }>>('load_user_chat', { userId });
+      if (chatMessages && chatMessages.length > 0) {
+        // Convert to our message format
+        const loadedMessages = chatMessages.map(msg => ({
+          role: msg.role as 'user' | 'assistant',
+          content: msg.content,
+        }));
+        setMessages(loadedMessages);
+      }
+    } catch (err) {
+      console.error('Failed to load chat history:', err);
+      // Don't show error to user, just continue with empty messages
+    }
+  };
+
+  const saveChatHistory = async () => {
+    if (!userId) return;
+    
+    try {
+      // Convert messages to format expected by backend
+      const chatMessages = messages.map(msg => ({
+        role: msg.role,
+        content: msg.content,
+        timestamp: new Date().toISOString(),
+      }));
+      
+      await invoke('save_user_chat', {
+        userId,
+        messages: chatMessages,
+      });
+    } catch (err) {
+      console.error('Failed to save chat history:', err);
+      // Don't show error to user, just log it
+    }
+  };
+
+  useEffect(() => {
+    resizeInput();
+  }, [input]);
+
   useEffect(() => {
     if (isProcessing) {
       scrollToBottom();
     }
   }, [isProcessing]);
 
-  // Track if we've sent the initial message
   const [hasSentInitialMessage, setHasSentInitialMessage] = useState(false);
+  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
 
-  // Automatically send initial welcome message when agent is ready
+  const handleCopyMessage = async (content: string, index: number) => {
+    try {
+      await navigator.clipboard.writeText(content);
+      setCopiedIndex(index);
+      setTimeout(() => setCopiedIndex(null), 2000);
+    } catch {
+      // ignore
+    }
+  };
+
+  // Show initial welcome messages one-by-one only after the chat is visible (setup modal closed)
   useEffect(() => {
-    if (isInitialized && agent && !hasSentInitialMessage && !isProcessing) {
+    if (chatVisible && isInitialized && agent && !hasSentInitialMessage && !isProcessing) {
       // Automatically trigger the first message flow
       const sendInitialMessage = async () => {
         setIsProcessing(true);
@@ -78,7 +158,7 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
 
       sendInitialMessage();
     }
-  }, [isInitialized, agent, hasSentInitialMessage, isProcessing]);
+  }, [chatVisible, isInitialized, agent, hasSentInitialMessage, isProcessing]);
 
   const initializeAgent = async () => {
     setIsInitializing(true);
@@ -160,15 +240,15 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
       const errorMessage = err instanceof Error ? err.message : 'Failed to process query';
       
       // Provide more helpful error messages
-      let userFriendlyError = 'Sorry, I encountered an error processing your query.';
+      let userFriendlyError = 'Something went wrong. Please try again.';
       if (errorMessage.includes('Model not initialized')) {
-        userFriendlyError = 'The model is not initialized. Please go to the Model Manager tab and initialize a model first.';
+        userFriendlyError = "The model isn't set up yet. Open Settings and initialize a model.";
       } else if (errorMessage.includes('Python')) {
-        userFriendlyError = 'Python integration error. Please ensure Python 3 and required packages (llama-cpp-python) are installed.';
+        userFriendlyError = 'Python setup issue. Install Python 3 and llama-cpp-python, then try again.';
       } else if (errorMessage.includes('timeout') || errorMessage.includes('time')) {
-        userFriendlyError = 'The request took too long. The model may be processing a large query. Please try again with a shorter question.';
+        userFriendlyError = 'That took too long. Try a shorter question.';
       } else {
-        userFriendlyError = `Sorry, I encountered an error: ${errorMessage}`;
+        userFriendlyError = `Something went wrong: ${errorMessage}`;
       }
       
       setError(userFriendlyError);
@@ -193,39 +273,40 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
       <div className="chat-interface chat-disabled">
         <div className="chat-disabled-overlay">
           <div className="chat-disabled-content">
-            <h3>Chat will be enabled once setup is complete</h3>
+            <h3>Finish setup to start chatting</h3>
             <div className="setup-status">
               <div className={`status-item ${modelReady ? 'ready' : 'pending'}`}>
                 <span className="status-icon">{modelReady ? '✓' : '○'}</span>
-                <span>AI Model {modelReady ? 'Ready' : 'Not Ready'}</span>
+                <span>AI model {modelReady ? 'ready' : 'not ready'}</span>
               </div>
               <div className={`status-item ${kbReady ? 'ready' : 'pending'}`}>
                 <span className="status-icon">{kbReady ? '✓' : '○'}</span>
-                <span>Knowledge Base {kbReady ? 'Ready' : 'Not Ready'}</span>
+                <span>Knowledge base {kbReady ? 'ready' : 'not ready'}</span>
               </div>
             </div>
             <p className="disabled-message">
-              Download and initialize both the AI model and knowledge base to start chatting.
-              All processing happens offline on your device for complete privacy.
+              Download and set up the AI model and knowledge base in Settings to start chatting. Everything runs on your device—your data never leaves your computer.
             </p>
           </div>
         </div>
         <div className="chat-messages" style={{ opacity: 0.3, pointerEvents: 'none' }}>
           <div className="chat-welcome">
             <h3>Welcome to Confidant</h3>
-            <p>Complete setup to begin chatting...</p>
+            <p>Finish setup to start chatting.</p>
           </div>
         </div>
         <form className="chat-input-form" style={{ opacity: 0.3, pointerEvents: 'none' }}>
-          <textarea
-            disabled
-            placeholder="Complete setup to enable chat..."
-            className="chat-input"
-            rows={1}
-          />
-          <button disabled className="chat-send-button">
-            Send
-          </button>
+          <div className="chat-input-wrap">
+            <textarea
+              disabled
+              placeholder="Open Settings to finish setup"
+              className="chat-input"
+              rows={1}
+            />
+            <button disabled className="chat-send-button" aria-label="Send">
+              <ArrowUp size={18} />
+            </button>
+          </div>
         </form>
       </div>
     );
@@ -236,7 +317,7 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
       <div className="chat-interface">
         <div className="chat-placeholder">
           <div className="loading-spinner"></div>
-          <p>Initializing chat interface...</p>
+          <p>Preparing chat…</p>
         </div>
       </div>
     );
@@ -246,7 +327,7 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
     return (
       <div className="chat-interface">
         <div className="chat-placeholder">
-          <p>Initializing chat interface...</p>
+          <p>Preparing chat…</p>
           {error && (
             <div className="error-message">
               <strong>Error:</strong> {error}
@@ -260,14 +341,31 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
   return (
     <div className="chat-interface">
       {onOpenSettings && (
-        <button 
+        <button
+          type="button"
           className="settings-button"
           onClick={onOpenSettings}
           aria-label="Settings"
           title="Settings"
         >
-          ⚙️
+          <Settings size={20} />
         </button>
+      )}
+      {userId === null && onSwitchProfile && (
+        <div className="guest-mode-banner">
+          <div className="info-note warning">
+            <p>
+              <strong>You're using Guest mode.</strong> Your chats are not saved.{' '}
+              <button
+                type="button"
+                className="link-button"
+                onClick={onSwitchProfile}
+              >
+                Switch to Profile
+              </button>
+            </p>
+          </div>
+        </div>
       )}
       <div className="chat-messages">
         {messages.map((msg, idx) => (
@@ -279,12 +377,29 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
                 msg.content
               )}
             </div>
+            {msg.role === 'assistant' && (
+              <div className="message-actions">
+                <div className="copy-action-wrap">
+                  <button
+                    type="button"
+                    className="message-action-btn"
+                    onClick={() => handleCopyMessage(msg.content, idx)}
+                    aria-label={copiedIndex === idx ? 'Copied' : 'Copy'}
+                  >
+                    <Copy size={16} />
+                  </button>
+                  <span className="copy-tooltip" role="status">
+                    {copiedIndex === idx ? 'Copied' : 'Copy'}
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
         ))}
         
         {isProcessing && (
-          <div className="message assistant" key="shimmer-loader">
-            <div className="message-content shimmer-container"></div>
+          <div className="message assistant" key="thinking">
+            <div className="message-content thinking-text">Thinking...</div>
           </div>
         )}
         
@@ -298,23 +413,30 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
       )}
 
       <form onSubmit={handleSubmit} className="chat-input-form">
-        <textarea
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="Ask a health question..."
-          disabled={isProcessing || !isInitialized}
-          rows={1}
-          className="chat-input"
-        />
-        <button
-          type="submit"
-          disabled={!input.trim() || isProcessing || !isInitialized}
-          className="chat-send-button"
-        >
-          Send
-        </button>
+        <div className="chat-input-wrap">
+          <textarea
+            ref={inputRef}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Ask a health question…"
+            disabled={isProcessing || !isInitialized}
+            rows={1}
+            className="chat-input"
+          />
+          <button
+            type="submit"
+            disabled={!input.trim() || isProcessing || !isInitialized}
+            className="chat-send-button"
+            aria-label="Send"
+          >
+            <ArrowUp size={18} />
+          </button>
+        </div>
       </form>
+      <p className="chat-footer">
+        Confidant is not a substitute for professional medical advice. If you have serious health concerns, please see a healthcare professional.
+      </p>
     </div>
   );
 }

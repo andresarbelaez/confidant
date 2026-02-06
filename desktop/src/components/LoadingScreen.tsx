@@ -25,8 +25,8 @@ export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
     <div className="loading-screen">
       <div className="loading-content">
         <h1 className="loading-title">Confidant</h1>
-        <p className="loading-subtitle">Offline AI Assistant</p>
-        <p className="loading-tagline">Privacy-first health consultation</p>
+        <p className="loading-subtitle">Your offline AI assistant</p>
+        <p className="loading-tagline">Health answers that stay private</p>
         <div className="loading-spinner"></div>
       </div>
     </div>
