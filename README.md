@@ -59,6 +59,10 @@ npm run dev
 
 See [desktop/SETUP_INSTRUCTIONS.md](desktop/SETUP_INSTRUCTIONS.md) for detailed setup and [desktop/PYTHON_SETUP.md](desktop/PYTHON_SETUP.md) for Python dependencies (LLM, ChromaDB, embeddings).
 
+### Download (Beta)
+
+Pre-built installers for macOS and Windows are available via [GitHub Releases](https://github.com/confidant/confidant/releases). A small [download page](docs/index.html) is in `docs/` for use with [GitHub Pages](docs/GITHUB_PAGES.md); enable Pages from the `docs/` folder to serve it.
+
 ## Contributing
 
 We welcome contributions. Please read [CONTRIBUTING.md](CONTRIBUTING.md) for development setup and guidelines. Use the issue and pull request templates in [.github/](.github/) when opening issues or PRs.

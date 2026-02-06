@@ -3,6 +3,9 @@
   line-height: 1.5;
   font-weight: 400;
 
+  --color-primary: #667eea;
+  --color-primary-hover: #5a4fd6;
+
   color-scheme: light dark;
   color: rgba(255, 255, 255, 0.87);
   background-color: #242424;
@@ -56,6 +59,8 @@ button:focus-visible {
 
 @media (prefers-color-scheme: light) {
   :root {
+    --color-primary: #5568d3;
+    --color-primary-hover: #4356b8;
     color: #213547;
     background-color: #ffffff;
   }

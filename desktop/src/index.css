@@ -49,9 +49,9 @@
   --color-send-button-icon: #ffffff;
   --color-tooltip-bg: #1a1a1a;
   --color-tooltip-text: #ffffff;
-  --color-chat-input-wrap-bg: #2f2f2f;
-  --color-chat-input-wrap-border: rgba(255, 255, 255, 0.12);
-  --color-chat-input-wrap-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  --color-chat-input-wrap-bg: #ffffff;
+  --color-chat-input-wrap-border: rgba(0, 0, 0, 0.08);
+  --color-chat-input-wrap-shadow: 0 1px 1px rgba(0, 0, 0, 0.04), 0 2px 2px rgba(0, 0, 0, 0.03), 0 4px 4px rgba(0, 0, 0, 0.02);
   --color-placeholder: #8e8e8e;
 
   color-scheme: light dark;

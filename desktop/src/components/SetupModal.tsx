@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { MODEL_OPTIONS, ModelOption, getDefaultModel } from '../config/model-options';
 import { KB_OPTIONS, KBOption, getDefaultKB } from '../config/kb-options';
+import { useTranslation } from '../i18n/hooks/useTranslation';
 import './SetupModal.css';
 
 type DownloadStatus = 'not-started' | 'downloading' | 'downloaded' | 'error' | 'checking';
@@ -14,6 +15,8 @@ interface SetupModalProps {
   title: string;
   showProceedButton?: boolean;
   onProceed?: () => void;
+  showOnlyKB?: boolean;
+  userId?: string | null;
 }
 
 export default function SetupModal({ 
@@ -23,8 +26,11 @@ export default function SetupModal({
   onKBReady,
   title,
   showProceedButton = false,
-  onProceed
+  onProceed,
+  showOnlyKB = false,
+  userId = null
 }: SetupModalProps) {
+  const { t } = useTranslation(userId);
   const [selectedModel, setSelectedModel] = useState<ModelOption>(getDefaultModel());
   const [selectedKB, setSelectedKB] = useState<KBOption>(getDefaultKB());
   
@@ -38,6 +44,14 @@ export default function SetupModal({
   const [kbError, setKBError] = useState<string | null>(null);
   const [existingModels, setExistingModels] = useState<string[]>([]);
   const [showExistingModels, setShowExistingModels] = useState(false);
+  const initializedRef = useRef<string | null>(null);
+
+  // Reset initialization ref when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      initializedRef.current = null;
+    }
+  }, [isOpen]);
 
   // Check for existing models on mount
   useEffect(() => {
@@ -53,19 +67,14 @@ export default function SetupModal({
     }
   }, [selectedModel, isOpen]);
 
-  // Check if KB already exists and initialize vector store
-  useEffect(() => {
-    if (isOpen) {
-      initializeVectorStore();
-    }
-  }, [isOpen]);
-
-  // Check if KB already exists
+  // Check if KB already exists (this will initialize vector store internally)
+  // Only run once when modal opens, not on selectedKB changes
   useEffect(() => {
     if (isOpen) {
       checkKBExists();
     }
-  }, [selectedKB, isOpen]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   const checkModelExists = async () => {
     try {
@@ -114,8 +123,16 @@ export default function SetupModal({
   };
 
   const initializeVectorStore = async () => {
+    const collectionName = showOnlyKB ? 'dant_knowledge_global' : 'dant_knowledge';
+    
+    // Skip if we've already initialized this collection
+    if (initializedRef.current === collectionName) {
+      return;
+    }
+    
     try {
-      await invoke('initialize_vector_store', { collectionName: 'dant_knowledge' });
+      await invoke('initialize_vector_store', { collectionName, dbPath: null });
+      initializedRef.current = collectionName;
     } catch (err) {
       console.warn('Vector store initialization failed:', err);
     }
@@ -123,12 +140,21 @@ export default function SetupModal({
 
   const checkKBExists = async () => {
     try {
+      // Initialize vector store first (only if not already initialized)
+      const collectionName = showOnlyKB ? 'dant_knowledge_global' : 'dant_knowledge';
       await initializeVectorStore();
       
-      const stats = await invoke<{ document_count: number }>('get_collection_stats');
+      // Then check stats
+      const stats = await invoke<{ document_count: number }>('get_collection_stats', {
+        collectionName
+      });
       if (stats.document_count > 0) {
+        const wasDownloaded = kbStatus === 'downloaded';
         setKBStatus('downloaded');
-        onKBReady();
+        // Only call onKBReady if status changed from not-downloaded to downloaded (prevent multiple calls)
+        if (!wasDownloaded) {
+          onKBReady();
+        }
       } else {
         setKBStatus('not-started');
       }
@@ -179,14 +205,15 @@ export default function SetupModal({
     setKBProgress(0);
 
     try {
-      await initializeVectorStore();
+      const collectionName = showOnlyKB ? 'dant_knowledge_global' : 'dant_knowledge';
+      await invoke('initialize_vector_store', { collectionName, dbPath: null });
 
       const { KnowledgeBaseLoader } = await import('../knowledge/knowledge-loader');
       const loader = new KnowledgeBaseLoader();
 
       await loader.loadFromURL(selectedKB.url, (progress) => {
         setKBProgress(progress * 100);
-      });
+      }, collectionName);
 
       setKBProgress(100);
       setKBStatus('downloaded');
@@ -199,7 +226,9 @@ export default function SetupModal({
     }
   };
 
-  const canProceed = modelStatus === 'downloaded' && kbStatus === 'downloaded';
+  const canProceed = showOnlyKB 
+    ? kbStatus === 'downloaded'
+    : modelStatus === 'downloaded' && kbStatus === 'downloaded';
 
   if (!isOpen) return null;
 
@@ -221,19 +250,20 @@ export default function SetupModal({
             <p>
               {showProceedButton ? (
                 <>
-                  Everything runs on your device—your conversations and data never leave your computer. This one-time setup downloads the AI model and knowledge base you need.
+                  {t('setup.privacyInfo')}
                 </>
               ) : (
                 <>
-                  Here you can download AI models and manage your knowledge bases. Everything runs on your device—your conversations and data never leave your computer.
+                  {t('setup.settingsPrivacyInfo')}
                 </>
               )}
             </p>
           </div>
 
           <div className="setup-selectors">
-            <div className="selector-group">
-              <label htmlFor="model-selector">AI Model</label>
+            {!showOnlyKB && (
+              <div className="selector-group">
+                <label htmlFor="model-selector">{t('setup.aiModel')}</label>
               <select
                 id="model-selector"
                 value={selectedModel.id}
@@ -254,11 +284,11 @@ export default function SetupModal({
               
               <div className="selector-status">
                 <span className={`status-badge ${modelStatus}`}>
-                  {modelStatus === 'checking' && 'Checking...'}
-                  {modelStatus === 'not-started' && 'Not Downloaded'}
-                  {modelStatus === 'downloading' && 'Downloading...'}
-                  {modelStatus === 'downloaded' && '✓ Ready'}
-                  {modelStatus === 'error' && '✗ Error'}
+                  {modelStatus === 'checking' && t('setup.checking')}
+                  {modelStatus === 'not-started' && t('setup.notDownloaded')}
+                  {modelStatus === 'downloading' && t('setup.downloading')}
+                  {modelStatus === 'downloaded' && t('setup.ready')}
+                  {modelStatus === 'error' && t('setup.error')}
                 </span>
               </div>
 
@@ -279,20 +309,20 @@ export default function SetupModal({
 
               {existingModels.length > 0 && !showExistingModels && modelStatus !== 'downloading' && (
                 <div className="existing-models-notice">
-                  <p>We found {existingModels.length} model file{existingModels.length > 1 ? 's' : ''} on your computer.</p>
+                  <p>{t('setup.foundModels', { count: existingModels.length.toString(), plural: existingModels.length > 1 ? 's' : '' })}</p>
                   <button
                     onClick={() => setShowExistingModels(true)}
                     className="browse-button"
                     type="button"
                   >
-                    {modelStatus === 'downloaded' ? 'Switch Model' : 'Use Existing Model'}
+                    {modelStatus === 'downloaded' ? t('setup.switchModel') : t('setup.useExistingModel')}
                   </button>
                 </div>
               )}
 
               {showExistingModels && (
                 <div className="existing-models-list">
-                  <h4>Choose a model already on your computer</h4>
+                  <h4>{t('setup.chooseModel')}</h4>
                   <select
                     className="existing-model-selector"
                     onChange={async (e) => {
@@ -320,7 +350,7 @@ export default function SetupModal({
                       }
                     }}
                   >
-                    <option value="">Choose a model…</option>
+                    <option value="">{t('setup.chooseModelOption')}</option>
                     {existingModels.map((path, idx) => {
                       const filename = path.split('/').pop() || path;
                       return (
@@ -335,7 +365,7 @@ export default function SetupModal({
                     className="cancel-button"
                     type="button"
                   >
-                    Cancel
+                    {t('ui.cancel')}
                   </button>
                 </div>
               )}
@@ -349,19 +379,20 @@ export default function SetupModal({
                   {modelStatus === 'downloading' ? (
                     <>
                       <span className="button-spinner"></span>
-                      Downloading...
+                      {t('setup.downloading')}
                     </>
                   ) : modelStatus === 'downloaded' ? (
-                    '✓ Downloaded'
+                    t('setup.downloaded')
                   ) : (
-                    'Download Model'
+                    t('setup.downloadModel')
                   )}
                 </button>
               )}
             </div>
+            )}
 
             <div className="selector-group">
-              <label htmlFor="kb-selector">Knowledge Base</label>
+              <label htmlFor="kb-selector">{showOnlyKB ? t('setup.globalKnowledgeBase') : t('setup.knowledgeBase')}</label>
               <select
                 id="kb-selector"
                 value={selectedKB.id}
@@ -383,11 +414,11 @@ export default function SetupModal({
               
               <div className="selector-status">
                 <span className={`status-badge ${kbStatus}`}>
-                  {kbStatus === 'checking' && 'Checking...'}
-                  {kbStatus === 'not-started' && 'Not Downloaded'}
-                  {kbStatus === 'downloading' && 'Downloading...'}
-                  {kbStatus === 'downloaded' && '✓ Ready'}
-                  {kbStatus === 'error' && '✗ Error'}
+                  {kbStatus === 'checking' && t('setup.checking')}
+                  {kbStatus === 'not-started' && t('setup.notDownloaded')}
+                  {kbStatus === 'downloading' && t('setup.downloading')}
+                  {kbStatus === 'downloaded' && t('setup.ready')}
+                  {kbStatus === 'error' && t('setup.error')}
                 </span>
               </div>
 
@@ -414,14 +445,14 @@ export default function SetupModal({
                 {kbStatus === 'downloading' ? (
                   <>
                     <span className="button-spinner"></span>
-                    Downloading...
+                    {t('setup.downloading')}
                   </>
                 ) : kbStatus === 'downloaded' ? (
-                  '✓ Downloaded'
+                  t('setup.downloaded')
                 ) : !selectedKB.url ? (
-                  'Coming Soon'
+                  t('setup.comingSoon')
                 ) : (
-                  'Download Knowledge Base'
+                  t('setup.downloadKnowledgeBase')
                 )}
               </button>
             </div>
@@ -431,7 +462,7 @@ export default function SetupModal({
         {showProceedButton && canProceed && onProceed && (
           <div className="modal-footer">
             <button onClick={onProceed} className="proceed-button">
-              Proceed
+              {t('setup.proceed')}
             </button>
           </div>
         )}

@@ -23,9 +23,15 @@ lazy_static::lazy_static! {
 pub struct User {
     pub id: String,
     pub name: String,
-    #[serde(skip_serializing)]
-    password_hash: String, // Only serialize when saving, never send to frontend
+    #[serde(default)]
+    password_hash: String, // Defaults to empty string if missing (for backward compatibility)
+    #[serde(default = "default_language")]
+    pub language: String, // Language code (e.g., "en", "es", "fr")
     pub created_at: String,
+}
+
+fn default_language() -> String {
+    "en".to_string()
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -129,18 +135,56 @@ fn load_users() -> Result<Vec<User>, String> {
     let users: Vec<User> = serde_json::from_str(&content)
         .map_err(|e| format!("Failed to parse users file: {}", e))?;
     
-    Ok(users)
+    // Filter out users with empty password_hash (old format) - they need to be recreated
+    // This handles migration from old users.json format
+    let original_count = users.len();
+    let valid_users: Vec<User> = users.into_iter()
+        .filter(|u| !u.password_hash.is_empty())
+        .collect();
+    
+    // If we filtered out any users, save the cleaned list
+    if valid_users.len() < original_count {
+        #[cfg(debug_assertions)]
+        eprintln!("[User Management] Filtered out {} users with missing password_hash (old format). These users need to be recreated.", 
+                  original_count - valid_users.len());
+        // Save the cleaned list back to prevent future parsing errors
+        if !valid_users.is_empty() {
+            save_users(&valid_users)?;
+        } else {
+            // If all users were invalid, delete the file
+            let _ = fs::remove_file(&users_file);
+        }
+    }
+    
+    Ok(valid_users)
 }
 
 /// Save users to file
 fn save_users(users: &[User]) -> Result<(), String> {
     let users_file = get_users_file_path()?;
     
+    #[cfg(debug_assertions)]
+    eprintln!("[User Management] Saving {} users to: {:?}", users.len(), users_file);
+    
     let content = serde_json::to_string_pretty(users)
-        .map_err(|e| format!("Failed to serialize users: {}", e))?;
+        .map_err(|e| {
+            #[cfg(debug_assertions)]
+            eprintln!("[User Management] Serialization failed: {}", e);
+            format!("Failed to serialize users: {}", e)
+        })?;
+    
+    #[cfg(debug_assertions)]
+    eprintln!("[User Management] Serialized {} bytes", content.len());
     
     fs::write(&users_file, content)
-        .map_err(|e| format!("Failed to write users file: {}", e))?;
+        .map_err(|e| {
+            #[cfg(debug_assertions)]
+            eprintln!("[User Management] File write failed: {} (path: {:?})", e, users_file);
+            format!("Failed to write users file: {}", e)
+        })?;
+    
+    #[cfg(debug_assertions)]
+    eprintln!("[User Management] Users saved successfully");
     
     Ok(())
 }
@@ -160,45 +204,80 @@ pub async fn get_users() -> Result<Vec<UserPublic>, String> {
 /// Create a new user
 #[tauri::command]
 pub async fn create_user(name: String, password: String) -> Result<UserPublic, String> {
+    #[cfg(debug_assertions)]
+    eprintln!("[User Management] Creating user: name='{}', password_len={}", name, password.len());
+    
     // Validate name
     let name = name.trim();
     if name.is_empty() {
+        #[cfg(debug_assertions)]
+        eprintln!("[User Management] Validation failed: name is empty");
         return Err("User name cannot be empty".to_string());
     }
     if name.len() > 50 {
+        #[cfg(debug_assertions)]
+        eprintln!("[User Management] Validation failed: name too long ({})", name.len());
         return Err("User name is too long (max 50 characters)".to_string());
     }
     
     // Validate password
     if password.len() < 4 {
+        #[cfg(debug_assertions)]
+        eprintln!("[User Management] Validation failed: password too short ({})", password.len());
         return Err("Password must be at least 4 characters long".to_string());
     }
     
     // Load existing users
-    let mut users = load_users()?;
+    let mut users = load_users().map_err(|e| {
+        #[cfg(debug_assertions)]
+        eprintln!("[User Management] Failed to load users: {}", e);
+        e
+    })?;
+    
+    #[cfg(debug_assertions)]
+    eprintln!("[User Management] Loaded {} existing users", users.len());
     
     // Check for duplicate name
     if users.iter().any(|u| u.name.eq_ignore_ascii_case(name)) {
+        #[cfg(debug_assertions)]
+        eprintln!("[User Management] Validation failed: duplicate name '{}'", name);
         return Err("A user with this name already exists".to_string());
     }
     
     // Hash password
+    #[cfg(debug_assertions)]
+    eprintln!("[User Management] Hashing password...");
     let password_hash = hash(&password, DEFAULT_COST)
-        .map_err(|e| format!("Failed to hash password: {}", e))?;
+        .map_err(|e| {
+            #[cfg(debug_assertions)]
+            eprintln!("[User Management] Password hashing failed: {}", e);
+            format!("Failed to hash password: {}", e)
+        })?;
     
     // Create new user
     let user = User {
         id: Uuid::new_v4().to_string(),
         name: name.to_string(),
         password_hash,
+        language: "en".to_string(), // Default to English
         created_at: Utc::now().to_rfc3339(),
     };
+    
+    #[cfg(debug_assertions)]
+    eprintln!("[User Management] Created user: id='{}', name='{}'", user.id, user.name);
     
     // Add to users list
     users.push(user.clone());
     
     // Save users
-    save_users(&users)?;
+    save_users(&users).map_err(|e| {
+        #[cfg(debug_assertions)]
+        eprintln!("[User Management] Failed to save users: {}", e);
+        e
+    })?;
+    
+    #[cfg(debug_assertions)]
+    eprintln!("[User Management] User created successfully: id='{}'", user.id);
     
     // Return public user info
     Ok(UserPublic {
@@ -355,6 +434,34 @@ pub async fn delete_user(user_id: String) -> Result<(), String> {
             set_current_user(None).await?;
         }
     }
+    
+    Ok(())
+}
+
+/// Get user's language preference
+#[tauri::command]
+pub async fn get_user_language(user_id: String) -> Result<Option<String>, String> {
+    let users = load_users()?;
+    
+    let user = users.iter()
+        .find(|u| u.id == user_id)
+        .ok_or_else(|| "User not found".to_string())?;
+    
+    Ok(Some(user.language.clone()))
+}
+
+/// Set user's language preference
+#[tauri::command]
+pub async fn set_user_language(user_id: String, language: String) -> Result<(), String> {
+    let mut users = load_users()?;
+    
+    let user = users.iter_mut()
+        .find(|u| u.id == user_id)
+        .ok_or_else(|| "User not found".to_string())?;
+    
+    user.language = language;
+    
+    save_users(&users)?;
     
     Ok(())
 }

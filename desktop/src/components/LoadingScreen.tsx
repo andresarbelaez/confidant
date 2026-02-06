@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import LanguageSelector from './LanguageSelector';
 import './LoadingScreen.css';
 
 interface LoadingScreenProps {
@@ -28,6 +29,9 @@ export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
         <p className="loading-subtitle">Your offline AI assistant</p>
         <p className="loading-tagline">Health answers that stay private</p>
         <div className="loading-spinner"></div>
+        <div className="loading-language-selector">
+          <LanguageSelector userId={null} />
+        </div>
       </div>
     </div>
   );

@@ -3,6 +3,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { ArrowUp, Copy, Settings } from 'lucide-react';
 import { DantAgent } from '../agent/dant-agent';
 import ReactMarkdown from 'react-markdown';
+import { useTranslation } from '../i18n/hooks/useTranslation';
 import './ChatInterface.css';
 
 interface ChatInterfaceProps {
@@ -11,11 +12,12 @@ interface ChatInterfaceProps {
   kbReady?: boolean;
   chatVisible?: boolean;
   onOpenSettings?: () => void;
-  userId?: string | null;
+  userId: string;
   onSwitchProfile?: () => void;
 }
 
-export default function ChatInterface({ disabled = false, modelReady = false, kbReady = false, chatVisible = false, onOpenSettings, userId = null, onSwitchProfile }: ChatInterfaceProps) {
+export default function ChatInterface({ disabled = false, modelReady = false, kbReady = false, chatVisible = false, onOpenSettings, userId, onSwitchProfile }: ChatInterfaceProps) {
+  const { t, currentLanguage } = useTranslation(userId);
   const [messages, setMessages] = useState<Array<{ role: 'user' | 'assistant'; content: string }>>([]);
   const [input, setInput] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -25,6 +27,7 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
   const [isInitializing, setIsInitializing] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const loadedUserIdRef = useRef<string | null>(null);
 
   const resizeInput = () => {
     const el = inputRef.current;
@@ -41,29 +44,63 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
       setIsInitializing(false);
       setIsInitialized(false);
     }
-  }, [disabled, modelReady]);
+  }, [disabled, modelReady, currentLanguage]);
 
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
-  // Load chat history when userId is available
+  // Initialize user KB and load chat history when userId is available
+  // Use a ref to track if we've already loaded history for this userId to prevent reloading
   useEffect(() => {
     if (userId && isInitialized && !disabled) {
-      loadChatHistory();
+      // Only load if this is a different user or we haven't loaded yet
+      if (loadedUserIdRef.current !== userId) {
+        loadedUserIdRef.current = userId;
+        initializeUserKB();
+        loadChatHistory();
+        // Reset initial message flag when switching users
+        setHasSentInitialMessage(false);
+      }
+    } else if (!userId) {
+      // Reset when userId is cleared
+      loadedUserIdRef.current = null;
+      setHasSentInitialMessage(false);
     }
-  }, [userId, isInitialized, disabled]);
-
-  // Save chat history when messages change (if user is logged in)
+  }, [userId, isInitialized, disabled, currentLanguage]);
+  
+  // Update agent language when language changes
   useEffect(() => {
-    if (userId && messages.length > 0 && isInitialized && !disabled) {
+    if (agent && currentLanguage) {
+      agent.setLanguage(currentLanguage);
+    }
+  }, [agent, currentLanguage]);
+
+  const initializeUserKB = async () => {
+    try {
+      // Check if user KB collection exists
+      const collectionName = `dant_knowledge_user_${userId}`;
+      try {
+        await invoke('get_collection_stats_by_name', { collectionName });
+        // Collection exists, no need to initialize
+      } catch (err) {
+        // Collection doesn't exist, initialize it
+        await invoke('initialize_user_vector_store', { userId });
+      }
+    } catch (err) {
+      console.error('Failed to initialize user KB:', err);
+      // Don't block the UI if KB initialization fails
+    }
+  };
+
+  // Save chat history when messages change
+  useEffect(() => {
+    if (messages.length > 0 && isInitialized && !disabled) {
       saveChatHistory();
     }
   }, [messages, userId, isInitialized, disabled]);
 
   const loadChatHistory = async () => {
-    if (!userId) return;
-    
     try {
       const chatMessages = await invoke<Array<{ role: string; content: string; timestamp: string }>>('load_user_chat', { userId });
       if (chatMessages && chatMessages.length > 0) {
@@ -81,8 +118,6 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
   };
 
   const saveChatHistory = async () => {
-    if (!userId) return;
-    
     try {
       // Convert messages to format expected by backend
       const chatMessages = messages.map(msg => ({
@@ -125,8 +160,9 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
   };
 
   // Show initial welcome messages one-by-one only after the chat is visible (setup modal closed)
+  // Only show welcome messages if there's no existing chat history
   useEffect(() => {
-    if (chatVisible && isInitialized && agent && !hasSentInitialMessage && !isProcessing) {
+    if (chatVisible && isInitialized && agent && !hasSentInitialMessage && !isProcessing && messages.length === 0) {
       // Automatically trigger the first message flow
       const sendInitialMessage = async () => {
         setIsProcessing(true);
@@ -135,7 +171,7 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
 
         try {
           // Process a simple initial query to trigger the welcome messages
-          const response = await agent.processQuery("hello", { useRAG: false });
+          const response = await agent.processQuery("hello", { useRAG: false, language: currentLanguage });
           
           // Add first message (don't add the user "hello" message - it's just a trigger)
           setMessages(prev => [...prev, { role: 'assistant', content: response.response }]);
@@ -158,7 +194,7 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
 
       sendInitialMessage();
     }
-  }, [chatVisible, isInitialized, agent, hasSentInitialMessage, isProcessing]);
+  }, [chatVisible, isInitialized, agent, hasSentInitialMessage, isProcessing, messages.length]);
 
   const initializeAgent = async () => {
     setIsInitializing(true);
@@ -185,6 +221,7 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
 
       // Create agent
       const dantAgent = new DantAgent();
+      dantAgent.setLanguage(currentLanguage);
       setAgent(dantAgent);
       setIsInitialized(true);
     } catch (err) {
@@ -220,7 +257,7 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
       // Simple heuristic: use RAG if query contains health-related keywords
       const healthKeywords = ['health', 'medical', 'symptom', 'disease', 'illness', 'condition', 'treatment', 'medicine', 'doctor', 'pain', 'fever', 'ache', 'diagnosis'];
       const isHealthQuery = healthKeywords.some(keyword => userMessage.toLowerCase().includes(keyword));
-      const response = await agent.processQuery(userMessage, { useRAG: isHealthQuery });
+      const response = await agent.processQuery(userMessage, { useRAG: isHealthQuery, userId, language: currentLanguage });
       
       // Add first message
       setMessages(prev => [...prev, { role: 'assistant', content: response.response }]);
@@ -240,15 +277,15 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
       const errorMessage = err instanceof Error ? err.message : 'Failed to process query';
       
       // Provide more helpful error messages
-      let userFriendlyError = 'Something went wrong. Please try again.';
+      let userFriendlyError = t('errors.somethingWentWrong');
       if (errorMessage.includes('Model not initialized')) {
-        userFriendlyError = "The model isn't set up yet. Open Settings and initialize a model.";
+        userFriendlyError = t('errors.modelNotSetUp');
       } else if (errorMessage.includes('Python')) {
-        userFriendlyError = 'Python setup issue. Install Python 3 and llama-cpp-python, then try again.';
+        userFriendlyError = t('errors.pythonIssue');
       } else if (errorMessage.includes('timeout') || errorMessage.includes('time')) {
-        userFriendlyError = 'That took too long. Try a shorter question.';
+        userFriendlyError = t('errors.timeout');
       } else {
-        userFriendlyError = `Something went wrong: ${errorMessage}`;
+        userFriendlyError = `${t('errors.somethingWentWrong')}: ${errorMessage}`;
       }
       
       setError(userFriendlyError);
@@ -273,33 +310,42 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
       <div className="chat-interface chat-disabled">
         <div className="chat-disabled-overlay">
           <div className="chat-disabled-content">
-            <h3>Finish setup to start chatting</h3>
+            <h3>{t('ui.finishSetup')}</h3>
             <div className="setup-status">
               <div className={`status-item ${modelReady ? 'ready' : 'pending'}`}>
                 <span className="status-icon">{modelReady ? '✓' : '○'}</span>
-                <span>AI model {modelReady ? 'ready' : 'not ready'}</span>
+                <span>{t('ui.aiModel')} {modelReady ? t('ui.ready') : t('ui.notReady')}</span>
               </div>
               <div className={`status-item ${kbReady ? 'ready' : 'pending'}`}>
                 <span className="status-icon">{kbReady ? '✓' : '○'}</span>
-                <span>Knowledge base {kbReady ? 'ready' : 'not ready'}</span>
+                <span>{t('ui.knowledgeBase')} {kbReady ? t('ui.ready') : t('ui.notReady')}</span>
               </div>
             </div>
             <p className="disabled-message">
-              Download and set up the AI model and knowledge base in Settings to start chatting. Everything runs on your device—your data never leaves your computer.
+              {t('ui.downloadAndSetup')}
             </p>
+            {onOpenSettings && (
+              <button
+                className="btn btn-primary"
+                onClick={onOpenSettings}
+                style={{ marginTop: '1.5rem' }}
+              >
+                {t('ui.openSettings')}
+              </button>
+            )}
           </div>
         </div>
         <div className="chat-messages" style={{ opacity: 0.3, pointerEvents: 'none' }}>
           <div className="chat-welcome">
-            <h3>Welcome to Confidant</h3>
-            <p>Finish setup to start chatting.</p>
+            <h3>{t('ui.welcomeToConfidant')}</h3>
+            <p>{t('ui.finishSetupToStart')}</p>
           </div>
         </div>
         <form className="chat-input-form" style={{ opacity: 0.3, pointerEvents: 'none' }}>
           <div className="chat-input-wrap">
             <textarea
               disabled
-              placeholder="Open Settings to finish setup"
+              placeholder={t('ui.openSettingsToFinish')}
               className="chat-input"
               rows={1}
             />
@@ -317,7 +363,7 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
       <div className="chat-interface">
         <div className="chat-placeholder">
           <div className="loading-spinner"></div>
-          <p>Preparing chat…</p>
+          <p>{t('ui.preparingChat')}</p>
         </div>
       </div>
     );
@@ -327,7 +373,7 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
     return (
       <div className="chat-interface">
         <div className="chat-placeholder">
-          <p>Preparing chat…</p>
+          <p>{t('ui.preparingChat')}</p>
           {error && (
             <div className="error-message">
               <strong>Error:</strong> {error}
@@ -345,27 +391,11 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
           type="button"
           className="settings-button"
           onClick={onOpenSettings}
-          aria-label="Settings"
-          title="Settings"
+          aria-label={t('ui.settings')}
+          title={t('ui.settings')}
         >
           <Settings size={20} />
         </button>
-      )}
-      {userId === null && onSwitchProfile && (
-        <div className="guest-mode-banner">
-          <div className="info-note warning">
-            <p>
-              <strong>You're using Guest mode.</strong> Your chats are not saved.{' '}
-              <button
-                type="button"
-                className="link-button"
-                onClick={onSwitchProfile}
-              >
-                Switch to Profile
-              </button>
-            </p>
-          </div>
-        </div>
       )}
       <div className="chat-messages">
         {messages.map((msg, idx) => (
@@ -384,12 +414,12 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
                     type="button"
                     className="message-action-btn"
                     onClick={() => handleCopyMessage(msg.content, idx)}
-                    aria-label={copiedIndex === idx ? 'Copied' : 'Copy'}
+                    aria-label={copiedIndex === idx ? t('ui.copied') : t('ui.copy')}
                   >
                     <Copy size={16} />
                   </button>
                   <span className="copy-tooltip" role="status">
-                    {copiedIndex === idx ? 'Copied' : 'Copy'}
+                    {copiedIndex === idx ? t('ui.copied') : t('ui.copy')}
                   </span>
                 </div>
               </div>
@@ -399,7 +429,7 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
         
         {isProcessing && (
           <div className="message assistant" key="thinking">
-            <div className="message-content thinking-text">Thinking...</div>
+            <div className="message-content thinking-text">{t('ui.thinking')}</div>
           </div>
         )}
         
@@ -419,7 +449,7 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Ask a health question…"
+            placeholder={t('ui.askHealthQuestion')}
             disabled={isProcessing || !isInitialized}
             rows={1}
             className="chat-input"
@@ -428,14 +458,14 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
             type="submit"
             disabled={!input.trim() || isProcessing || !isInitialized}
             className="chat-send-button"
-            aria-label="Send"
+            aria-label={t('ui.send')}
           >
             <ArrowUp size={18} />
           </button>
         </div>
       </form>
       <p className="chat-footer">
-        Confidant is not a substitute for professional medical advice. If you have serious health concerns, please see a healthcare professional.
+        {t('agent.disclaimer')}
       </p>
     </div>
   );

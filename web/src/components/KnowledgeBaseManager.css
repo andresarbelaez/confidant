@@ -54,7 +54,7 @@
   font-size: 1.2rem;
   font-weight: 600;
   font-family: monospace;
-  color: #667eea;
+  color: var(--color-primary);
 }
 
 .kb-actions {
@@ -92,20 +92,20 @@
 .upload-button,
 .download-button {
   padding: 0.75rem 1.5rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--color-primary);
   color: white;
   border: none;
   border-radius: 8px;
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  transition: opacity 0.2s;
+  transition: background 0.2s;
   margin-top: 0.5rem;
 }
 
 .upload-button:hover:not(:disabled),
 .download-button:hover:not(:disabled) {
-  opacity: 0.9;
+  background: var(--color-primary-hover);
 }
 
 .upload-button:disabled,
@@ -150,7 +150,7 @@
 
 .load-progress .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  background: var(--color-primary);
   transition: width 0.3s ease;
 }
 
@@ -240,7 +240,7 @@
   }
 
   .stat-value {
-    color: #667eea;
+    color: var(--color-primary);
   }
 
   .load-option {

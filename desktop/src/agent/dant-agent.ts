@@ -4,6 +4,8 @@
  */
 
 import { invoke } from '@tauri-apps/api/core';
+import { getCachedResponse, cacheResponse, normalizeQuery, initializeCache } from '../utils/response-cache';
+import { LanguageCode } from '../i18n';
 
 export interface AgentResponse {
   response: string;
@@ -23,16 +25,62 @@ export class DantAgent {
   private maxHistoryLength: number = 10;
   private isFirstMessage: boolean = true;
   private kbReadyCache: boolean | null = null; // Cache KB readiness to avoid repeated stats checks
+  private currentLanguage: LanguageCode = 'en';
+
+  /**
+   * Set language for cache lookups
+   */
+  setLanguage(language: LanguageCode): void {
+    this.currentLanguage = language;
+    // Initialize cache for the new language
+    initializeCache(language).catch(err => {
+      console.warn('[Agent] Failed to initialize cache:', err);
+    });
+  }
 
   /**
    * Process a user query with optional RAG
    */
   async processQuery(
     query: string,
-    options: { stream?: boolean; useRAG?: boolean } = {}
+    options: { stream?: boolean; useRAG?: boolean; userId?: string; language?: LanguageCode } = {}
   ): Promise<AgentResponse> {
     const startMs = performance.now();
     const useRAG = options.useRAG ?? true;
+    const language = options.language || this.currentLanguage;
+    
+    // Update language if provided
+    if (options.language && options.language !== this.currentLanguage) {
+      this.currentLanguage = options.language;
+      await initializeCache(language);
+    }
+    
+    // For first message, skip cache and use hardcoded welcome messages
+    // Check cache AFTER first message check (for subsequent queries)
+    if (!this.isFirstMessage) {
+      const normalizedQuery = normalizeQuery(query);
+      const cachedResponse = await getCachedResponse(normalizedQuery, language);
+      
+      if (cachedResponse) {
+        const cacheMs = Math.round(performance.now() - startMs);
+        console.log(`[Confidant] Cache hit: ${cacheMs}ms (query: "${normalizedQuery}")`);
+        
+        // Add to conversation history
+        this.conversationHistory.push({ role: 'user', content: query });
+        this.conversationHistory.push({ role: 'assistant', content: cachedResponse });
+        
+        // Trim history if too long
+        if (this.conversationHistory.length > this.maxHistoryLength * 2) {
+          this.conversationHistory = this.conversationHistory.slice(-this.maxHistoryLength * 2);
+        }
+        
+        return {
+          response: cachedResponse,
+          sources: undefined,
+          usedRAG: false,
+        };
+      }
+    }
 
     // Check if model is loaded
     const isLoaded = await invoke<boolean>('is_model_loaded');
@@ -68,40 +116,59 @@ export class DantAgent {
         }
         
         if (shouldUseRAG) {
-          // Generate embedding for optimized query (parallelize if possible)
+          // Generate embedding ONCE (biggest bottleneck - single call)
           const queryEmbedding = await invoke<number[]>('generate_embedding', { text: optimizedQuery });
           
-          // Search for similar documents (reduced limit for faster processing)
-          const searchResults = await invoke<Array<{
-            id: string;
-            text: string;
-            score: number;
-            metadata: any;
-          }>>('search_similar', {
-            queryEmbedding,
-            limit: 2  // Reduced from 3 to 2 for faster RAG processing
-          });
+          // Query both KBs IN PARALLEL (not sequential)
+          const userId = options.userId;
+          const [globalResults, userResults] = await Promise.all([
+            invoke<Array<{
+              id: string;
+              text: string;
+              score: number;
+              metadata: any;
+            }>>('search_collection', {
+              collectionName: 'dant_knowledge_global',
+              queryEmbedding,
+              limit: 3  // Get top 3 from global
+            }).catch(() => []), // Fallback to empty array if query fails
+            userId ? invoke<Array<{
+              id: string;
+              text: string;
+              score: number;
+              metadata: any;
+            }>>('search_collection', {
+              collectionName: `dant_knowledge_user_${userId}`,
+              queryEmbedding,
+              limit: 2  // Get top 2 from user KB (more personal, smaller set)
+            }).catch(() => []) : Promise.resolve([]) // Empty if no userId or query fails
+          ]);
 
-          if (searchResults && searchResults.length > 0) {
-            // Filter by minimum relevance score to avoid low-quality results
-            const minScore = 0.3; // Minimum similarity threshold
-            const relevantResults = searchResults.filter(r => r.score >= minScore);
-            
-            if (relevantResults.length > 0) {
-              sources = relevantResults.map(r => ({
-                id: r.id,
-                text: r.text,
-                score: r.score
-              }));
+          // Merge results by score (descending)
+          const mergedResults = [...globalResults, ...userResults]
+            .filter(r => r.score >= 0.3) // Apply threshold
+            .sort((a, b) => b.score - a.score)
+            .slice(0, 4); // Top 4 total
 
-              // Build context from search results (truncate long texts for faster processing)
-              context = '\n\nRelevant information:\n';
-              relevantResults.forEach((result, idx) => {
-                // Truncate long texts to max 200 chars per result for faster processing
-                const truncatedText = result.text.length > 200 ? result.text.substring(0, 200) + '...' : result.text;
-                context += `${idx + 1}. ${truncatedText}\n`;
-              });
-            }
+          // Deduplicate similar results (if score difference < 0.05, keep higher)
+          const deduplicated = mergedResults.reduce((acc, result) => {
+            const isDuplicate = acc.some(existing => 
+              Math.abs(existing.score - result.score) < 0.05 &&
+              existing.text.substring(0, 50) === result.text.substring(0, 50)
+            );
+            if (!isDuplicate) acc.push(result);
+            return acc;
+          }, [] as typeof mergedResults);
+
+          if (deduplicated.length > 0) {
+            sources = deduplicated.map(r => ({
+              id: r.id,
+              text: r.text,
+              score: r.score
+            }));
+
+            // Build context with smart truncation (preserve important info)
+            context = this.buildSmartContext(deduplicated, 800);
           }
         }
       } catch (err) {
@@ -113,12 +180,18 @@ export class DantAgent {
     // For first message, use hardcoded messages instead of generating
     // This is more reliable than trying to get the LLM to generate with separators
     if (this.isFirstMessage) {
-      // Hardcode the first messages for reliability
+      // Import i18n for first message
+      const i18n = await import('../i18n');
+      
+      // Ensure i18n is initialized for this language
+      await i18n.initializeI18n(null);
+      
+      // Use i18n for first messages
       const hardcodedMessages = [
-        "Hi! I'm Confidant, your privacy-first AI assistant for health questions.",
-        "Everything runs on your device—your conversations stay private and never leave your computer.",
-        "I'm not a substitute for professional medical advice. If you have serious health concerns, please see a healthcare professional.",
-        "Ask me anything about health—I'm here to help."
+        i18n.t('agent.welcome'),
+        i18n.t('agent.privacy'),
+        i18n.t('agent.disclaimer'),
+        i18n.t('agent.askAnything')
       ];
       
       this.isFirstMessage = false;
@@ -215,6 +288,16 @@ Assistant:`;
       const responseMs = Math.round(performance.now() - startMs);
       const usedRAGFlag = useRAG && sources.length > 0;
       console.log(`[Confidant] Agent response: ${responseMs}ms (RAG: ${usedRAGFlag})`);
+      
+      // Cache the response for common queries
+      const normalized = normalizeQuery(query);
+      const commonQueries = ['hi', 'hello', 'hey', 'what are you', 'who are you', 'what can you do', 'help'];
+      if (commonQueries.includes(normalized)) {
+        cacheResponse(normalized, assistantMessage, language).catch(err => {
+          console.warn('[Agent] Failed to cache response:', err);
+        });
+      }
+      
       return {
         response: assistantMessage,
         sources: sources.length > 0 ? sources : undefined,
@@ -256,5 +339,91 @@ Assistant:`;
    */
   getHistory(): Array<{ role: 'user' | 'assistant'; content: string }> {
     return [...this.conversationHistory];
+  }
+
+  /**
+   * Build smart context with dynamic allocation based on score
+   * - Higher score = more characters allowed
+   * - Preserve sentence boundaries
+   * - Total context capped at maxLength
+   * - Prioritize user KB results (60% allocation)
+   */
+  private buildSmartContext(results: Array<{ text: string; score: number; id: string }>, maxLength: number): string {
+    let context = '\n\nRelevant information:\n';
+    let remaining = maxLength - context.length;
+    
+    // Separate user KB and global KB results
+    const userResults = results.filter(r => r.id.startsWith('entry_'));
+    const globalResults = results.filter(r => !r.id.startsWith('entry_'));
+    
+    // Allocate 60% to user KB, 40% to global KB
+    const userAllocation = Math.floor(remaining * 0.6);
+    const globalAllocation = remaining - userAllocation;
+    
+    // Process user KB results first (higher priority)
+    let userUsed = 0;
+    for (const result of userResults) {
+      if (userUsed >= userAllocation || remaining <= 0) break;
+      
+      // Allocate based on score
+      const allocation = result.score > 0.7 ? 250 : 
+                        result.score > 0.5 ? 150 : 100;
+      const allowed = Math.min(allocation, remaining, userAllocation - userUsed);
+      
+      if (allowed < 50) break; // Too little space, skip
+      
+      // Truncate at sentence boundary
+      const truncated = this.truncateAtSentence(result.text, allowed);
+      context += `${truncated}\n`;
+      remaining -= truncated.length + 2; // +2 for newline
+      userUsed += truncated.length + 2;
+    }
+    
+    // Process global KB results
+    for (const result of globalResults) {
+      if (remaining <= 0) break;
+      
+      // Allocate based on score
+      const allocation = result.score > 0.7 ? 200 : 
+                        result.score > 0.5 ? 120 : 80;
+      const allowed = Math.min(allocation, remaining);
+      
+      if (allowed < 50) break; // Too little space, skip
+      
+      // Truncate at sentence boundary
+      const truncated = this.truncateAtSentence(result.text, allowed);
+      context += `${truncated}\n`;
+      remaining -= truncated.length + 2; // +2 for newline
+    }
+    
+    return context;
+  }
+
+  /**
+   * Truncate text at sentence boundary, preserving important information
+   */
+  private truncateAtSentence(text: string, maxLength: number): string {
+    if (text.length <= maxLength) return text;
+    
+    // Try to find sentence boundaries
+    const sentenceEndings = /[.!?]\s+/g;
+    const matches = [...text.matchAll(sentenceEndings)];
+    
+    // Find the last complete sentence that fits
+    for (let i = matches.length - 1; i >= 0; i--) {
+      const endPos = matches[i].index! + matches[i][0].length;
+      if (endPos <= maxLength) {
+        return text.substring(0, endPos).trim();
+      }
+    }
+    
+    // If no sentence boundary found, truncate at word boundary
+    const truncated = text.substring(0, maxLength);
+    const lastSpace = truncated.lastIndexOf(' ');
+    if (lastSpace > maxLength * 0.8) {
+      return truncated.substring(0, lastSpace) + '...';
+    }
+    
+    return truncated + '...';
   }
 }

@@ -47,18 +47,6 @@
   color: var(--color-primary);
 }
 
-.user-profile-card.guest .profile-avatar {
-  background: var(--color-warning-bg);
-  border-color: var(--color-warning-text);
-  color: var(--color-warning-text);
-}
-
-.user-profile-card.guest:hover .profile-avatar {
-  background: var(--color-warning-bg);
-  border-color: var(--color-warning-text);
-  opacity: 0.9;
-}
-
 .profile-name {
   font-size: 1rem;
   color: var(--color-text-muted);
@@ -73,10 +61,6 @@
 
 .user-profile-card.new-user:hover .profile-name {
   color: var(--color-primary);
-}
-
-.user-profile-card.guest .profile-name {
-  color: var(--color-warning-text);
 }
 
 @media (prefers-color-scheme: light) {

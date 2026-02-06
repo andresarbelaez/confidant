@@ -141,6 +141,30 @@ def get_stats(db_path: str, collection_name: str):
         }
 
 
+def delete_collection(db_path: str, collection_name: str):
+    """Delete a ChromaDB collection"""
+    try:
+        client = get_chroma_client(db_path)
+        client.delete_collection(name=collection_name)
+        
+        return {
+            "status": "success",
+            "collection_name": collection_name
+        }
+    except Exception as e:
+        # If collection doesn't exist, that's okay
+        if "does not exist" in str(e).lower() or "not found" in str(e).lower():
+            return {
+                "status": "success",
+                "collection_name": collection_name,
+                "message": "Collection already deleted or does not exist"
+            }
+        return {
+            "status": "error",
+            "message": str(e)
+        }
+
+
 def main():
     if len(sys.argv) < 2:
         print("ERROR: Missing command", file=sys.stderr)
@@ -180,6 +204,15 @@ def main():
             db_path = sys.argv[2]
             collection_name = sys.argv[3]
             result = get_stats(db_path, collection_name)
+            print(json.dumps(result))
+            
+        elif command == "delete_collection":
+            if len(sys.argv) < 4:
+                print("ERROR: Missing arguments for delete_collection command", file=sys.stderr)
+                sys.exit(1)
+            db_path = sys.argv[2]
+            collection_name = sys.argv[3]
+            result = delete_collection(db_path, collection_name)
             print(json.dumps(result))
             
         else:

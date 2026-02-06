@@ -13,7 +13,7 @@
 .App-header h1 {
   font-size: 3.5em;
   margin: 0;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--color-primary);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -63,8 +63,8 @@
 }
 
 .tabs button.active {
-  color: #667eea; /* Purple for active */
-  border-bottom-color: #667eea;
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
   font-weight: 600;
 }
 
@@ -83,7 +83,7 @@
   }
 
   .tabs button.active {
-    color: #667eea;
+    color: var(--color-primary);
   }
 }
 

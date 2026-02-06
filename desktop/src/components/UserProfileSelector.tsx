@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react';
 import { invoke } from '@tauri-apps/api/core';
+import { Settings } from 'lucide-react';
 import UserProfileCard from './UserProfileCard';
 import PasswordPrompt from './PasswordPrompt';
 import CreateUserModal from './CreateUserModal';
+import SetupModal from './SetupModal';
+import { useTranslation } from '../i18n/hooks/useTranslation';
 import './UserProfileSelector.css';
 
 interface User {
@@ -12,20 +15,34 @@ interface User {
 }
 
 interface UserProfileSelectorProps {
-  onUserSelected: (userId: string | null) => void;
+  onUserSelected: (userId: string) => void;
 }
 
 export default function UserProfileSelector({ onUserSelected }: UserProfileSelectorProps) {
+  const { t } = useTranslation(null);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
   const [showCreateUser, setShowCreateUser] = useState(false);
-  const [showGuestDisclaimer, setShowGuestDisclaimer] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [showSettings, setShowSettings] = useState(false);
+  const [globalKBReady, setGlobalKBReady] = useState(false);
 
   useEffect(() => {
     loadUsers();
+    checkGlobalKB();
   }, []);
+
+  const checkGlobalKB = async () => {
+    try {
+      const stats = await invoke<{ document_count: number }>('get_collection_stats_by_name', {
+        collectionName: 'dant_knowledge_global'
+      });
+      setGlobalKBReady(stats.document_count > 0);
+    } catch (err) {
+      console.error('Failed to check global KB:', err);
+    }
+  };
 
   const loadUsers = async () => {
     try {
@@ -47,10 +64,6 @@ export default function UserProfileSelector({ onUserSelected }: UserProfileSelec
     setShowCreateUser(true);
   };
 
-  const handleGuestClick = () => {
-    setShowGuestDisclaimer(true);
-  };
-
   const handlePasswordVerified = async () => {
     if (selectedUserId) {
       await invoke('set_current_user', { userId: selectedUserId });
@@ -64,22 +77,30 @@ export default function UserProfileSelector({ onUserSelected }: UserProfileSelec
     onUserSelected(userId);
   };
 
-  const handleGuestConfirmed = async () => {
-    await invoke('set_current_user', { userId: null });
-    onUserSelected(null);
-  };
-
   if (loading) {
     return (
       <div className="user-profile-selector">
-        <div className="loading-message">Loading profiles...</div>
+        <div className="loading-message">{t('ui.loadingProfiles')}</div>
       </div>
     );
   }
 
+  const handleGlobalKBReady = () => {
+    setGlobalKBReady(true);
+  };
+
   return (
     <div className="user-profile-selector">
-      <h1 className="selector-title">Who's using Confidant?</h1>
+      <div className="selector-header">
+        <h1 className="selector-title">{t('ui.whoIsUsing')}</h1>
+        <button
+          className="settings-button"
+          onClick={() => setShowSettings(true)}
+          title={t('ui.settings')}
+        >
+          <Settings size={20} />
+        </button>
+      </div>
       
       <div className="profiles-grid">
         {users.map((user) => (
@@ -91,15 +112,9 @@ export default function UserProfileSelector({ onUserSelected }: UserProfileSelec
         ))}
         
         <UserProfileCard
-          name="New User"
+          name={t('ui.newUser')}
           isNewUser={true}
           onClick={handleNewUserClick}
-        />
-        
-        <UserProfileCard
-          name="Guest"
-          isGuest={true}
-          onClick={handleGuestClick}
         />
       </div>
 
@@ -122,34 +137,15 @@ export default function UserProfileSelector({ onUserSelected }: UserProfileSelec
         />
       )}
 
-      {showGuestDisclaimer && (
-        <div className="modal-overlay" onClick={() => setShowGuestDisclaimer(false)}>
-          <div className="modal-dialog guest-disclaimer" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>Guest Mode</h2>
-            </div>
-            <div className="modal-content">
-              <div className="info-note warning">
-                <p><strong>Your chats and information will not be saved.</strong></p>
-                <p>Switch to a user profile to save your conversation history and settings.</p>
-              </div>
-              <div className="modal-actions">
-                <button
-                  className="btn btn-primary"
-                  onClick={handleGuestConfirmed}
-                >
-                  Continue as Guest
-                </button>
-                <button
-                  className="btn btn-secondary"
-                  onClick={() => setShowGuestDisclaimer(false)}
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+      {showSettings && (
+        <SetupModal
+          isOpen={showSettings}
+          onClose={() => setShowSettings(false)}
+          onModelReady={() => {}}
+          onKBReady={handleGlobalKBReady}
+          title={t('ui.settings')}
+          showProceedButton={false}
+        />
       )}
     </div>
   );

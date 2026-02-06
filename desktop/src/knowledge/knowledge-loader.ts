@@ -90,7 +90,7 @@ export class KnowledgeBaseLoader {
   /**
    * Load knowledge base from URL
    */
-  async loadFromURL(url: string, onProgress?: (progress: number) => void): Promise<void> {
+  async loadFromURL(url: string, onProgress?: (progress: number) => void, collectionName?: string): Promise<void> {
     try {
       onProgress?.(0.1);
       
@@ -110,7 +110,7 @@ export class KnowledgeBaseLoader {
       const package_ = this.parsePackage(data);
       await this.loadIntoVectorStore(package_, (progress) => {
         onProgress?.(0.5 + progress * 0.5);
-      });
+      }, collectionName);
 
       onProgress?.(1.0);
 
@@ -140,7 +140,8 @@ export class KnowledgeBaseLoader {
    */
   private async loadIntoVectorStore(
     package_: KnowledgeBasePackage,
-    onProgress?: (progress: number) => void
+    onProgress?: (progress: number) => void,
+    collectionName?: string
   ): Promise<void> {
     const { documents, embeddings } = package_;
     const batchSize = 50; // Smaller batches for Tauri IPC
@@ -160,8 +161,15 @@ export class KnowledgeBaseLoader {
         metadata: doc.metadata || {}
       }));
 
-      // Add documents via Tauri command
-      await invoke('add_documents', { documents: vectorDocs });
+      // Add documents via Tauri command (use collection-specific command if provided)
+      if (collectionName) {
+        await invoke('add_documents_to_collection', { 
+          collectionName, 
+          documents: vectorDocs 
+        });
+      } else {
+        await invoke('add_documents', { documents: vectorDocs });
+      }
 
       onProgress?.((i + 1) / totalBatches);
     }

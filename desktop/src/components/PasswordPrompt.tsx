@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { Eye, EyeOff } from 'lucide-react';
+import { useTranslation } from '../i18n/hooks/useTranslation';
 import './PasswordPrompt.css';
 
 interface PasswordPromptProps {
@@ -11,6 +12,7 @@ interface PasswordPromptProps {
 }
 
 export default function PasswordPrompt({ userId, userName, onVerified, onCancel }: PasswordPromptProps) {
+  const { t } = useTranslation(null);
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -20,7 +22,7 @@ export default function PasswordPrompt({ userId, userName, onVerified, onCancel 
     e.preventDefault();
     
     if (!password.trim()) {
-      setError('Please enter your password');
+      setError(t('errors.pleaseEnterPassword'));
       return;
     }
 
@@ -36,11 +38,11 @@ export default function PasswordPrompt({ userId, userName, onVerified, onCancel 
       if (isValid) {
         onVerified();
       } else {
-        setError('Incorrect password. Please try again.');
+        setError(t('errors.incorrectPassword'));
         setPassword('');
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to verify password');
+      setError(err instanceof Error ? err.message : t('errors.failedToVerifyPassword'));
       setPassword('');
     } finally {
       setIsVerifying(false);
@@ -51,10 +53,10 @@ export default function PasswordPrompt({ userId, userName, onVerified, onCancel 
     <div className="modal-overlay" onClick={onCancel}>
       <div className="modal-dialog password-prompt" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h2>Enter Password</h2>
+          <h2>{t('ui.enterPasswordTitle')}</h2>
         </div>
         <div className="modal-content">
-          <p className="password-prompt-subtitle">Enter password for {userName}</p>
+          <p className="password-prompt-subtitle">{t('ui.enterPasswordFor', { name: userName })}</p>
           
           <form onSubmit={handleSubmit}>
             <div className="form-group">
@@ -66,7 +68,7 @@ export default function PasswordPrompt({ userId, userName, onVerified, onCancel 
                     setPassword(e.target.value);
                     setError(null);
                   }}
-                  placeholder="Password"
+                    placeholder={t('ui.password')}
                   className="form-input"
                   autoFocus
                   disabled={isVerifying}
@@ -93,14 +95,14 @@ export default function PasswordPrompt({ userId, userName, onVerified, onCancel 
                 onClick={onCancel}
                 disabled={isVerifying}
               >
-                Cancel
+                {t('ui.cancel')}
               </button>
               <button
                 type="submit"
                 className="btn btn-primary"
                 disabled={isVerifying || !password.trim()}
               >
-                {isVerifying ? 'Verifying...' : 'Sign In'}
+                {isVerifying ? t('ui.verifying') : t('ui.signIn')}
               </button>
             </div>
           </form>

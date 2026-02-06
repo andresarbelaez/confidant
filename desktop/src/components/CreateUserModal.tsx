@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { Eye, EyeOff } from 'lucide-react';
+import { useTranslation } from '../i18n/hooks/useTranslation';
 import './CreateUserModal.css';
 
 interface CreateUserModalProps {
@@ -9,6 +10,7 @@ interface CreateUserModalProps {
 }
 
 export default function CreateUserModal({ onUserCreated, onCancel }: CreateUserModalProps) {
+  const { t } = useTranslation(null);
   const [step, setStep] = useState<'name' | 'password'>('name');
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
@@ -22,12 +24,12 @@ export default function CreateUserModal({ onUserCreated, onCancel }: CreateUserM
     e.preventDefault();
     
     if (!name.trim()) {
-      setError('Please enter a name');
+      setError(t('errors.pleaseEnterName'));
       return;
     }
 
     if (name.trim().length > 50) {
-      setError('Name is too long (max 50 characters)');
+      setError(t('errors.nameTooLong'));
       return;
     }
 
@@ -39,17 +41,17 @@ export default function CreateUserModal({ onUserCreated, onCancel }: CreateUserM
     e.preventDefault();
     
     if (!password.trim()) {
-      setError('Please enter a password');
+      setError(t('errors.pleaseEnterPasswordField'));
       return;
     }
 
     if (password.length < 4) {
-      setError('Password must be at least 4 characters long');
+      setError(t('errors.passwordTooShort'));
       return;
     }
 
     if (password !== confirmPassword) {
-      setError('Passwords do not match');
+      setError(t('errors.passwordsDoNotMatch'));
       return;
     }
 
@@ -64,7 +66,10 @@ export default function CreateUserModal({ onUserCreated, onCancel }: CreateUserM
 
       onUserCreated(user.id);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create user');
+      // Log full error details to console for debugging
+      console.error('[CreateUserModal] Failed to create user:', err);
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      setError(errorMessage || t('errors.failedToCreateUser'));
     } finally {
       setIsCreating(false);
     }
@@ -81,13 +86,13 @@ export default function CreateUserModal({ onUserCreated, onCancel }: CreateUserM
     <div className="modal-overlay" onClick={onCancel}>
       <div className="modal-dialog create-user-modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h2>{step === 'name' ? 'Create Profile' : 'Set Password'}</h2>
+          <h2>{step === 'name' ? t('ui.createProfile') : t('ui.setPassword')}</h2>
         </div>
         <div className="modal-content">
           {step === 'name' ? (
             <form onSubmit={handleNameSubmit}>
               <div className="form-group">
-                <label className="form-label">Profile Name</label>
+                <label className="form-label">{t('ui.profileName')}</label>
                 <input
                   type="text"
                   value={name}
@@ -95,7 +100,7 @@ export default function CreateUserModal({ onUserCreated, onCancel }: CreateUserM
                     setName(e.target.value);
                     setError(null);
                   }}
-                  placeholder="Enter your name"
+                  placeholder={t('ui.enterName')}
                   className="form-input"
                   autoFocus
                   maxLength={50}
@@ -111,21 +116,21 @@ export default function CreateUserModal({ onUserCreated, onCancel }: CreateUserM
                   className="btn btn-secondary"
                   onClick={onCancel}
                 >
-                  Cancel
+                  {t('ui.cancel')}
                 </button>
                 <button
                   type="submit"
                   className="btn btn-primary"
                   disabled={!name.trim()}
                 >
-                  Continue
+                  {t('ui.continue')}
                 </button>
               </div>
             </form>
           ) : (
             <form onSubmit={handlePasswordSubmit}>
               <div className="form-group">
-                <label className="form-label">Password</label>
+                <label className="form-label">{t('ui.password')}</label>
                 <div className="password-input-wrapper">
                   <input
                     type={showPassword ? 'text' : 'password'}
@@ -134,7 +139,7 @@ export default function CreateUserModal({ onUserCreated, onCancel }: CreateUserM
                       setPassword(e.target.value);
                       setError(null);
                     }}
-                    placeholder="Enter password"
+                    placeholder={t('ui.enterPassword')}
                     className="form-input"
                     autoFocus
                     disabled={isCreating}
@@ -151,7 +156,7 @@ export default function CreateUserModal({ onUserCreated, onCancel }: CreateUserM
               </div>
 
               <div className="form-group">
-                <label className="form-label">Confirm Password</label>
+                <label className="form-label">{t('ui.confirmPassword')}</label>
                 <div className="password-input-wrapper">
                   <input
                     type={showConfirmPassword ? 'text' : 'password'}
@@ -160,7 +165,7 @@ export default function CreateUserModal({ onUserCreated, onCancel }: CreateUserM
                       setConfirmPassword(e.target.value);
                       setError(null);
                     }}
-                    placeholder="Confirm password"
+                    placeholder={t('ui.confirmPasswordPlaceholder')}
                     className="form-input"
                     disabled={isCreating}
                   />
@@ -186,14 +191,14 @@ export default function CreateUserModal({ onUserCreated, onCancel }: CreateUserM
                   onClick={handleBack}
                   disabled={isCreating}
                 >
-                  Back
+                  {t('ui.back') || 'Back'}
                 </button>
                 <button
                   type="submit"
                   className="btn btn-primary"
                   disabled={isCreating || !password.trim() || !confirmPassword.trim()}
                 >
-                  {isCreating ? 'Creating...' : 'Create User'}
+                  {isCreating ? t('ui.creating') : t('ui.createUserButton')}
                 </button>
               </div>
             </form>

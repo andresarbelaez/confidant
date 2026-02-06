@@ -73,6 +73,28 @@
   margin: 2rem auto 0;
 }
 
+.loading-language-selector {
+  margin-top: 3rem;
+  width: 100%;
+  max-width: 400px;
+  margin-left: auto;
+  margin-right: auto;
+  opacity: 0;
+  animation: fadeInLanguage 0.5s ease-in forwards;
+  animation-delay: 0.8s;
+}
+
+@keyframes fadeInLanguage {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }

@@ -167,21 +167,25 @@ fn call_python_helper(command: &str, args: &[&str], stdin_data: Option<&str>) ->
 
 /// Initialize vector store with ChromaDB
 #[tauri::command]
-pub async fn initialize_vector_store(collection_name: String) -> Result<(), String> {
+pub async fn initialize_vector_store(collection_name: String, db_path: Option<String>) -> Result<(), String> {
     let mut state = VECTOR_STORE_STATE.lock()
         .map_err(|e| format!("Failed to lock state: {}", e))?;
-    
-    if state.is_initialized && state.collection_name.as_ref() == Some(&collection_name) {
-        #[cfg(debug_assertions)]
-        eprintln!("[Vector Store] Already initialized: {}", collection_name);
-        return Ok(());
-    }
 
     #[cfg(debug_assertions)]
     eprintln!("[Vector Store] Initializing collection: {}", collection_name);
 
-    // Get database path
-    let db_path = get_app_data_dir()?;
+    // Get database path (use provided or default)
+    let db_path = if let Some(path) = db_path {
+        PathBuf::from(path)
+    } else {
+        get_app_data_dir()?
+    };
+    
+    // Ensure db_path is set in state
+    if state.db_path.is_none() {
+        state.db_path = Some(db_path.clone());
+    }
+    
     let db_path_str = db_path.to_str()
         .ok_or("Invalid database path")?;
     
@@ -194,14 +198,12 @@ pub async fn initialize_vector_store(collection_name: String) -> Result<(), Stri
         return Err(format!("ChromaDB initialization failed: {:?}", result));
     }
     
-    state.db_path = Some(db_path);
-    state.collection_name = Some(collection_name);
     state.is_initialized = true;
 
     Ok(())
 }
 
-/// Add documents to vector store
+/// Add documents to vector store (uses current collection from state)
 #[tauri::command]
 pub async fn add_documents(
     documents: Vec<VectorDocument>,
@@ -249,7 +251,53 @@ pub async fn add_documents(
     Ok(())
 }
 
-/// Search for similar documents
+/// Add documents to a specific collection
+#[tauri::command]
+pub async fn add_documents_to_collection(
+    collection_name: String,
+    documents: Vec<VectorDocument>,
+) -> Result<(), String> {
+    let state = VECTOR_STORE_STATE.lock()
+        .map_err(|e| format!("Failed to lock state: {}", e))?;
+    
+    if !state.is_initialized {
+        return Err("Vector store not initialized. Call initialize_vector_store first.".to_string());
+    }
+
+    let db_path = state.db_path.as_ref()
+        .ok_or("Database path not set")?
+        .to_str()
+        .ok_or("Invalid database path")?;
+
+    #[cfg(debug_assertions)]
+    eprintln!("[Vector Store] Adding {} documents to collection: {}", documents.len(), collection_name);
+
+    // Convert to JSON for Python
+    let docs_json: Vec<serde_json::Value> = documents.iter().map(|doc| {
+        serde_json::json!({
+            "id": doc.id,
+            "text": doc.text,
+            "embedding": doc.embedding,
+            "metadata": doc.metadata
+        })
+    }).collect();
+    
+    let stdin_data = serde_json::to_string(&docs_json)
+        .map_err(|e| format!("Failed to serialize documents: {}", e))?;
+    
+    // Call Python helper
+    let result_json = call_python_helper("add", &[db_path, &collection_name], Some(&stdin_data))?;
+    let result: serde_json::Value = serde_json::from_str(&result_json)
+        .map_err(|e| format!("Failed to parse Python response: {}", e))?;
+    
+    if result["status"].as_str() != Some("success") {
+        return Err(format!("Failed to add documents: {:?}", result));
+    }
+    
+    Ok(())
+}
+
+/// Search for similar documents (uses current collection from state)
 #[tauri::command]
 pub async fn search_similar(
     query_embedding: Vec<f32>,
@@ -304,7 +352,60 @@ pub async fn search_similar(
     Ok(search_results)
 }
 
-/// Get collection statistics
+/// Search a specific collection
+#[tauri::command]
+pub async fn search_collection(
+    collection_name: String,
+    query_embedding: Vec<f32>,
+    limit: u32,
+) -> Result<Vec<SearchResult>, String> {
+    let state = VECTOR_STORE_STATE.lock()
+        .map_err(|e| format!("Failed to lock state: {}", e))?;
+    
+    if !state.is_initialized {
+        return Err("Vector store not initialized. Call initialize_vector_store first.".to_string());
+    }
+
+    let db_path = state.db_path.as_ref()
+        .ok_or("Database path not set")?
+        .to_str()
+        .ok_or("Invalid database path")?;
+
+    #[cfg(debug_assertions)]
+    eprintln!("[Vector Store] Searching collection: {} with limit: {}", collection_name, limit);
+
+    // Convert embedding to JSON
+    let embedding_json = serde_json::to_string(&query_embedding)
+        .map_err(|e| format!("Failed to serialize embedding: {}", e))?;
+    
+    // Call Python helper
+    let result_json = call_python_helper("search", &[db_path, &collection_name, &limit.to_string()], Some(&embedding_json))?;
+    let result: serde_json::Value = serde_json::from_str(&result_json)
+        .map_err(|e| format!("Failed to parse Python response: {}", e))?;
+    
+    if result["status"].as_str() != Some("success") {
+        return Err(format!("Search failed: {:?}", result));
+    }
+    
+    // Parse results
+    let results_array = result["results"].as_array()
+        .ok_or("Invalid search results format")?;
+    
+    let search_results: Result<Vec<SearchResult>, _> = results_array.iter().map(|r| {
+        Ok(SearchResult {
+            id: r["id"].as_str().unwrap_or("").to_string(),
+            text: r["text"].as_str().unwrap_or("").to_string(),
+            score: r["score"].as_f64().unwrap_or(0.0) as f32,
+            metadata: r["metadata"].clone(),
+        })
+    }).collect();
+    
+    let search_results = search_results.map_err(|e: serde_json::Error| format!("Failed to parse results: {}", e))?;
+    
+    Ok(search_results)
+}
+
+/// Get collection statistics (uses current collection from state)
 #[tauri::command]
 pub async fn get_collection_stats() -> Result<serde_json::Value, String> {
     let state = VECTOR_STORE_STATE.lock()
@@ -328,4 +429,66 @@ pub async fn get_collection_stats() -> Result<serde_json::Value, String> {
         .map_err(|e| format!("Failed to parse Python response: {}", e))?;
     
     Ok(result)
+}
+
+/// Get statistics for a specific collection
+#[tauri::command]
+pub async fn get_collection_stats_by_name(collection_name: String) -> Result<serde_json::Value, String> {
+    let state = VECTOR_STORE_STATE.lock()
+        .map_err(|e| format!("Failed to lock state: {}", e))?;
+    
+    if !state.is_initialized {
+        return Err("Vector store not initialized. Call initialize_vector_store first.".to_string());
+    }
+
+    let db_path = state.db_path.as_ref()
+        .ok_or("Database path not set")?
+        .to_str()
+        .ok_or("Invalid database path")?;
+
+    // Call Python helper
+    let result_json = call_python_helper("stats", &[db_path, &collection_name], None)?;
+    let result: serde_json::Value = serde_json::from_str(&result_json)
+        .map_err(|e| format!("Failed to parse Python response: {}", e))?;
+    
+    Ok(result)
+}
+
+/// Initialize user vector store collection
+#[tauri::command]
+pub async fn initialize_user_vector_store(user_id: String) -> Result<(), String> {
+    let collection_name = format!("dant_knowledge_user_{}", user_id);
+    initialize_vector_store(collection_name, None).await
+}
+
+/// Delete user knowledge base collection
+#[tauri::command]
+pub async fn delete_user_knowledge_base(user_id: String) -> Result<(), String> {
+    let state = VECTOR_STORE_STATE.lock()
+        .map_err(|e| format!("Failed to lock state: {}", e))?;
+    
+    if !state.is_initialized {
+        return Err("Vector store not initialized. Call initialize_vector_store first.".to_string());
+    }
+
+    let db_path = state.db_path.as_ref()
+        .ok_or("Database path not set")?
+        .to_str()
+        .ok_or("Invalid database path")?;
+    
+    let collection_name = format!("dant_knowledge_user_{}", user_id);
+
+    #[cfg(debug_assertions)]
+    eprintln!("[Vector Store] Deleting user KB collection: {}", collection_name);
+
+    // Call Python helper to delete collection
+    let result_json = call_python_helper("delete_collection", &[db_path, &collection_name], None)?;
+    let result: serde_json::Value = serde_json::from_str(&result_json)
+        .map_err(|e| format!("Failed to parse Python response: {}", e))?;
+    
+    if result["status"].as_str() != Some("success") {
+        return Err(format!("Failed to delete collection: {:?}", result));
+    }
+    
+    Ok(())
 }
