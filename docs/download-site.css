@@ -1,0 +1,138 @@
+/* Confidant download page – minimal layout (palette aligned with app) */
+:root {
+  --bg: #0f0f12;
+  --surface: #1a1a1f;
+  --text: #e4e4e7;
+  --muted: #a1a1aa;
+  --color-primary: #667eea;
+  --color-primary-hover: #5a4fd6;
+  --accent: var(--color-primary);
+  --accent-hover: var(--color-primary-hover);
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #fafafa;
+    --surface: #fff;
+    --text: #18181b;
+    --muted: #71717a;
+    --color-primary: #5568d3;
+    --color-primary-hover: #4356b8;
+    --accent: var(--color-primary);
+    --accent-hover: var(--color-primary-hover);
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  margin: 0;
+  padding: 2rem 1rem;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+.container {
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem 0;
+}
+
+.tagline {
+  color: var(--muted);
+  font-size: 1rem;
+  margin: 0 0 2rem 0;
+}
+
+.downloads {
+  background: var(--surface);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+@media (prefers-color-scheme: light) {
+  .downloads {
+    border-color: rgba(0, 0, 0, 0.08);
+  }
+}
+
+.downloads h2 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 1rem 0;
+  color: var(--muted);
+}
+
+.download-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.dl-btn {
+  display: inline-block;
+  padding: 0.75rem 1.25rem;
+  background: var(--accent);
+  color: #fff;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.95rem;
+  border-radius: 8px;
+  transition: background 0.2s;
+}
+
+.dl-btn:hover {
+  background: var(--accent-hover);
+}
+
+.requirements {
+  font-size: 0.875rem;
+  color: var(--muted);
+  margin-bottom: 2rem;
+}
+
+.requirements a {
+  color: var(--accent);
+}
+
+.beta-notice {
+  font-size: 0.875rem;
+  padding: 1rem;
+  background: var(--surface);
+  border-radius: 8px;
+  margin-bottom: 2rem;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+@media (prefers-color-scheme: light) {
+  .beta-notice {
+    border-color: rgba(0, 0, 0, 0.08);
+  }
+}
+
+.security-note {
+  font-size: 0.8125rem;
+  color: var(--muted);
+  margin-top: 1rem;
+}
+
+.footer {
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+
+.footer a {
+  color: var(--accent);
+}

@@ -4,6 +4,7 @@ import { ArrowUp, Copy, Settings } from 'lucide-react';
 import { DantAgent } from '../agent/dant-agent';
 import ReactMarkdown from 'react-markdown';
 import { useTranslation } from '../i18n/hooks/useTranslation';
+import ChatSidebar from './ChatSidebar';
 import './ChatInterface.css';
 
 interface ChatInterfaceProps {
@@ -59,13 +60,10 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
         loadedUserIdRef.current = userId;
         initializeUserKB();
         loadChatHistory();
-        // Reset initial message flag when switching users
-        setHasSentInitialMessage(false);
       }
     } else if (!userId) {
       // Reset when userId is cleared
       loadedUserIdRef.current = null;
-      setHasSentInitialMessage(false);
     }
   }, [userId, isInitialized, disabled, currentLanguage]);
   
@@ -146,7 +144,6 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
     }
   }, [isProcessing]);
 
-  const [hasSentInitialMessage, setHasSentInitialMessage] = useState(false);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
 
   const handleCopyMessage = async (content: string, index: number) => {
@@ -159,42 +156,6 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
     }
   };
 
-  // Show initial welcome messages one-by-one only after the chat is visible (setup modal closed)
-  // Only show welcome messages if there's no existing chat history
-  useEffect(() => {
-    if (chatVisible && isInitialized && agent && !hasSentInitialMessage && !isProcessing && messages.length === 0) {
-      // Automatically trigger the first message flow
-      const sendInitialMessage = async () => {
-        setIsProcessing(true);
-        setError(null);
-        setHasSentInitialMessage(true);
-
-        try {
-          // Process a simple initial query to trigger the welcome messages
-          const response = await agent.processQuery("hello", { useRAG: false, language: currentLanguage });
-          
-          // Add first message (don't add the user "hello" message - it's just a trigger)
-          setMessages(prev => [...prev, { role: 'assistant', content: response.response }]);
-          
-          // If this is the first message and has follow-ups, add them with delays
-          if (response.isFirstMessage && response.followUpMessages && response.followUpMessages.length > 0) {
-            response.followUpMessages.forEach((msg, index) => {
-              setTimeout(() => {
-                setMessages(prev => [...prev, { role: 'assistant', content: msg }]);
-              }, (index + 1) * 800); // 800ms delay between messages
-            });
-          }
-        } catch (err) {
-          console.error('Failed to send initial message:', err);
-          // Don't show error for initial message failure - just continue
-        } finally {
-          setIsProcessing(false);
-        }
-      };
-
-      sendInitialMessage();
-    }
-  }, [chatVisible, isInitialized, agent, hasSentInitialMessage, isProcessing, messages.length]);
 
   const initializeAgent = async () => {
     setIsInitializing(true);
@@ -259,17 +220,8 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
       const isHealthQuery = healthKeywords.some(keyword => userMessage.toLowerCase().includes(keyword));
       const response = await agent.processQuery(userMessage, { useRAG: isHealthQuery, userId, language: currentLanguage });
       
-      // Add first message
+      // Add assistant response
       setMessages(prev => [...prev, { role: 'assistant', content: response.response }]);
-      
-      // If this is the first message and has follow-ups, add them with delays
-      if (response.isFirstMessage && response.followUpMessages && response.followUpMessages.length > 0) {
-        response.followUpMessages.forEach((msg, index) => {
-          setTimeout(() => {
-            setMessages(prev => [...prev, { role: 'assistant', content: msg }]);
-          }, (index + 1) * 800); // 800ms delay between messages
-        });
-      }
       
       if (response.sources && response.sources.length > 0) {
       }
@@ -308,52 +260,55 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
   if (disabled) {
     return (
       <div className="chat-interface chat-disabled">
-        <div className="chat-disabled-overlay">
-          <div className="chat-disabled-content">
-            <h3>{t('ui.finishSetup')}</h3>
-            <div className="setup-status">
-              <div className={`status-item ${modelReady ? 'ready' : 'pending'}`}>
-                <span className="status-icon">{modelReady ? '✓' : '○'}</span>
-                <span>{t('ui.aiModel')} {modelReady ? t('ui.ready') : t('ui.notReady')}</span>
+        <ChatSidebar userId={userId} onOpenSettings={onOpenSettings} />
+        <div className="chat-main">
+          <div className="chat-disabled-overlay">
+            <div className="chat-disabled-content">
+              <h3>{t('ui.finishSetup')}</h3>
+              <div className="setup-status">
+                <div className={`status-item ${modelReady ? 'ready' : 'pending'}`}>
+                  <span className="status-icon">{modelReady ? '✓' : '○'}</span>
+                  <span>{t('ui.aiModel')} {modelReady ? t('ui.ready') : t('ui.notReady')}</span>
+                </div>
+                <div className={`status-item ${kbReady ? 'ready' : 'pending'}`}>
+                  <span className="status-icon">{kbReady ? '✓' : '○'}</span>
+                  <span>{t('ui.knowledgeBase')} {kbReady ? t('ui.ready') : t('ui.notReady')}</span>
+                </div>
               </div>
-              <div className={`status-item ${kbReady ? 'ready' : 'pending'}`}>
-                <span className="status-icon">{kbReady ? '✓' : '○'}</span>
-                <span>{t('ui.knowledgeBase')} {kbReady ? t('ui.ready') : t('ui.notReady')}</span>
-              </div>
+              <p className="disabled-message">
+                {t('ui.downloadAndSetup')}
+              </p>
+              {onOpenSettings && (
+                <button
+                  className="btn btn-primary"
+                  onClick={onOpenSettings}
+                  style={{ marginTop: '1.5rem' }}
+                >
+                  {t('ui.openSettings')}
+                </button>
+              )}
             </div>
-            <p className="disabled-message">
-              {t('ui.downloadAndSetup')}
-            </p>
-            {onOpenSettings && (
-              <button
-                className="btn btn-primary"
-                onClick={onOpenSettings}
-                style={{ marginTop: '1.5rem' }}
-              >
-                {t('ui.openSettings')}
+          </div>
+          <div className="chat-messages" style={{ opacity: 0.3, pointerEvents: 'none' }}>
+            <div className="chat-welcome">
+              <h3>{t('ui.welcomeToConfidant')}</h3>
+              <p>{t('ui.finishSetupToStart')}</p>
+            </div>
+          </div>
+          <form className="chat-input-form" style={{ opacity: 0.3, pointerEvents: 'none' }}>
+            <div className="chat-input-wrap">
+              <textarea
+                disabled
+                placeholder={t('ui.openSettingsToFinish')}
+                className="chat-input"
+                rows={1}
+              />
+              <button disabled className="chat-send-button" aria-label="Send">
+                <ArrowUp size={18} />
               </button>
-            )}
-          </div>
+            </div>
+          </form>
         </div>
-        <div className="chat-messages" style={{ opacity: 0.3, pointerEvents: 'none' }}>
-          <div className="chat-welcome">
-            <h3>{t('ui.welcomeToConfidant')}</h3>
-            <p>{t('ui.finishSetupToStart')}</p>
-          </div>
-        </div>
-        <form className="chat-input-form" style={{ opacity: 0.3, pointerEvents: 'none' }}>
-          <div className="chat-input-wrap">
-            <textarea
-              disabled
-              placeholder={t('ui.openSettingsToFinish')}
-              className="chat-input"
-              rows={1}
-            />
-            <button disabled className="chat-send-button" aria-label="Send">
-              <ArrowUp size={18} />
-            </button>
-          </div>
-        </form>
       </div>
     );
   }
@@ -361,9 +316,12 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
   if (isInitializing) {
     return (
       <div className="chat-interface">
-        <div className="chat-placeholder">
-          <div className="loading-spinner"></div>
-          <p>{t('ui.preparingChat')}</p>
+        <ChatSidebar userId={userId} onOpenSettings={onOpenSettings} />
+        <div className="chat-main">
+          <div className="chat-placeholder">
+            <div className="loading-spinner"></div>
+            <p>{t('ui.preparingChat')}</p>
+          </div>
         </div>
       </div>
     );
@@ -372,13 +330,16 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
   if (!isInitialized) {
     return (
       <div className="chat-interface">
-        <div className="chat-placeholder">
-          <p>{t('ui.preparingChat')}</p>
-          {error && (
-            <div className="error-message">
-              <strong>Error:</strong> {error}
-            </div>
-          )}
+        <ChatSidebar userId={userId} onOpenSettings={onOpenSettings} />
+        <div className="chat-main">
+          <div className="chat-placeholder">
+            <p>{t('ui.preparingChat')}</p>
+            {error && (
+              <div className="error-message">
+                <strong>Error:</strong> {error}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     );
@@ -386,18 +347,20 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
 
   return (
     <div className="chat-interface">
-      {onOpenSettings && (
-        <button
-          type="button"
-          className="settings-button"
-          onClick={onOpenSettings}
-          aria-label={t('ui.settings')}
-          title={t('ui.settings')}
-        >
-          <Settings size={20} />
-        </button>
-      )}
-      <div className="chat-messages">
+      <ChatSidebar userId={userId} onOpenSettings={onOpenSettings} />
+      <div className="chat-main">
+        {onOpenSettings && (
+          <button
+            type="button"
+            className="settings-button"
+            onClick={onOpenSettings}
+            aria-label={t('ui.settings')}
+            title={t('ui.settings')}
+          >
+            <Settings size={20} />
+          </button>
+        )}
+        <div className="chat-messages">
         {messages.map((msg, idx) => (
           <div key={idx} className={`message ${msg.role}`}>
             <div className="message-content">
@@ -434,39 +397,40 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
         )}
         
         <div ref={messagesEndRef} />
+        </div>
+
+        {error && (
+          <div className="chat-error">
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="chat-input-form">
+          <div className="chat-input-wrap">
+            <textarea
+              ref={inputRef}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder={t('ui.askHealthQuestion')}
+              disabled={isProcessing || !isInitialized}
+              rows={1}
+              className="chat-input"
+            />
+            <button
+              type="submit"
+              disabled={!input.trim() || isProcessing || !isInitialized}
+              className="chat-send-button"
+              aria-label={t('ui.send')}
+            >
+              <ArrowUp size={18} />
+            </button>
+          </div>
+        </form>
+        <p className="chat-footer">
+          {t('agent.disclaimer')}
+        </p>
       </div>
-
-      {error && (
-        <div className="chat-error">
-          {error}
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit} className="chat-input-form">
-        <div className="chat-input-wrap">
-          <textarea
-            ref={inputRef}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder={t('ui.askHealthQuestion')}
-            disabled={isProcessing || !isInitialized}
-            rows={1}
-            className="chat-input"
-          />
-          <button
-            type="submit"
-            disabled={!input.trim() || isProcessing || !isInitialized}
-            className="chat-send-button"
-            aria-label={t('ui.send')}
-          >
-            <ArrowUp size={18} />
-          </button>
-        </div>
-      </form>
-      <p className="chat-footer">
-        {t('agent.disclaimer')}
-      </p>
     </div>
   );
 }

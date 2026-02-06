@@ -6,19 +6,21 @@ mod vector_store;
 mod embeddings;
 mod user_management;
 mod cache;
+mod bundled_defaults;
 
 use llm::{initialize_model, generate_text, is_model_loaded, download_model, check_model_exists, get_app_data_dir, find_existing_models};
 use vector_store::{
-    initialize_vector_store, add_documents, add_documents_to_collection, 
+    initialize_vector_store, add_documents, add_documents_to_collection,
     search_similar, search_collection, get_collection_stats, get_collection_stats_by_name,
     initialize_user_vector_store, delete_user_knowledge_base,
 };
 use embeddings::{generate_embedding, generate_embeddings_batch};
 use user_management::{
     get_users, create_user, verify_password, get_current_user, set_current_user,
-    save_user_chat, load_user_chat, delete_user, get_user_language, set_user_language,
+    save_user_chat, load_user_chat, delete_user_chat, delete_user, get_user_language, set_user_language,
 };
 use cache::{read_cache_file, write_cache_file};
+use bundled_defaults::ensure_bundled_defaults_initialized;
 
 fn main() {
     tauri::Builder::default()
@@ -53,12 +55,15 @@ fn main() {
             set_current_user,
             save_user_chat,
             load_user_chat,
+            delete_user_chat,
             delete_user,
             get_user_language,
             set_user_language,
             // Cache commands
             read_cache_file,
             write_cache_file,
+            // Bundled defaults (opinionated setup)
+            ensure_bundled_defaults_initialized,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

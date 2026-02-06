@@ -1,3 +1,8 @@
+/**
+ * Knowledge base options. The option with default: true is the bundled default
+ * (see desktop/BUNDLED_RESOURCES.md for where the app looks for the bundled KB file).
+ * The url field is used by Settings when the user downloads a KB; it can be empty for the default if using bundling only.
+ */
 export interface KBOption {
   id: string;
   name: string;

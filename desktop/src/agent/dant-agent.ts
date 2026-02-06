@@ -55,31 +55,29 @@ export class DantAgent {
       await initializeCache(language);
     }
     
-    // For first message, skip cache and use hardcoded welcome messages
-    // Check cache AFTER first message check (for subsequent queries)
-    if (!this.isFirstMessage) {
-      const normalizedQuery = normalizeQuery(query);
-      const cachedResponse = await getCachedResponse(normalizedQuery, language);
+    // Check cache for both first and subsequent messages (greetings/identity use updated cached responses)
+    const normalizedQuery = normalizeQuery(query);
+    const cachedResponse = await getCachedResponse(normalizedQuery, language);
+    
+    if (cachedResponse) {
+      const cacheMs = Math.round(performance.now() - startMs);
+      const wasFirstMessage = this.isFirstMessage;
+      console.log(`[Confidant] Cache hit: ${cacheMs}ms (query: "${normalizedQuery}")`);
       
-      if (cachedResponse) {
-        const cacheMs = Math.round(performance.now() - startMs);
-        console.log(`[Confidant] Cache hit: ${cacheMs}ms (query: "${normalizedQuery}")`);
-        
-        // Add to conversation history
-        this.conversationHistory.push({ role: 'user', content: query });
-        this.conversationHistory.push({ role: 'assistant', content: cachedResponse });
-        
-        // Trim history if too long
-        if (this.conversationHistory.length > this.maxHistoryLength * 2) {
-          this.conversationHistory = this.conversationHistory.slice(-this.maxHistoryLength * 2);
-        }
-        
-        return {
-          response: cachedResponse,
-          sources: undefined,
-          usedRAG: false,
-        };
+      this.isFirstMessage = false;
+      this.conversationHistory.push({ role: 'user', content: query });
+      this.conversationHistory.push({ role: 'assistant', content: cachedResponse });
+      
+      if (this.conversationHistory.length > this.maxHistoryLength * 2) {
+        this.conversationHistory = this.conversationHistory.slice(-this.maxHistoryLength * 2);
       }
+      
+      return {
+        response: cachedResponse,
+        sources: undefined,
+        usedRAG: false,
+        isFirstMessage: wasFirstMessage,
+      };
     }
 
     // Check if model is loaded

@@ -1,3 +1,7 @@
+/**
+ * Model options. The option with default: true is the bundled default
+ * (see desktop/BUNDLED_RESOURCES.md for bundled model path).
+ */
 export interface ModelOption {
   id: string;
   name: string;

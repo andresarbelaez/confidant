@@ -404,6 +404,25 @@ pub async fn load_user_chat(user_id: String) -> Result<Vec<ChatMessage>, String>
     Ok(messages)
 }
 
+/// Delete chat history for a user
+#[tauri::command]
+pub async fn delete_user_chat(user_id: String) -> Result<(), String> {
+    // Verify user exists
+    let users = load_users()?;
+    if !users.iter().any(|u| u.id == user_id) {
+        return Err("User not found".to_string());
+    }
+    
+    let chat_file = get_chat_history_path(&user_id)?;
+    
+    if chat_file.exists() {
+        fs::remove_file(&chat_file)
+            .map_err(|e| format!("Failed to delete chat history: {}", e))?;
+    }
+    
+    Ok(())
+}
+
 /// Delete a user and their data
 #[tauri::command]
 pub async fn delete_user(user_id: String) -> Result<(), String> {
