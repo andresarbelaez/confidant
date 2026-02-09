@@ -6,6 +6,7 @@ use std::sync::Mutex;
 use std::path::PathBuf;
 use std::process::Command;
 use std::io::Write;
+use tauri::AppHandle;
 
 // Global state for the vector store
 struct VectorStoreState {
@@ -79,27 +80,40 @@ fn get_helper_script_path() -> Result<PathBuf, String> {
     Ok(script_path)
 }
 
-/// Call Python helper script
-fn call_python_helper(command: &str, args: &[&str], stdin_data: Option<&str>) -> Result<String, String> {
-    let script_path = get_helper_script_path()?;
-    
-    // Find Python (try venv first, then python3, then python)
-    let python_cmd = {
-        // Check for venv Python first
-        let venv_python = std::env::current_dir()
-            .ok()
-            .and_then(|dir| {
-                // Check for venv in project root (../../venv/bin/python3)
-                let project_root = dir
-                    .parent() // desktop/
-                    .and_then(|p| p.parent()); // project root
-                project_root.map(|root| root.join("venv").join("bin").join("python3"))
-            })
-            .filter(|p| p.exists());
-        
-        if let Some(venv_py) = venv_python {
-            if Command::new(&venv_py).arg("--version").output().is_ok() {
-                venv_py.to_string_lossy().to_string()
+/// Call Python helper script.
+/// If `bundled` is Some((python_exe, scripts_dir)), use that Python and scripts_dir/chromadb_helper.py.
+fn call_python_helper(
+    bundled: Option<(PathBuf, PathBuf)>,
+    command: &str,
+    args: &[&str],
+    stdin_data: Option<&str>,
+) -> Result<String, String> {
+    let (python_cmd, script_path) = if let Some((python_exe, scripts_dir)) = bundled {
+        let script = scripts_dir.join("chromadb_helper.py");
+        if !python_exe.exists() || !script.exists() {
+            return Err("Bundled Python or script not found.".to_string());
+        }
+        (python_exe.to_string_lossy().to_string(), script)
+    } else {
+        let script_path = get_helper_script_path()?;
+        let python_cmd = {
+            let venv_python = std::env::current_dir()
+                .ok()
+                .and_then(|dir| {
+                    let project_root = dir.parent().and_then(|p| p.parent());
+                    project_root.map(|root| root.join("venv").join("bin").join("python3"))
+                })
+                .filter(|p| p.exists());
+            if let Some(venv_py) = venv_python {
+                if Command::new(&venv_py).arg("--version").output().is_ok() {
+                    venv_py.to_string_lossy().to_string()
+                } else if Command::new("python3").arg("--version").output().is_ok() {
+                    "python3".to_string()
+                } else if Command::new("python").arg("--version").output().is_ok() {
+                    "python".to_string()
+                } else {
+                    return Err("Python not found. Please install Python 3.".to_string());
+                }
             } else if Command::new("python3").arg("--version").output().is_ok() {
                 "python3".to_string()
             } else if Command::new("python").arg("--version").output().is_ok() {
@@ -107,16 +121,11 @@ fn call_python_helper(command: &str, args: &[&str], stdin_data: Option<&str>) ->
             } else {
                 return Err("Python not found. Please install Python 3.".to_string());
             }
-        } else if Command::new("python3").arg("--version").output().is_ok() {
-            "python3".to_string()
-        } else if Command::new("python").arg("--version").output().is_ok() {
-            "python".to_string()
-        } else {
-            return Err("Python not found. Please install Python 3.".to_string());
-        }
+        };
+        (python_cmd, script_path)
     };
-    
-    let mut cmd = Command::new(python_cmd);
+
+    let mut cmd = Command::new(&python_cmd);
     cmd.arg(&script_path);
     cmd.arg(command);
     cmd.args(args);
@@ -167,7 +176,7 @@ fn call_python_helper(command: &str, args: &[&str], stdin_data: Option<&str>) ->
 
 /// Initialize vector store with ChromaDB
 #[tauri::command]
-pub async fn initialize_vector_store(collection_name: String, db_path: Option<String>) -> Result<(), String> {
+pub async fn initialize_vector_store(app: AppHandle, collection_name: String, db_path: Option<String>) -> Result<(), String> {
     let mut state = VECTOR_STORE_STATE.lock()
         .map_err(|e| format!("Failed to lock state: {}", e))?;
 
@@ -190,7 +199,8 @@ pub async fn initialize_vector_store(collection_name: String, db_path: Option<St
         .ok_or("Invalid database path")?;
     
     // Call Python helper to initialize ChromaDB
-    let result_json = call_python_helper("init", &[db_path_str, &collection_name], None)?;
+    let bundled = crate::python_bundle::resolve_bundled_python(&app);
+    let result_json = call_python_helper(bundled, "init", &[db_path_str, &collection_name], None)?;
     let result: serde_json::Value = serde_json::from_str(&result_json)
         .map_err(|e| format!("Failed to parse Python response: {}", e))?;
     
@@ -206,8 +216,10 @@ pub async fn initialize_vector_store(collection_name: String, db_path: Option<St
 /// Add documents to vector store (uses current collection from state)
 #[tauri::command]
 pub async fn add_documents(
+    app: AppHandle,
     documents: Vec<VectorDocument>,
 ) -> Result<(), String> {
+    let bundled = crate::python_bundle::resolve_bundled_python(&app);
     let state = VECTOR_STORE_STATE.lock()
         .map_err(|e| format!("Failed to lock state: {}", e))?;
     
@@ -240,7 +252,7 @@ pub async fn add_documents(
         .map_err(|e| format!("Failed to serialize documents: {}", e))?;
     
     // Call Python helper
-    let result_json = call_python_helper("add", &[db_path, collection_name], Some(&stdin_data))?;
+    let result_json = call_python_helper(bundled, "add", &[db_path, collection_name], Some(&stdin_data))?;
     let result: serde_json::Value = serde_json::from_str(&result_json)
         .map_err(|e| format!("Failed to parse Python response: {}", e))?;
     
@@ -254,6 +266,7 @@ pub async fn add_documents(
 /// Add documents to a specific collection
 #[tauri::command]
 pub async fn add_documents_to_collection(
+    app: AppHandle,
     collection_name: String,
     documents: Vec<VectorDocument>,
 ) -> Result<(), String> {
@@ -264,6 +277,7 @@ pub async fn add_documents_to_collection(
         return Err("Vector store not initialized. Call initialize_vector_store first.".to_string());
     }
 
+    let bundled = crate::python_bundle::resolve_bundled_python(&app);
     let db_path = state.db_path.as_ref()
         .ok_or("Database path not set")?
         .to_str()
@@ -286,7 +300,7 @@ pub async fn add_documents_to_collection(
         .map_err(|e| format!("Failed to serialize documents: {}", e))?;
     
     // Call Python helper
-    let result_json = call_python_helper("add", &[db_path, &collection_name], Some(&stdin_data))?;
+    let result_json = call_python_helper(bundled, "add", &[db_path, &collection_name], Some(&stdin_data))?;
     let result: serde_json::Value = serde_json::from_str(&result_json)
         .map_err(|e| format!("Failed to parse Python response: {}", e))?;
     
@@ -300,9 +314,11 @@ pub async fn add_documents_to_collection(
 /// Search for similar documents (uses current collection from state)
 #[tauri::command]
 pub async fn search_similar(
+    app: AppHandle,
     query_embedding: Vec<f32>,
     limit: u32,
 ) -> Result<Vec<SearchResult>, String> {
+    let bundled = crate::python_bundle::resolve_bundled_python(&app);
     let state = VECTOR_STORE_STATE.lock()
         .map_err(|e| format!("Failed to lock state: {}", e))?;
     
@@ -326,7 +342,7 @@ pub async fn search_similar(
         .map_err(|e| format!("Failed to serialize embedding: {}", e))?;
     
     // Call Python helper
-    let result_json = call_python_helper("search", &[db_path, collection_name, &limit.to_string()], Some(&embedding_json))?;
+    let result_json = call_python_helper(bundled, "search", &[db_path, collection_name, &limit.to_string()], Some(&embedding_json))?;
     let result: serde_json::Value = serde_json::from_str(&result_json)
         .map_err(|e| format!("Failed to parse Python response: {}", e))?;
     
@@ -355,10 +371,12 @@ pub async fn search_similar(
 /// Search a specific collection
 #[tauri::command]
 pub async fn search_collection(
+    app: AppHandle,
     collection_name: String,
     query_embedding: Vec<f32>,
     limit: u32,
 ) -> Result<Vec<SearchResult>, String> {
+    let bundled = crate::python_bundle::resolve_bundled_python(&app);
     let state = VECTOR_STORE_STATE.lock()
         .map_err(|e| format!("Failed to lock state: {}", e))?;
     
@@ -379,7 +397,7 @@ pub async fn search_collection(
         .map_err(|e| format!("Failed to serialize embedding: {}", e))?;
     
     // Call Python helper
-    let result_json = call_python_helper("search", &[db_path, &collection_name, &limit.to_string()], Some(&embedding_json))?;
+    let result_json = call_python_helper(bundled, "search", &[db_path, &collection_name, &limit.to_string()], Some(&embedding_json))?;
     let result: serde_json::Value = serde_json::from_str(&result_json)
         .map_err(|e| format!("Failed to parse Python response: {}", e))?;
     
@@ -407,7 +425,8 @@ pub async fn search_collection(
 
 /// Get collection statistics (uses current collection from state)
 #[tauri::command]
-pub async fn get_collection_stats() -> Result<serde_json::Value, String> {
+pub async fn get_collection_stats(app: AppHandle) -> Result<serde_json::Value, String> {
+    let bundled = crate::python_bundle::resolve_bundled_python(&app);
     let state = VECTOR_STORE_STATE.lock()
         .map_err(|e| format!("Failed to lock state: {}", e))?;
     
@@ -424,7 +443,7 @@ pub async fn get_collection_stats() -> Result<serde_json::Value, String> {
         .unwrap_or("dant_knowledge");
 
     // Call Python helper
-    let result_json = call_python_helper("stats", &[db_path, collection_name], None)?;
+    let result_json = call_python_helper(bundled, "stats", &[db_path, collection_name], None)?;
     let result: serde_json::Value = serde_json::from_str(&result_json)
         .map_err(|e| format!("Failed to parse Python response: {}", e))?;
     
@@ -433,7 +452,8 @@ pub async fn get_collection_stats() -> Result<serde_json::Value, String> {
 
 /// Get statistics for a specific collection
 #[tauri::command]
-pub async fn get_collection_stats_by_name(collection_name: String) -> Result<serde_json::Value, String> {
+pub async fn get_collection_stats_by_name(app: AppHandle, collection_name: String) -> Result<serde_json::Value, String> {
+    let bundled = crate::python_bundle::resolve_bundled_python(&app);
     let state = VECTOR_STORE_STATE.lock()
         .map_err(|e| format!("Failed to lock state: {}", e))?;
     
@@ -447,7 +467,7 @@ pub async fn get_collection_stats_by_name(collection_name: String) -> Result<ser
         .ok_or("Invalid database path")?;
 
     // Call Python helper
-    let result_json = call_python_helper("stats", &[db_path, &collection_name], None)?;
+    let result_json = call_python_helper(bundled, "stats", &[db_path, &collection_name], None)?;
     let result: serde_json::Value = serde_json::from_str(&result_json)
         .map_err(|e| format!("Failed to parse Python response: {}", e))?;
     
@@ -456,14 +476,15 @@ pub async fn get_collection_stats_by_name(collection_name: String) -> Result<ser
 
 /// Initialize user vector store collection
 #[tauri::command]
-pub async fn initialize_user_vector_store(user_id: String) -> Result<(), String> {
+pub async fn initialize_user_vector_store(app: AppHandle, user_id: String) -> Result<(), String> {
     let collection_name = format!("dant_knowledge_user_{}", user_id);
-    initialize_vector_store(collection_name, None).await
+    initialize_vector_store(app, collection_name, None).await
 }
 
 /// Delete user knowledge base collection
 #[tauri::command]
-pub async fn delete_user_knowledge_base(user_id: String) -> Result<(), String> {
+pub async fn delete_user_knowledge_base(app: AppHandle, user_id: String) -> Result<(), String> {
+    let bundled = crate::python_bundle::resolve_bundled_python(&app);
     let state = VECTOR_STORE_STATE.lock()
         .map_err(|e| format!("Failed to lock state: {}", e))?;
     
@@ -482,7 +503,7 @@ pub async fn delete_user_knowledge_base(user_id: String) -> Result<(), String> {
     eprintln!("[Vector Store] Deleting user KB collection: {}", collection_name);
 
     // Call Python helper to delete collection
-    let result_json = call_python_helper("delete_collection", &[db_path, &collection_name], None)?;
+    let result_json = call_python_helper(bundled, "delete_collection", &[db_path, &collection_name], None)?;
     let result: serde_json::Value = serde_json::from_str(&result_json)
         .map_err(|e| format!("Failed to parse Python response: {}", e))?;
     

@@ -157,7 +157,7 @@ fn resolve_bundled_kb_path(app: &AppHandle) -> Option<PathBuf> {
 
 /// Load bundled KB JSON and ingest into global collection.
 /// Expects same format as frontend KnowledgeBasePackage: { manifest, documents: [{ id, text, metadata }], embeddings: number[][] }.
-async fn ingest_kb_from_path(path: &Path) -> Result<(), String> {
+async fn ingest_kb_from_path(app: &AppHandle, path: &Path) -> Result<(), String> {
     let content = fs::read_to_string(path)
         .map_err(|e| format!("Failed to read bundled KB file: {}", e))?;
     let data: serde_json::Value = serde_json::from_str(&content)
@@ -203,7 +203,8 @@ async fn ingest_kb_from_path(path: &Path) -> Result<(), String> {
                 }
             })
             .collect();
-        add_documents_to_collection(GLOBAL_KB_COLLECTION.to_string(), batch_docs).await?;
+        add_documents_to_collection(app.clone(), GLOBAL_KB_COLLECTION.to_string(), batch_docs)
+            .await?;
     }
 
     Ok(())
@@ -219,7 +220,7 @@ pub async fn ensure_bundled_defaults_initialized(app: AppHandle) -> Result<Bundl
             let path_str = model_path.to_string_lossy().to_string();
             #[cfg(debug_assertions)]
             eprintln!("[Bundled] Initializing model from: {}", path_str);
-            if let Err(e) = initialize_model(path_str).await {
+            if let Err(e) = initialize_model(app.clone(), path_str).await {
                 #[cfg(debug_assertions)]
                 eprintln!("[Bundled] Model init failed: {}", e);
             }
@@ -227,7 +228,7 @@ pub async fn ensure_bundled_defaults_initialized(app: AppHandle) -> Result<Bundl
     }
 
     // 2. Global KB: ensure collection exists
-    if let Err(e) = initialize_vector_store(GLOBAL_KB_COLLECTION.to_string(), None).await {
+    if let Err(e) = initialize_vector_store(app.clone(), GLOBAL_KB_COLLECTION.to_string(), None).await {
         #[cfg(debug_assertions)]
         eprintln!("[Bundled] Vector store init failed: {}", e);
         return Ok(BundledDefaultsStatus {
@@ -237,7 +238,7 @@ pub async fn ensure_bundled_defaults_initialized(app: AppHandle) -> Result<Bundl
     }
 
     // 3. If collection is empty and we have bundled KB, ingest
-    let stats = get_collection_stats_by_name(GLOBAL_KB_COLLECTION.to_string()).await;
+    let stats = get_collection_stats_by_name(app.clone(), GLOBAL_KB_COLLECTION.to_string()).await;
     let doc_count: u64 = stats
         .ok()
         .and_then(|v| v["document_count"].as_u64())
@@ -246,7 +247,7 @@ pub async fn ensure_bundled_defaults_initialized(app: AppHandle) -> Result<Bundl
         if let Some(kb_path) = resolve_bundled_kb_path(&app) {
             #[cfg(debug_assertions)]
             eprintln!("[Bundled] Ingesting KB from: {:?}", kb_path);
-            if let Err(e) = ingest_kb_from_path(&kb_path).await {
+            if let Err(e) = ingest_kb_from_path(&app, &kb_path).await {
                 #[cfg(debug_assertions)]
                 eprintln!("[Bundled] KB ingest failed: {}", e);
             }
@@ -254,7 +255,7 @@ pub async fn ensure_bundled_defaults_initialized(app: AppHandle) -> Result<Bundl
     }
 
     let model_ready = is_model_loaded().await?;
-    let stats_after = get_collection_stats_by_name(GLOBAL_KB_COLLECTION.to_string()).await;
+    let stats_after = get_collection_stats_by_name(app.clone(), GLOBAL_KB_COLLECTION.to_string()).await;
     let kb_ready = stats_after
         .ok()
         .and_then(|v| v["document_count"].as_u64())

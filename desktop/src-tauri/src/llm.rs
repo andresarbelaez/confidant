@@ -7,6 +7,9 @@ use std::process::Command;
 use std::io::Write;
 use std::fs;
 use std::path::{Path, PathBuf};
+use tauri::AppHandle;
+
+use crate::python_bundle;
 
 // Global state for the LLM engine
 struct LLMState {
@@ -73,27 +76,41 @@ fn get_llama_helper_path() -> Result<std::path::PathBuf, String> {
     Ok(script_path)
 }
 
-/// Call Python helper script for LLM operations
-fn call_llama_helper(command: &str, args: &[&str], stdin_data: Option<&str>) -> Result<String, String> {
-    let script_path = get_llama_helper_path()?;
-    
-    // Find Python (try venv first, then python3, then python)
-    let python_cmd = {
-        // Check for venv Python first
-        let venv_python = std::env::current_dir()
-            .ok()
-            .and_then(|dir| {
-                // Check for venv in project root (../../venv/bin/python3)
-                let project_root = dir
-                    .parent() // desktop/
-                    .and_then(|p| p.parent()); // project root
-                project_root.map(|root| root.join("venv").join("bin").join("python3"))
-            })
-            .filter(|p| p.exists());
-        
-        if let Some(venv_py) = venv_python {
-            if Command::new(&venv_py).arg("--version").output().is_ok() {
-                venv_py.to_string_lossy().to_string()
+/// Call Python helper script for LLM operations.
+/// If `bundled` is Some((python_exe, scripts_dir)), use that Python and scripts_dir/llama_helper.py; otherwise use system/venv Python and dev script path.
+fn call_llama_helper(
+    bundled: Option<(PathBuf, PathBuf)>,
+    command: &str,
+    args: &[&str],
+    stdin_data: Option<&str>,
+) -> Result<String, String> {
+    let (python_cmd, script_path) = if let Some((python_exe, scripts_dir)) = bundled {
+        let script = scripts_dir.join("llama_helper.py");
+        if !python_exe.exists() || !script.exists() {
+            return Err("Bundled Python or script not found.".to_string());
+        }
+        (python_exe.to_string_lossy().to_string(), script)
+    } else {
+        let script_path = get_llama_helper_path()?;
+        // Find Python (try venv first, then python3, then python)
+        let python_cmd = {
+            let venv_python = std::env::current_dir()
+                .ok()
+                .and_then(|dir| {
+                    let project_root = dir.parent().and_then(|p| p.parent());
+                    project_root.map(|root| root.join("venv").join("bin").join("python3"))
+                })
+                .filter(|p| p.exists());
+            if let Some(venv_py) = venv_python {
+                if Command::new(&venv_py).arg("--version").output().is_ok() {
+                    venv_py.to_string_lossy().to_string()
+                } else if Command::new("python3").arg("--version").output().is_ok() {
+                    "python3".to_string()
+                } else if Command::new("python").arg("--version").output().is_ok() {
+                    "python".to_string()
+                } else {
+                    return Err("Python not found. Please install Python 3.".to_string());
+                }
             } else if Command::new("python3").arg("--version").output().is_ok() {
                 "python3".to_string()
             } else if Command::new("python").arg("--version").output().is_ok() {
@@ -101,16 +118,11 @@ fn call_llama_helper(command: &str, args: &[&str], stdin_data: Option<&str>) -> 
             } else {
                 return Err("Python not found. Please install Python 3.".to_string());
             }
-        } else if Command::new("python3").arg("--version").output().is_ok() {
-            "python3".to_string()
-        } else if Command::new("python").arg("--version").output().is_ok() {
-            "python".to_string()
-        } else {
-            return Err("Python not found. Please install Python 3.".to_string());
-        }
+        };
+        (python_cmd, script_path)
     };
-    
-    let mut cmd = Command::new(python_cmd);
+
+    let mut cmd = Command::new(&python_cmd);
     cmd.arg(&script_path);
     cmd.arg(command);
     cmd.args(args);
@@ -160,7 +172,10 @@ fn call_llama_helper(command: &str, args: &[&str], stdin_data: Option<&str>) -> 
 }
 
 /// Initialize LLM model from file path (internal helper without state lock)
-async fn initialize_model_internal(mut model_path: String) -> Result<(), String> {
+async fn initialize_model_internal(
+    mut model_path: String,
+    bundled: Option<(PathBuf, PathBuf)>,
+) -> Result<(), String> {
     // Try to resolve the actual file path (handles case-insensitive matching)
     loop {
         #[cfg(debug_assertions)]
@@ -235,7 +250,7 @@ async fn initialize_model_internal(mut model_path: String) -> Result<(), String>
     }
 
     // Call Python helper to load model
-    let result_json = call_llama_helper("load", &[&model_path], None)?;
+    let result_json = call_llama_helper(bundled, "load", &[&model_path], None)?;
     let result: serde_json::Value = serde_json::from_str(&result_json)
         .map_err(|e| format!("Failed to parse Python response: {}", e))?;
     
@@ -250,7 +265,7 @@ async fn initialize_model_internal(mut model_path: String) -> Result<(), String>
 
 /// Initialize LLM model from file path
 #[tauri::command]
-pub async fn initialize_model(model_path: String) -> Result<(), String> {
+pub async fn initialize_model(app: AppHandle, model_path: String) -> Result<(), String> {
     // Check state first (lock and release immediately)
     {
         let state = LLM_STATE.lock().map_err(|e| format!("Failed to lock state: {}", e))?;
@@ -261,8 +276,9 @@ pub async fn initialize_model(model_path: String) -> Result<(), String> {
         }
     } // Lock is released here
     
+    let bundled = python_bundle::resolve_bundled_python(&app);
     // Initialize model (without holding the lock)
-    initialize_model_internal(model_path.clone()).await?;
+    initialize_model_internal(model_path.clone(), bundled).await?;
     
     // Update state after successful initialization
     {
@@ -277,6 +293,7 @@ pub async fn initialize_model(model_path: String) -> Result<(), String> {
 /// Generate text from the LLM
 #[tauri::command]
 pub async fn generate_text(
+    app: AppHandle,
     prompt: String,
     config: LLMConfig,
 ) -> Result<LLMResponse, String> {
@@ -299,8 +316,9 @@ pub async fn generate_text(
         "max_tokens": config.max_tokens
     })).map_err(|e| format!("Failed to serialize config: {}", e))?;
     
+    let bundled = python_bundle::resolve_bundled_python(&app);
     // Call Python helper to generate text (pass model_path as first arg)
-    let result_json = call_llama_helper("generate", &[model_path, &config_json], Some(&prompt))?;
+    let result_json = call_llama_helper(bundled, "generate", &[model_path, &config_json], Some(&prompt))?;
     let result: serde_json::Value = serde_json::from_str(&result_json)
         .map_err(|e| format!("Failed to parse Python response: {}", e))?;
     

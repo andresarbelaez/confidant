@@ -1,7 +1,9 @@
 // Embeddings - Generate embeddings using Python sentence-transformers
 
+use std::path::PathBuf;
 use std::process::Command;
 use std::io::Write;
+use tauri::AppHandle;
 
 /// Get path to embeddings helper script
 fn get_embeddings_helper_path() -> Result<std::path::PathBuf, String> {
@@ -29,27 +31,39 @@ fn get_embeddings_helper_path() -> Result<std::path::PathBuf, String> {
     Ok(script_path)
 }
 
-/// Call Python embeddings helper
-fn call_embeddings_helper(command: &str, stdin_data: Option<&str>) -> Result<String, String> {
-    let script_path = get_embeddings_helper_path()?;
-    
-    // Find Python (try venv first, then python3, then python)
-    let python_cmd = {
-        // Check for venv Python first
-        let venv_python = std::env::current_dir()
-            .ok()
-            .and_then(|dir| {
-                // Check for venv in project root (../../venv/bin/python3)
-                let project_root = dir
-                    .parent() // desktop/
-                    .and_then(|p| p.parent()); // project root
-                project_root.map(|root| root.join("venv").join("bin").join("python3"))
-            })
-            .filter(|p| p.exists());
-        
-        if let Some(venv_py) = venv_python {
-            if Command::new(&venv_py).arg("--version").output().is_ok() {
-                venv_py.to_string_lossy().to_string()
+/// Call Python embeddings helper.
+/// If `bundled` is Some((python_exe, scripts_dir)), use that Python and scripts_dir/embeddings_helper.py.
+fn call_embeddings_helper(
+    bundled: Option<(PathBuf, PathBuf)>,
+    command: &str,
+    stdin_data: Option<&str>,
+) -> Result<String, String> {
+    let (python_cmd, script_path) = if let Some((python_exe, scripts_dir)) = bundled {
+        let script = scripts_dir.join("embeddings_helper.py");
+        if !python_exe.exists() || !script.exists() {
+            return Err("Bundled Python or script not found.".to_string());
+        }
+        (python_exe.to_string_lossy().to_string(), script)
+    } else {
+        let script_path = get_embeddings_helper_path()?;
+        let python_cmd = {
+            let venv_python = std::env::current_dir()
+                .ok()
+                .and_then(|dir| {
+                    let project_root = dir.parent().and_then(|p| p.parent());
+                    project_root.map(|root| root.join("venv").join("bin").join("python3"))
+                })
+                .filter(|p| p.exists());
+            if let Some(venv_py) = venv_python {
+                if Command::new(&venv_py).arg("--version").output().is_ok() {
+                    venv_py.to_string_lossy().to_string()
+                } else if Command::new("python3").arg("--version").output().is_ok() {
+                    "python3".to_string()
+                } else if Command::new("python").arg("--version").output().is_ok() {
+                    "python".to_string()
+                } else {
+                    return Err("Python not found. Please install Python 3.".to_string());
+                }
             } else if Command::new("python3").arg("--version").output().is_ok() {
                 "python3".to_string()
             } else if Command::new("python").arg("--version").output().is_ok() {
@@ -57,16 +71,11 @@ fn call_embeddings_helper(command: &str, stdin_data: Option<&str>) -> Result<Str
             } else {
                 return Err("Python not found. Please install Python 3.".to_string());
             }
-        } else if Command::new("python3").arg("--version").output().is_ok() {
-            "python3".to_string()
-        } else if Command::new("python").arg("--version").output().is_ok() {
-            "python".to_string()
-        } else {
-            return Err("Python not found. Please install Python 3.".to_string());
-        }
+        };
+        (python_cmd, script_path)
     };
-    
-    let mut cmd = Command::new(python_cmd);
+
+    let mut cmd = Command::new(&python_cmd);
     cmd.arg(&script_path);
     cmd.arg(command);
     
@@ -102,8 +111,9 @@ fn call_embeddings_helper(command: &str, stdin_data: Option<&str>) -> Result<Str
 
 /// Generate embedding for a single text
 #[tauri::command]
-pub async fn generate_embedding(text: String) -> Result<Vec<f32>, String> {
-    let result_json = call_embeddings_helper("embed", Some(&text))?;
+pub async fn generate_embedding(app: AppHandle, text: String) -> Result<Vec<f32>, String> {
+    let bundled = crate::python_bundle::resolve_bundled_python(&app);
+    let result_json = call_embeddings_helper(bundled, "embed", Some(&text))?;
     let result: serde_json::Value = serde_json::from_str(&result_json)
         .map_err(|e| format!("Failed to parse Python response: {}", e))?;
     
@@ -129,11 +139,12 @@ pub async fn generate_embedding(text: String) -> Result<Vec<f32>, String> {
 
 /// Generate embeddings for multiple texts
 #[tauri::command]
-pub async fn generate_embeddings_batch(texts: Vec<String>) -> Result<Vec<Vec<f32>>, String> {
+pub async fn generate_embeddings_batch(app: AppHandle, texts: Vec<String>) -> Result<Vec<Vec<f32>>, String> {
+    let bundled = crate::python_bundle::resolve_bundled_python(&app);
     let texts_json = serde_json::to_string(&texts)
         .map_err(|e| format!("Failed to serialize texts: {}", e))?;
     
-    let result_json = call_embeddings_helper("batch", Some(&texts_json))?;
+    let result_json = call_embeddings_helper(bundled, "batch", Some(&texts_json))?;
     let result: serde_json::Value = serde_json::from_str(&result_json)
         .map_err(|e| format!("Failed to parse Python response: {}", e))?;
     

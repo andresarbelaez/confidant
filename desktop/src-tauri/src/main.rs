@@ -7,6 +7,7 @@ mod embeddings;
 mod user_management;
 mod cache;
 mod bundled_defaults;
+mod python_bundle;
 
 use llm::{initialize_model, generate_text, is_model_loaded, download_model, check_model_exists, get_app_data_dir, find_existing_models};
 use vector_store::{

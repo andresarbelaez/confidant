@@ -1,0 +1,2 @@
+# Placeholder so resources/ exists. For distribution, run the steps in desktop/BUNDLE_PYTHON.md
+# to add resources/python/ and resources/scripts/ before building.
