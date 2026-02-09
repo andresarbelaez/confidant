@@ -191,7 +191,7 @@ export default function CreateUserModal({ onUserCreated, onCancel }: CreateUserM
                   onClick={handleBack}
                   disabled={isCreating}
                 >
-                  {t('ui.back') || 'Back'}
+                  {t('ui.back')}
                 </button>
                 <button
                   type="submit"

@@ -32,9 +32,9 @@
 }
 
 .user-profile-card:hover .profile-avatar {
-  border-color: var(--color-border);
+  border-color: var(--color-primary);
   background: var(--color-surface);
-  color: var(--color-text);
+  color: var(--color-primary);
 }
 
 .user-profile-card.new-user .profile-avatar {
@@ -56,7 +56,7 @@
 }
 
 .user-profile-card:hover .profile-name {
-  color: var(--color-text);
+  color: var(--color-primary);
 }
 
 .user-profile-card.new-user:hover .profile-name {

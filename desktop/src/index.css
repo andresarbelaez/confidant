@@ -33,6 +33,10 @@
   --color-error-bg: rgba(239, 68, 68, 0.1);
   --color-error-border: rgba(239, 68, 68, 0.3);
   --color-error-text: #dc2626;
+  --color-danger-bg: #c53030;
+  --color-danger-text: #ffffff;
+  --color-danger-hover: #9b2c2c;
+  --color-danger-active: #822727;
   --color-warning-bg: rgba(156, 163, 175, 0.2);
   --color-warning-text: rgba(255, 255, 255, 0.7);
 
@@ -133,6 +137,10 @@ button:focus-visible {
     --color-success-bg: rgba(74, 222, 128, 0.15);
     --color-error-bg: rgba(239, 68, 68, 0.15);
     --color-error-border: rgba(239, 68, 68, 0.4);
+    --color-danger-bg: #b91c1c;
+    --color-danger-text: #ffffff;
+    --color-danger-hover: #991b1b;
+    --color-danger-active: #7f1d1d;
     --color-warning-bg: rgba(0, 0, 0, 0.05);
     --color-warning-text: rgba(0, 0, 0, 0.7);
     --color-assistant-bubble: #e8e8e8;

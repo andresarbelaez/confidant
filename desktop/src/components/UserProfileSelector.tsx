@@ -1,10 +1,8 @@
 import { useState, useEffect } from 'react';
 import { invoke } from '@tauri-apps/api/core';
-import { Settings } from 'lucide-react';
 import UserProfileCard from './UserProfileCard';
 import PasswordPrompt from './PasswordPrompt';
 import CreateUserModal from './CreateUserModal';
-import SetupModal from './SetupModal';
 import { useTranslation } from '../i18n/hooks/useTranslation';
 import './UserProfileSelector.css';
 
@@ -25,24 +23,9 @@ export default function UserProfileSelector({ onUserSelected }: UserProfileSelec
   const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
   const [showCreateUser, setShowCreateUser] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
-  const [showSettings, setShowSettings] = useState(false);
-  const [globalKBReady, setGlobalKBReady] = useState(false);
-
   useEffect(() => {
     loadUsers();
-    checkGlobalKB();
   }, []);
-
-  const checkGlobalKB = async () => {
-    try {
-      const stats = await invoke<{ document_count: number }>('get_collection_stats_by_name', {
-        collectionName: 'dant_knowledge_global'
-      });
-      setGlobalKBReady(stats.document_count > 0);
-    } catch (err) {
-      console.error('Failed to check global KB:', err);
-    }
-  };
 
   const loadUsers = async () => {
     try {
@@ -85,21 +68,10 @@ export default function UserProfileSelector({ onUserSelected }: UserProfileSelec
     );
   }
 
-  const handleGlobalKBReady = () => {
-    setGlobalKBReady(true);
-  };
-
   return (
     <div className="user-profile-selector">
       <div className="selector-header">
         <h1 className="selector-title">{t('ui.whoIsUsing')}</h1>
-        <button
-          className="settings-button"
-          onClick={() => setShowSettings(true)}
-          title={t('ui.settings')}
-        >
-          <Settings size={20} />
-        </button>
       </div>
       
       <div className="profiles-grid">
@@ -121,7 +93,7 @@ export default function UserProfileSelector({ onUserSelected }: UserProfileSelec
       {showPasswordPrompt && selectedUserId && (
         <PasswordPrompt
           userId={selectedUserId}
-          userName={users.find(u => u.id === selectedUserId)?.name || 'User'}
+          userName={users.find(u => u.id === selectedUserId)?.name || t('ui.userFallback')}
           onVerified={handlePasswordVerified}
           onCancel={() => {
             setShowPasswordPrompt(false);
@@ -137,16 +109,6 @@ export default function UserProfileSelector({ onUserSelected }: UserProfileSelec
         />
       )}
 
-      {showSettings && (
-        <SetupModal
-          isOpen={showSettings}
-          onClose={() => setShowSettings(false)}
-          onModelReady={() => {}}
-          onKBReady={handleGlobalKBReady}
-          title={t('ui.settings')}
-          showProceedButton={false}
-        />
-      )}
     </div>
   );
 }

@@ -260,7 +260,7 @@ export default function SetupScreen({
 
                 {modelError && (
                   <div className="error-message">
-                    <strong>Error:</strong> {modelError}
+                    <strong>{t('ui.errorLabel')}:</strong> {modelError}
                   </div>
                 )}
 
@@ -390,7 +390,7 @@ export default function SetupScreen({
 
               {kbError && (
                 <div className="error-message">
-                  <strong>Error:</strong> {kbError}
+                  <strong>{t('ui.errorLabel')}:</strong> {kbError}
                 </div>
               )}
 

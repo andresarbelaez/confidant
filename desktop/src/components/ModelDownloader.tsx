@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { invoke } from '@tauri-apps/api/core';
+import { useTranslation } from '../i18n/hooks/useTranslation';
 import './ModelDownloader.css';
 
 type InitializationState = 'not-initialized' | 'initializing' | 'initialized' | 'error';
 
 export default function ModelDownloader() {
+  const { t } = useTranslation(null);
   const [modelPath, setModelPath] = useState('');
   const [initState, setInitState] = useState<InitializationState>('not-initialized');
   const [error, setError] = useState<string | null>(null);
@@ -48,11 +50,11 @@ export default function ModelDownloader() {
 
   return (
     <div className="model-downloader">
-      <h2>AI model</h2>
+      <h2>{t('setup.aiModel')}</h2>
       
       {error && (
         <div className="error-message">
-          <strong>Error:</strong>
+          <strong>{t('ui.errorLabel')}:</strong>
           <pre style={{ whiteSpace: 'pre-wrap', fontFamily: 'inherit', marginTop: '0.5rem' }}>{error}</pre>
           <p style={{ marginTop: '0.75rem', fontSize: '0.9rem', opacity: 0.8 }}>
             Check that the path is correct and the file exists. You need Python and llama-cpp-python installed.
@@ -61,13 +63,13 @@ export default function ModelDownloader() {
       )}
 
       <div className="model-selector">
-        <label htmlFor="model-path">Path to model file</label>
+        <label htmlFor="model-path">{t('setup.pathToModelFile')}</label>
         <input
           id="model-path"
           type="text"
           value={modelPath}
           onChange={(e) => setModelPath(e.target.value)}
-          placeholder="/path/to/model.gguf"
+          placeholder={t('setup.pathPlaceholder')}
           disabled={initState === 'initializing'}
           style={{
             width: '100%',
@@ -87,11 +89,11 @@ export default function ModelDownloader() {
 
       <div className="model-info">
         <p>
-          <strong>Status:</strong>{' '}
+          <strong>{t('setup.statusLabel')}:</strong>{' '}
           <span className={`status-badge ${initState === 'initialized' ? 'ready' : initState === 'initializing' ? 'initializing' : 'not-ready'}`}>
-            {initState === 'initialized' ? '✓ Model Ready' : 
-             initState === 'initializing' ? 'Initializing...' : 
-             'Not Initialized'}
+            {initState === 'initialized' ? `✓ ${t('setup.modelReady')}` : 
+             initState === 'initializing' ? t('setup.initializing') : 
+             t('setup.notInitialized')}
           </span>
         </p>
         {isModelLoaded && (
@@ -110,23 +112,19 @@ export default function ModelDownloader() {
           {initState === 'initializing' ? (
             <>
               <span className="button-spinner"></span>
-              Initializing...
+              {t('setup.initializing')}
             </>
           ) : initState === 'initialized' ? (
-            'Model Ready'
+            t('setup.modelReady')
           ) : (
-            'Initialize Model'
+            t('setup.initializeModel')
           )}
         </button>
       </div>
 
       <div className="info-note">
-        <p>
-          <strong>How it works:</strong> Enter the path to your GGUF model file and click Initialize Model. The model loads into memory for chat.
-        </p>
-        <p>
-          <strong>Recommended:</strong> Llama-3.2-3B-Instruct (Q4_0 or Q4_K_M). <a href="https://huggingface.co/bartowski/Llama-3.2-3B-Instruct-GGUF" target="_blank" rel="noopener noreferrer">Download from HuggingFace</a>.
-        </p>
+        <p>{t('setup.howItWorksModel')}</p>
+        <p>{t('setup.recommendedModel')} <a href="https://huggingface.co/bartowski/Llama-3.2-3B-Instruct-GGUF" target="_blank" rel="noopener noreferrer">{t('setup.downloadFromHuggingFace')}</a>.</p>
       </div>
     </div>
   );

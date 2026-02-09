@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "bash scripts/tauri-dev.sh",
+    "seed-defaults": "node scripts/seed-defaults.mjs",
+    "seed-defaults-lite": "node scripts/seed-defaults-lite.mjs",
     "vite": "vite",
     "build:frontend": "vite build",
     "build": "bash scripts/tauri-build.sh",

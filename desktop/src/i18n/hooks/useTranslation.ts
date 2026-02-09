@@ -4,7 +4,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { invoke } from '@tauri-apps/api/core';
-import { t as translate, setLanguage, getCurrentLanguage, initializeI18n, LanguageCode, SUPPORTED_LANGUAGES } from '../index';
+import { t as translate, setLanguage, getCurrentLanguage, initializeI18n, subscribeToLanguageChange, LanguageCode, SUPPORTED_LANGUAGES } from '../index';
 
 export interface UseTranslationReturn {
   t: (key: string, params?: Record<string, string | number>) => string;
@@ -30,6 +30,14 @@ export function useTranslation(userId?: string | null): UseTranslationReturn {
     };
     init();
   }, [userId]);
+
+  // Re-render when language is changed elsewhere (e.g. User Settings modal)
+  useEffect(() => {
+    const unsubscribe = subscribeToLanguageChange((newLang) => {
+      setLang(newLang);
+    });
+    return unsubscribe;
+  }, []);
 
   // Translation function
   const t = useCallback((key: string, params?: Record<string, string | number>) => {

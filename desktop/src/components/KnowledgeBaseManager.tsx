@@ -1,9 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { invoke } from '@tauri-apps/api/core';
+import { useTranslation } from '../i18n/hooks/useTranslation';
 import { KnowledgeBaseLoader } from '../knowledge/knowledge-loader';
 import './KnowledgeBaseManager.css';
 
 export default function KnowledgeBaseManager() {
+  const { t } = useTranslation(null);
   const [isInitialized, setIsInitialized] = useState(false);
   const [documentCount, setDocumentCount] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -84,7 +86,7 @@ export default function KnowledgeBaseManager() {
   };
 
   const handleClear = async () => {
-    if (!confirm('Clear all documents? This cannot be undone.')) {
+    if (!confirm(t('setup.clearConfirm'))) {
       return;
     }
 
@@ -101,7 +103,7 @@ export default function KnowledgeBaseManager() {
       <div className="knowledge-base-manager">
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '2rem' }}>
           <div className="loading-spinner"></div>
-          <p style={{ marginTop: '1rem' }}>Preparing knowledge base…</p>
+          <p style={{ marginTop: '1rem' }}>{t('setup.preparingKnowledgeBase')}</p>
         </div>
       </div>
     );
@@ -109,11 +111,11 @@ export default function KnowledgeBaseManager() {
 
   return (
     <div className="knowledge-base-manager">
-      <h2>Knowledge base</h2>
+      <h2>{t('setup.knowledgeBase')}</h2>
       
       {error && (
         <div className="error-message">
-          <strong>Error:</strong>
+          <strong>{t('ui.errorLabel')}:</strong>
           <p style={{ marginTop: '0.5rem', marginBottom: 0 }}>{error}</p>
           <p style={{ marginTop: '0.75rem', fontSize: '0.9rem', opacity: 0.8 }}>
             Use a valid knowledge base JSON file. You need Python, ChromaDB, and sentence-transformers installed.
@@ -122,25 +124,25 @@ export default function KnowledgeBaseManager() {
       )}
 
       <div className="kb-stats">
-        <h3>Status</h3>
+        <h3>{t('setup.statusLabel')}</h3>
         <div className="stat-grid">
           <div className="stat-item">
-            <span className="stat-label">Documents</span>
+            <span className="stat-label">{t('setup.documents')}</span>
             <span className="stat-value">{documentCount.toLocaleString()}</span>
           </div>
           <div className="stat-item">
-            <span className="stat-label">Status</span>
-            <span className="stat-value" style={{ color: '#4ade80' }}>Ready</span>
+            <span className="stat-label">{t('setup.statusLabel')}</span>
+            <span className="stat-value" style={{ color: '#4ade80' }}>{t('setup.readyStatus')}</span>
           </div>
         </div>
       </div>
 
       <div className="kb-actions">
-        <h3>Load knowledge base</h3>
+        <h3>{t('setup.loadKnowledgeBase')}</h3>
         
         <div className="load-option">
-          <h4>From file</h4>
-          <p>Upload a .json or .zst package file.</p>
+          <h4>{t('setup.knowledgeBaseFromFile')}</h4>
+          <p>{t('setup.uploadPackageFile')}</p>
           <input
             ref={fileInputRef}
             type="file"
@@ -154,17 +156,17 @@ export default function KnowledgeBaseManager() {
             disabled={isLoading}
             className="upload-button"
           >
-            Choose File
+            {t('setup.chooseFile')}
           </button>
         </div>
 
         <div className="load-option">
-          <h4>From URL</h4>
-          <p>Enter a URL to download a knowledge base file.</p>
+          <h4>{t('setup.knowledgeBaseFromUrl')}</h4>
+          <p>{t('setup.enterUrlToDownload')}</p>
           <div className="url-input-group">
             <input
               type="url"
-              placeholder="https://example.com/knowledge-base.json"
+              placeholder={t('setup.urlPlaceholder')}
               disabled={isLoading}
               className="url-input"
               id="kb-url-input"
@@ -179,7 +181,7 @@ export default function KnowledgeBaseManager() {
               disabled={isLoading}
               className="download-button"
             >
-              Download
+              {t('setup.downloadButton')}
             </button>
           </div>
         </div>
@@ -192,34 +194,30 @@ export default function KnowledgeBaseManager() {
                 style={{ width: `${loadProgress * 100}%` }}
               />
             </div>
-            <p>Loading… {Math.round(loadProgress * 100)}%</p>
+            <p>{t('setup.loadingPercent', { percent: Math.round(loadProgress * 100).toString() })}</p>
           </div>
         )}
       </div>
 
       {documentCount > 0 && (
         <div className="kb-management">
-          <h3>Management</h3>
+          <h3>{t('setup.management')}</h3>
           <button
             onClick={handleClear}
             disabled={isLoading}
             className="clear-button"
           >
-            Clear all documents
+            {t('setup.clearAllDocuments')}
           </button>
           <p className="warning-text">
-            This removes all documents and cannot be undone.
+            {t('setup.warningRemoveDocuments')}
           </p>
         </div>
       )}
 
       <div className="info-note">
-        <p>
-          <strong>Format:</strong> Knowledge bases are JSON (or .zst) files with documents and embeddings.
-        </p>
-        <p>
-          ZSTD support is coming soon; use uncompressed JSON for now.
-        </p>
+        <p>{t('setup.formatKnowledgeBase')}</p>
+        <p>{t('setup.zstdComingSoon')}</p>
       </div>
     </div>
   );

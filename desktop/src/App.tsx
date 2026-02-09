@@ -5,17 +5,18 @@ import LoadingScreen from './components/LoadingScreen';
 import UserProfileSelector from './components/UserProfileSelector';
 import ErrorScreen from './components/ErrorScreen';
 import { useAppState } from './hooks/useAppState';
+import { useTranslation } from './i18n/hooks/useTranslation';
 import { clearAllChatHistory } from './utils/clearChatHistory';
 import './App.css';
 
 function App() {
+  const { t } = useTranslation(null);
   const [loadingComplete, setLoadingComplete] = useState(false);
   const {
     view,
     setupStatus,
     showSettingsModal,
     transitionToChat,
-    openSettings,
     closeSettings,
     switchProfile,
     handleModelReady,
@@ -52,8 +53,19 @@ function App() {
   switch (view.type) {
     case 'user-selection':
       return (
-        <div className="App">
+        <div className={`App ${showSettingsModal ? 'dimmed' : ''}`}>
           <UserProfileSelector onUserSelected={handleUserSelected} />
+          {showSettingsModal && (
+            <SetupModal
+              isOpen={showSettingsModal}
+              onClose={closeSettings}
+              onModelReady={handleModelReady}
+              onKBReady={handleGlobalKBReady}
+              title={t('ui.settings')}
+              showProceedButton={false}
+              userId={null}
+            />
+          )}
         </div>
       );
 
@@ -67,9 +79,9 @@ function App() {
               modelReady={setupStatus.modelReady}
               kbReady={setupStatus.globalKBReady}
               chatVisible={!showSettingsModal}
-              onOpenSettings={openSettings}
               userId={view.userId}
               onSwitchProfile={switchProfile}
+              onLogOut={switchProfile}
             />
           </main>
 
@@ -79,7 +91,7 @@ function App() {
               onClose={closeSettings}
               onModelReady={handleModelReady}
               onKBReady={handleGlobalKBReady}
-              title="Settings"
+              title={t('ui.settings')}
               showProceedButton={false}
               userId={view.userId}
             />

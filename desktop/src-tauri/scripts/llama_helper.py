@@ -74,12 +74,13 @@ def generate_text(model_path: str, prompt: str, temperature: float, top_p: float
         # Remove "User:" from stop sequences as it might match too early
         # Only stop on obvious continuation patterns
         # Use stop sequences to prevent the model from generating conversation format
-        # Stop on "User:" (case-insensitive) to prevent it from continuing the conversation format
         stop_sequences = [
             "User:", "\nUser:", "User: ", "\n\nUser:",
             "user:", "\nuser:", "user: ", "\n\nuser:",
             "\n\nAssistant:", "\nAssistant:", " Assistant:",
-            "\n\nassistant:", "\nassistant:", " assistant:"
+            "\n\nassistant:", "\nassistant:", " assistant:",
+            "Doctor:", "\nDoctor:", "Doctor: ", "\n\nDoctor:",
+            "Patient:", "\nPatient:", "Patient: ", "\n\nPatient:",
         ]
         
         response = _model(

@@ -4,35 +4,34 @@ import './ChatSidebar.css';
 interface ChatSidebarProps {
   userId: string;
   onOpenSettings?: () => void;
+  onOpenUserSettings?: () => void;
+  onLogOut?: () => void;
 }
 
-export default function ChatSidebar({ userId, onOpenSettings }: ChatSidebarProps) {
+export default function ChatSidebar({ userId, onOpenSettings, onOpenUserSettings, onLogOut }: ChatSidebarProps) {
   const { t } = useTranslation(userId);
 
   return (
     <div className="chat-sidebar">
       <div className="sidebar-content">
-        {onOpenSettings && (
+        {onLogOut && (
           <button
             type="button"
             className="sidebar-settings-label"
-            onClick={onOpenSettings}
+            onClick={onLogOut}
+          >
+            {t('ui.logOut')}
+          </button>
+        )}
+        {onOpenUserSettings && (
+          <button
+            type="button"
+            className="sidebar-settings-label"
+            onClick={onOpenUserSettings}
           >
             {t('ui.settings')}
           </button>
         )}
-        
-        <div className="sidebar-divider" />
-        
-        <div className="sidebar-section">
-          <div className="sidebar-section-label">{t('ui.chatHistory')}</div>
-          <div className="chat-history-list">
-            {/* Currently showing single chat history for the user */}
-            <div className="chat-history-item active">
-              {t('ui.currentChat')}
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );

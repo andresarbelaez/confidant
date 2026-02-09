@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { invoke } from '@tauri-apps/api/core';
+import { t } from '../i18n';
 
 export type AppView =
   | { type: 'loading' }
@@ -131,6 +132,16 @@ export function useAppState() {
     }));
   }, []);
 
+  /** Go to user-selection and open Settings (e.g. from the "defaults not found" error). */
+  const transitionToUserSelectionWithSettings = useCallback(async () => {
+    await invoke('set_current_user', { userId: null }).catch(console.error);
+    setState(prev => ({
+      ...prev,
+      view: { type: 'user-selection' },
+      showSettingsModal: true,
+    }));
+  }, []);
+
   const transitionToChat = useCallback(async (userId: string) => {
     // Set current user in backend
     await invoke('set_current_user', { userId }).catch(console.error);
@@ -216,9 +227,9 @@ export function useAppState() {
 
           if (!setupStatus.modelReady || !setupStatus.globalKBReady) {
             transitionToError(
-              "Confidant couldn't find the default model or knowledge base. Reinstall the app or open Settings to choose a model.",
+              t('errors.bundledDefaultsNotFound'),
               undefined,
-              () => transitionToUserSelection()
+              () => transitionToUserSelectionWithSettings()
             );
             return;
           }
@@ -234,7 +245,7 @@ export function useAppState() {
         }
       } catch (err) {
         console.error('Failed to initialize app:', err);
-        transitionToError('Failed to initialize application. Please try again.', () => {
+        transitionToError(t('errors.failedToInitialize'), () => {
           initializationRef.current = false;
           initialize();
         });

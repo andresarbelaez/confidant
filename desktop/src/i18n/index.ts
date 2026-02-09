@@ -30,6 +30,17 @@ export const SUPPORTED_LANGUAGES: Language[] = [
 let translationsCache: Record<string, any> = {};
 let currentLanguage: LanguageCode = 'en';
 
+// Listeners notified when setLanguage() completes (so UI can re-render)
+const languageChangeListeners: Array<(newLang: LanguageCode) => void> = [];
+
+export function subscribeToLanguageChange(callback: (newLang: LanguageCode) => void): () => void {
+  languageChangeListeners.push(callback);
+  return () => {
+    const i = languageChangeListeners.indexOf(callback);
+    if (i !== -1) languageChangeListeners.splice(i, 1);
+  };
+}
+
 /**
  * Detect system language from browser
  */
@@ -120,6 +131,7 @@ export async function setLanguage(lang: LanguageCode, userId?: string | null): P
   // Load translations
   translationsCache = await loadTranslations(lang);
   currentLanguage = lang;
+  languageChangeListeners.forEach((fn) => fn(lang));
 }
 
 /**

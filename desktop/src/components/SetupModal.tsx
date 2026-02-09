@@ -239,7 +239,7 @@ export default function SetupModal({
         <div className="modal-header">
           <h2>{title}</h2>
           {!showProceedButton && onClose && (
-            <button className="modal-close" onClick={onClose} aria-label="Close">
+            <button className="modal-close" onClick={onClose} aria-label={t('ui.close')}>
               ×
             </button>
           )}
@@ -303,7 +303,7 @@ export default function SetupModal({
 
               {modelError && (
                 <div className="error-message">
-                  <strong>Error:</strong> {modelError}
+                  <strong>{t('ui.errorLabel')}:</strong> {modelError}
                 </div>
               )}
 
@@ -433,7 +433,7 @@ export default function SetupModal({
 
               {kbError && (
                 <div className="error-message">
-                  <strong>Error:</strong> {kbError}
+                  <strong>{t('ui.errorLabel')}:</strong> {kbError}
                 </div>
               )}
 

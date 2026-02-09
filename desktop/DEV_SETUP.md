@@ -2,6 +2,15 @@
 
 This describes how to get the same “defaults ready” experience locally as a user who downloads the desktop app with bundled model and KB, **without** shipping a real bundle.
 
+## Quick start: avoid the error screen
+
+From the `desktop/` directory, run either:
+
+- **Full default model (~4.4 GB):** `npm run seed-defaults`
+- **Lightweight model for testing (~2.5 GB):** `npm run seed-defaults-lite`
+
+Both download to `data/models/` (the same path the app uses). The app will find it on startup and will auto-ingest the knowledge base from `desktop/test_knowledge_base.json` on first run. After the download finishes, run `npm run dev` and the app should open directly to the user selector.
+
 ## What the app does on startup
 
 On launch, the app calls `ensure_bundled_defaults_initialized`, which:

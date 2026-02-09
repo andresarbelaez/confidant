@@ -35,13 +35,18 @@ pub struct BundledDefaultsStatus {
 }
 
 /// Find project root (directory that contains "data" and ideally "desktop") for dev fallback.
+/// Prefers the actual project root (where both data/ and desktop/ exist) over nested data/ directories.
 fn find_dev_data_dir() -> Option<PathBuf> {
     let mut current = std::env::current_dir().ok()?;
+    let mut candidates = Vec::new();
+    
+    // Collect all directories with data/models
     for _ in 0..6 {
         let data_dir = current.join("data");
         let models_dir = data_dir.join("models");
         if models_dir.exists() {
-            return Some(data_dir);
+            let is_project_root = current.join("desktop").exists() && current.join("data").exists();
+            candidates.push((is_project_root, data_dir));
         }
         if let Some(parent) = current.parent() {
             current = parent.to_path_buf();
@@ -49,7 +54,12 @@ fn find_dev_data_dir() -> Option<PathBuf> {
             break;
         }
     }
-    None
+    
+    // Prefer project root (where both data/ and desktop/ exist)
+    candidates.iter()
+        .find(|(is_root, _)| *is_root)
+        .map(|(_, path)| path.clone())
+        .or_else(|| candidates.first().map(|(_, path)| path.clone()))
 }
 
 /// Resolve the path to the bundled default model file.
@@ -82,10 +92,19 @@ fn resolve_bundled_model_path(app: &AppHandle) -> Option<PathBuf> {
             }
         }
         // Any .gguf in models (e.g. after one-time download via Settings)
+        // Skip files that are too small (likely corrupted/incomplete downloads)
         if let Ok(entries) = fs::read_dir(&models_dir) {
             for e in entries.flatten() {
                 let path = e.path();
                 if path.extension().map_or(false, |e| e == "gguf") {
+                    // Check file size - skip files smaller than 1GB (likely incomplete)
+                    if let Ok(metadata) = fs::metadata(&path) {
+                        let size_gb = metadata.len() as f64 / (1024.0 * 1024.0 * 1024.0);
+                        if size_gb < 1.0 {
+                            eprintln!("[Bundled] Skipping model file (too small: {:.2} GB): {}", size_gb, path.display());
+                            continue;
+                        }
+                    }
                     return Some(path);
                 }
             }

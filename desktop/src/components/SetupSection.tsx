@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { MODEL_OPTIONS, ModelOption, getDefaultModel } from '../config/model-options';
 import { KB_OPTIONS, KBOption, getDefaultKB } from '../config/kb-options';
+import { useTranslation } from '../i18n/hooks/useTranslation';
 import './SetupSection.css';
 
 type DownloadStatus = 'not-started' | 'downloading' | 'downloaded' | 'error' | 'checking';
@@ -12,6 +13,7 @@ interface SetupSectionProps {
 }
 
 export default function SetupSection({ onModelReady, onKBReady }: SetupSectionProps) {
+  const { t } = useTranslation(null);
   const [selectedModel, setSelectedModel] = useState<ModelOption>(getDefaultModel());
   const [selectedKB, setSelectedKB] = useState<KBOption>(getDefaultKB());
   
@@ -198,17 +200,15 @@ export default function SetupSection({ onModelReady, onKBReady }: SetupSectionPr
   return (
     <div className="setup-section">
       <div className="setup-header">
-        <h2>Get started with Confidant</h2>
+        <h2>{t('setup.getStartedWithConfidant')}</h2>
         <div className="privacy-info">
-          <p>
-            Everything runs on your device—your conversations and data never leave your computer. This one-time setup downloads the AI model and knowledge base you need.
-          </p>
+          <p>{t('setup.privacyInfo')}</p>
         </div>
       </div>
 
       <div className="setup-selectors">
         <div className="selector-group">
-          <label htmlFor="model-selector">AI Model</label>
+          <label htmlFor="model-selector">{t('setup.aiModel')}</label>
           <select
             id="model-selector"
             value={selectedModel.id}
@@ -229,11 +229,11 @@ export default function SetupSection({ onModelReady, onKBReady }: SetupSectionPr
           
           <div className="selector-status">
             <span className={`status-badge ${modelStatus}`}>
-              {modelStatus === 'checking' && 'Checking...'}
-              {modelStatus === 'not-started' && 'Not Downloaded'}
-              {modelStatus === 'downloading' && 'Downloading...'}
-              {modelStatus === 'downloaded' && '✓ Ready'}
-              {modelStatus === 'error' && '✗ Error'}
+              {modelStatus === 'checking' && t('setup.checking')}
+              {modelStatus === 'not-started' && t('setup.notDownloaded')}
+              {modelStatus === 'downloading' && t('setup.downloading')}
+              {modelStatus === 'downloaded' && t('setup.ready')}
+              {modelStatus === 'error' && t('setup.error')}
             </span>
           </div>
 
@@ -248,26 +248,26 @@ export default function SetupSection({ onModelReady, onKBReady }: SetupSectionPr
 
           {modelError && (
             <div className="error-message">
-              <strong>Error:</strong> {modelError}
+              <strong>{t('ui.errorLabel')}:</strong> {modelError}
             </div>
           )}
 
           {existingModels.length > 0 && !showExistingModels && modelStatus !== 'downloading' && (
             <div className="existing-models-notice">
-              <p>We found {existingModels.length} model file{existingModels.length > 1 ? 's' : ''} on your computer.</p>
+              <p>{t('setup.foundModels', { count: existingModels.length.toString(), plural: existingModels.length > 1 ? 's' : '' })}</p>
               <button
                 onClick={() => setShowExistingModels(true)}
                 className="browse-button"
                 type="button"
               >
-                {modelStatus === 'downloaded' ? 'Switch Model' : 'Use Existing Model'}
+                {modelStatus === 'downloaded' ? t('setup.switchModel') : t('setup.useExistingModel')}
               </button>
             </div>
           )}
 
           {showExistingModels && (
             <div className="existing-models-list">
-              <h4>Choose a model already on your computer</h4>
+              <h4>{t('setup.chooseModelAlreadyOnComputer')}</h4>
               <select
                 className="existing-model-selector"
                 onChange={async (e) => {
@@ -297,7 +297,7 @@ export default function SetupSection({ onModelReady, onKBReady }: SetupSectionPr
                   }
                 }}
               >
-                <option value="">Choose a model…</option>
+                <option value="">{t('setup.chooseModelOption')}</option>
                 {existingModels.map((path, idx) => {
                   const filename = path.split('/').pop() || path;
                   // Show file size if available
@@ -313,7 +313,7 @@ export default function SetupSection({ onModelReady, onKBReady }: SetupSectionPr
                 className="cancel-button"
                 type="button"
               >
-                Cancel
+                {t('ui.cancel')}
               </button>
             </div>
           )}
@@ -327,19 +327,19 @@ export default function SetupSection({ onModelReady, onKBReady }: SetupSectionPr
               {modelStatus === 'downloading' ? (
                 <>
                   <span className="button-spinner"></span>
-                  Downloading...
+                  {t('setup.downloading')}
                 </>
               ) : modelStatus === 'downloaded' ? (
-                '✓ Downloaded'
+                t('setup.downloaded')
               ) : (
-                'Download Model'
+                t('setup.downloadModel')
               )}
             </button>
           )}
         </div>
 
         <div className="selector-group">
-          <label htmlFor="kb-selector">Knowledge Base</label>
+          <label htmlFor="kb-selector">{t('setup.knowledgeBase')}</label>
           <select
             id="kb-selector"
             value={selectedKB.id}
@@ -361,11 +361,11 @@ export default function SetupSection({ onModelReady, onKBReady }: SetupSectionPr
           
           <div className="selector-status">
             <span className={`status-badge ${kbStatus}`}>
-              {kbStatus === 'checking' && 'Checking...'}
-              {kbStatus === 'not-started' && 'Not Downloaded'}
-              {kbStatus === 'downloading' && 'Downloading...'}
-              {kbStatus === 'downloaded' && '✓ Ready'}
-              {kbStatus === 'error' && '✗ Error'}
+              {kbStatus === 'checking' && t('setup.checking')}
+              {kbStatus === 'not-started' && t('setup.notDownloaded')}
+              {kbStatus === 'downloading' && t('setup.downloading')}
+              {kbStatus === 'downloaded' && t('setup.ready')}
+              {kbStatus === 'error' && t('setup.error')}
             </span>
           </div>
 
@@ -380,7 +380,7 @@ export default function SetupSection({ onModelReady, onKBReady }: SetupSectionPr
 
           {kbError && (
             <div className="error-message">
-              <strong>Error:</strong> {kbError}
+              <strong>{t('ui.errorLabel')}:</strong> {kbError}
             </div>
           )}
 
@@ -392,14 +392,14 @@ export default function SetupSection({ onModelReady, onKBReady }: SetupSectionPr
             {kbStatus === 'downloading' ? (
               <>
                 <span className="button-spinner"></span>
-                Downloading...
+                {t('setup.downloading')}
               </>
             ) : kbStatus === 'downloaded' ? (
-              '✓ Downloaded'
+              t('setup.downloaded')
             ) : !selectedKB.url ? (
-              'Coming Soon'
+              t('setup.comingSoon')
             ) : (
-              'Download Knowledge Base'
+              t('setup.downloadKnowledgeBase')
             )}
           </button>
         </div>

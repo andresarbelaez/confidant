@@ -7,6 +7,20 @@ import { invoke } from '@tauri-apps/api/core';
 import { getCachedResponse, cacheResponse, normalizeQuery, initializeCache } from '../utils/response-cache';
 import { LanguageCode } from '../i18n';
 
+/** Language code to display name for system prompt (model responds in this language) */
+const LANGUAGE_DISPLAY_NAMES: Record<LanguageCode, string> = {
+  en: 'English',
+  es: 'Spanish',
+  fr: 'French',
+  de: 'German',
+  it: 'Italian',
+  pt: 'Portuguese',
+  ja: 'Japanese',
+  zh: 'Chinese',
+  ko: 'Korean',
+  ru: 'Russian',
+};
+
 export interface AgentResponse {
   response: string;
   sources?: Array<{ id: string; text: string; score: number }>;
@@ -181,8 +195,8 @@ export class DantAgent {
       // Import i18n for first message
       const i18n = await import('../i18n');
       
-      // Ensure i18n is initialized for this language
-      await i18n.initializeI18n(null);
+      // Ensure i18n is initialized: user language when userId present, else app language
+      await i18n.initializeI18n(options.userId ?? null);
       
       // Use i18n for first messages
       const hardcodedMessages = [
@@ -207,7 +221,9 @@ export class DantAgent {
 
     // For subsequent messages, use normal LLM generation
     // Use a clear prompt format that encourages direct, concise responses
-    const systemContext = `You are Confidant, a helpful AI assistant for health questions. Be concise, friendly, and accurate. Keep responses brief (2-3 sentences when possible). Remember: you're not a substitute for professional medical advice. Respond directly to the user's question without generating example conversations or meta-dialogue.`;
+    const languageName = LANGUAGE_DISPLAY_NAMES[language] ?? 'English';
+    const languageInstruction = ` Always respond in ${languageName}. The user's preferred language is ${languageName}.`;
+    const systemContext = `You are Confidant, a helpful AI assistant for health questions. Be concise, friendly, and accurate. Keep responses brief (2-3 sentences when possible). Remember: you're not a substitute for professional medical advice. Respond directly to the user's question without generating example conversations or meta-dialogue.${languageInstruction}`;
 
     // Build conversation history for context (reduced for faster processing)
     let conversationContext = '';

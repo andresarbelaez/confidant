@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from '../i18n/hooks/useTranslation';
 import './NetworkMonitor.css';
 
 interface NetworkActivity {
@@ -8,6 +9,7 @@ interface NetworkActivity {
 }
 
 export default function NetworkMonitor() {
+  const { t } = useTranslation(null);
   const [activity, setActivity] = useState<NetworkActivity>({
     bytesTransmitted: 0,
     requestsBlocked: 0,
@@ -50,32 +52,32 @@ export default function NetworkMonitor() {
       <div className="network-status">
         <div className={`status-indicator ${isOnline ? 'online' : 'offline'}`}>
           <span className="status-dot"></span>
-          <span>{isOnline ? 'Online' : 'Offline'}</span>
+          <span>{isOnline ? t('network.online') : t('network.offline')}</span>
         </div>
       </div>
       
       <div className="network-stats">
         <div className="stat-item">
-          <span className="stat-label">Bytes Transmitted:</span>
+          <span className="stat-label">{t('network.bytesTransmitted')}</span>
           <span className={`stat-value ${activity.bytesTransmitted === 0 ? 'zero' : 'non-zero'}`}>
             {formatBytes(activity.bytesTransmitted)}
           </span>
         </div>
         
         <div className="stat-item">
-          <span className="stat-label">Requests Blocked:</span>
+          <span className="stat-label">{t('network.requestsBlocked')}</span>
           <span className="stat-value">{activity.requestsBlocked}</span>
         </div>
         
         <div className="stat-item">
-          <span className="stat-label">Requests Allowed:</span>
+          <span className="stat-label">{t('network.requestsAllowed')}</span>
           <span className="stat-value">{activity.requestsAllowed}</span>
         </div>
       </div>
 
       {activity.bytesTransmitted === 0 && (
         <div className="privacy-badge">
-          ✓ Zero bytes transmitted - Your queries are private
+          {t('network.zeroBytesPrivacy')}
         </div>
       )}
     </div>

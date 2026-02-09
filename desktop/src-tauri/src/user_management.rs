@@ -5,8 +5,8 @@ use std::sync::Mutex;
 use std::fs;
 use std::path::PathBuf;
 use bcrypt::{hash, verify, DEFAULT_COST};
-use uuid::Uuid;
 use chrono::Utc;
+use uuid::Uuid;
 
 // Global state for user management
 struct UserManagementState {
@@ -115,10 +115,67 @@ fn get_user_dir_path(user_id: &str) -> Result<PathBuf, String> {
     Ok(users_dir.join(user_id))
 }
 
-/// Get chat history file path for a user
+/// Path to single chat file per user.
 fn get_chat_history_path(user_id: &str) -> Result<PathBuf, String> {
     let user_dir = get_user_dir_path(user_id)?;
     Ok(user_dir.join("chats.json"))
+}
+
+/// One-time reverse migration: if user has multi-chat format (chat_list.json + chats/*.json),
+/// take the most recent chat's messages, write to chats.json, then remove the new format.
+#[derive(Debug, Deserialize)]
+struct ChatSummaryLegacy {
+    id: String,
+    updated_at: String,
+}
+
+#[derive(Debug, Deserialize)]
+struct ChatListLegacy {
+    chats: Vec<ChatSummaryLegacy>,
+}
+
+fn migrate_multi_chat_to_single_if_needed(user_id: &str) -> Result<(), String> {
+    let user_dir = get_user_dir_path(user_id)?;
+    let list_path = user_dir.join("chat_list.json");
+    if !list_path.exists() {
+        return Ok(());
+    }
+    let content = fs::read_to_string(&list_path)
+        .map_err(|e| format!("Failed to read chat list: {}", e))?;
+    let list: ChatListLegacy = serde_json::from_str(&content)
+        .map_err(|e| format!("Failed to parse chat list: {}", e))?;
+    let mut chats = list.chats;
+    chats.sort_by(|a, b| b.updated_at.cmp(&a.updated_at));
+    let latest_id = chats.first().map(|c| c.id.as_str()).ok_or("Empty chat list")?;
+    let msg_path = user_dir.join("chats").join(format!("{}.json", latest_id));
+    if !msg_path.exists() {
+        fs::remove_file(&list_path).ok();
+        return Ok(());
+    }
+    let msg_content = fs::read_to_string(&msg_path)
+        .map_err(|e| format!("Failed to read chat messages: {}", e))?;
+    let messages: Vec<ChatMessage> = serde_json::from_str(&msg_content)
+        .map_err(|e| format!("Failed to parse chat messages: {}", e))?;
+    let chat_file = get_chat_history_path(user_id)?;
+    if let Some(p) = chat_file.parent() {
+        fs::create_dir_all(p).map_err(|e| format!("Failed to create user dir: {}", e))?;
+    }
+    let out = serde_json::to_string_pretty(&messages)
+        .map_err(|e| format!("Failed to serialize messages: {}", e))?;
+    fs::write(&chat_file, out)
+        .map_err(|e| format!("Failed to write chats.json: {}", e))?;
+    fs::remove_file(&list_path)
+        .map_err(|e| format!("Failed to remove chat list: {}", e))?;
+    let chats_dir = user_dir.join("chats");
+    if chats_dir.exists() {
+        if let Ok(entries) = fs::read_dir(&chats_dir) {
+            for e in entries.flatten() {
+                let _ = fs::remove_file(e.path());
+            }
+        }
+        let _ = fs::remove_dir(&chats_dir);
+    }
+    Ok(())
 }
 
 /// Load users from file
@@ -354,72 +411,72 @@ pub async fn set_current_user(user_id: Option<String>) -> Result<(), String> {
     Ok(())
 }
 
-/// Save chat history for a user
+/// Load chat history for a user (single chat).
 #[tauri::command]
-pub async fn save_user_chat(user_id: String, messages: Vec<ChatMessage>) -> Result<(), String> {
-    // Verify user exists
+pub async fn load_user_chat(user_id: String) -> Result<Vec<ChatMessage>, String> {
     let users = load_users()?;
     if !users.iter().any(|u| u.id == user_id) {
         return Err("User not found".to_string());
     }
-    
+    migrate_multi_chat_to_single_if_needed(&user_id)?;
     let chat_file = get_chat_history_path(&user_id)?;
-    
-    // Ensure user directory exists
+    if !chat_file.exists() {
+        return Ok(Vec::new());
+    }
+    let content = fs::read_to_string(&chat_file)
+        .map_err(|e| format!("Failed to read chat history: {}", e))?;
+    let messages: Vec<ChatMessage> = serde_json::from_str(&content)
+        .map_err(|e| format!("Failed to parse chat history: {}", e))?;
+    Ok(messages)
+}
+
+/// Save chat history for a user (single chat).
+#[tauri::command]
+pub async fn save_user_chat(user_id: String, messages: Vec<ChatMessage>) -> Result<(), String> {
+    let users = load_users()?;
+    if !users.iter().any(|u| u.id == user_id) {
+        return Err("User not found".to_string());
+    }
+    migrate_multi_chat_to_single_if_needed(&user_id)?;
+    let chat_file = get_chat_history_path(&user_id)?;
     if let Some(parent) = chat_file.parent() {
         fs::create_dir_all(parent)
             .map_err(|e| format!("Failed to create user directory: {}", e))?;
     }
-    
     let content = serde_json::to_string_pretty(&messages)
         .map_err(|e| format!("Failed to serialize chat history: {}", e))?;
-    
     fs::write(&chat_file, content)
         .map_err(|e| format!("Failed to write chat history: {}", e))?;
-    
     Ok(())
 }
 
-/// Load chat history for a user
-#[tauri::command]
-pub async fn load_user_chat(user_id: String) -> Result<Vec<ChatMessage>, String> {
-    // Verify user exists
-    let users = load_users()?;
-    if !users.iter().any(|u| u.id == user_id) {
-        return Err("User not found".to_string());
-    }
-    
-    let chat_file = get_chat_history_path(&user_id)?;
-    
-    if !chat_file.exists() {
-        return Ok(Vec::new());
-    }
-    
-    let content = fs::read_to_string(&chat_file)
-        .map_err(|e| format!("Failed to read chat history: {}", e))?;
-    
-    let messages: Vec<ChatMessage> = serde_json::from_str(&content)
-        .map_err(|e| format!("Failed to parse chat history: {}", e))?;
-    
-    Ok(messages)
-}
-
-/// Delete chat history for a user
+/// Delete all chat history for a user.
 #[tauri::command]
 pub async fn delete_user_chat(user_id: String) -> Result<(), String> {
-    // Verify user exists
     let users = load_users()?;
     if !users.iter().any(|u| u.id == user_id) {
         return Err("User not found".to_string());
     }
-    
+    migrate_multi_chat_to_single_if_needed(&user_id)?;
     let chat_file = get_chat_history_path(&user_id)?;
-    
     if chat_file.exists() {
         fs::remove_file(&chat_file)
             .map_err(|e| format!("Failed to delete chat history: {}", e))?;
     }
-    
+    let user_dir = get_user_dir_path(&user_id)?;
+    let list_path = user_dir.join("chat_list.json");
+    if list_path.exists() {
+        let _ = fs::remove_file(&list_path);
+    }
+    let chats_dir = user_dir.join("chats");
+    if chats_dir.exists() {
+        if let Ok(entries) = fs::read_dir(&chats_dir) {
+            for e in entries.flatten() {
+                let _ = fs::remove_file(e.path());
+            }
+        }
+        let _ = fs::remove_dir(&chats_dir);
+    }
     Ok(())
 }
 

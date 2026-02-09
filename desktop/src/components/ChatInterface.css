@@ -23,6 +23,43 @@
   overflow: hidden;
 }
 
+/* Preparing chat: centered in chat section, spinner above text */
+.chat-placeholder {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  color: var(--color-text-muted);
+  padding: 1.5rem;
+}
+
+.chat-placeholder .loading-spinner {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border: 3px solid var(--color-border-subtle);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: chat-spin 1s linear infinite;
+}
+
+.chat-placeholder p {
+  margin: 0;
+  text-align: center;
+}
+
+@keyframes chat-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.chat-placeholder .error-message {
+  margin-top: 0.5rem;
+  text-align: center;
+}
+
 .settings-button {
   position: absolute;
   top: 1rem;
@@ -102,6 +139,12 @@
 .message.assistant + .message.assistant,
 .message.user + .message.user {
   margin-top: -0.15rem;
+}
+
+/* More space between messages from different senders */
+.message.assistant + .message.user,
+.message.user + .message.assistant {
+  margin-top: 1.25rem;
 }
 
 .message.user {
@@ -569,7 +612,7 @@
     color: var(--color-error-text);
   }
 
-  .loading-spinner {
+  .chat-placeholder .loading-spinner {
     border-color: var(--color-border-subtle);
     border-top-color: var(--color-primary);
   }

@@ -1,0 +1,46 @@
+.user-settings-modal {
+  max-width: 450px;
+}
+
+.user-settings-section {
+  margin: 0;
+}
+
+.user-settings-section .language-selector {
+  margin: 0;
+}
+
+.user-settings-modal .modal-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  margin-top: 1.5rem;
+}
+
+.user-settings-modal .btn {
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.1s;
+  border: none;
+}
+
+.user-settings-modal .btn:hover {
+  opacity: 0.9;
+}
+
+.user-settings-modal .btn:active {
+  transform: scale(0.98);
+}
+
+.user-settings-modal .btn-primary {
+  background: var(--color-primary);
+  color: white;
+}
+
+.user-settings-modal .btn-secondary {
+  background: var(--color-surface-input);
+  color: var(--color-text);
+}

@@ -73,6 +73,11 @@
   color: var(--color-text-secondary);
   cursor: pointer;
   transition: background 0.2s, color 0.2s;
+  background: transparent;
+  border: none;
+  text-align: left;
+  font-family: inherit;
+  width: 100%;
 }
 
 .chat-history-item:hover {

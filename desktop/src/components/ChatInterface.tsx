@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
 import { invoke } from '@tauri-apps/api/core';
-import { ArrowUp, Copy, Settings } from 'lucide-react';
+import { ArrowUp, Copy } from 'lucide-react';
 import { DantAgent } from '../agent/dant-agent';
 import ReactMarkdown from 'react-markdown';
 import { useTranslation } from '../i18n/hooks/useTranslation';
 import ChatSidebar from './ChatSidebar';
+import LogOutConfirmModal from './LogOutConfirmModal';
+import UserSettingsModal from './UserSettingsModal';
 import './ChatInterface.css';
 
 interface ChatInterfaceProps {
@@ -15,9 +17,10 @@ interface ChatInterfaceProps {
   onOpenSettings?: () => void;
   userId: string;
   onSwitchProfile?: () => void;
+  onLogOut?: () => void;
 }
 
-export default function ChatInterface({ disabled = false, modelReady = false, kbReady = false, chatVisible = false, onOpenSettings, userId, onSwitchProfile }: ChatInterfaceProps) {
+export default function ChatInterface({ disabled = false, modelReady = false, kbReady = false, chatVisible = false, onOpenSettings, userId, onSwitchProfile, onLogOut }: ChatInterfaceProps) {
   const { t, currentLanguage } = useTranslation(userId);
   const [messages, setMessages] = useState<Array<{ role: 'user' | 'assistant'; content: string }>>([]);
   const [input, setInput] = useState('');
@@ -26,6 +29,8 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
   const [agent, setAgent] = useState<DantAgent | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
+  const [showLogOutModal, setShowLogOutModal] = useState(false);
+  const [showUserSettingsModal, setShowUserSettingsModal] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const loadedUserIdRef = useRef<string | null>(null);
@@ -51,19 +56,17 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
     scrollToBottom();
   }, [messages]);
 
-  // Initialize user KB and load chat history when userId is available
-  // Use a ref to track if we've already loaded history for this userId to prevent reloading
+  // Initialize user KB and load chat history when userId is available.
   useEffect(() => {
     if (userId && isInitialized && !disabled) {
-      // Only load if this is a different user or we haven't loaded yet
       if (loadedUserIdRef.current !== userId) {
         loadedUserIdRef.current = userId;
         initializeUserKB();
         loadChatHistory();
       }
     } else if (!userId) {
-      // Reset when userId is cleared
       loadedUserIdRef.current = null;
+      setMessages([]);
     }
   }, [userId, isInitialized, disabled, currentLanguage]);
   
@@ -91,7 +94,7 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
     }
   };
 
-  // Save chat history when messages change
+  // Save chat history when messages change.
   useEffect(() => {
     if (messages.length > 0 && isInitialized && !disabled) {
       saveChatHistory();
@@ -101,36 +104,30 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
   const loadChatHistory = async () => {
     try {
       const chatMessages = await invoke<Array<{ role: string; content: string; timestamp: string }>>('load_user_chat', { userId });
-      if (chatMessages && chatMessages.length > 0) {
-        // Convert to our message format
-        const loadedMessages = chatMessages.map(msg => ({
-          role: msg.role as 'user' | 'assistant',
-          content: msg.content,
-        }));
-        setMessages(loadedMessages);
-      }
+      const loadedMessages = (chatMessages || []).map(msg => ({
+        role: msg.role as 'user' | 'assistant',
+        content: msg.content,
+      }));
+      setMessages(loadedMessages);
     } catch (err) {
       console.error('Failed to load chat history:', err);
-      // Don't show error to user, just continue with empty messages
+      setMessages([]);
     }
   };
 
   const saveChatHistory = async () => {
     try {
-      // Convert messages to format expected by backend
       const chatMessages = messages.map(msg => ({
         role: msg.role,
         content: msg.content,
         timestamp: new Date().toISOString(),
       }));
-      
       await invoke('save_user_chat', {
         userId,
         messages: chatMessages,
       });
     } catch (err) {
       console.error('Failed to save chat history:', err);
-      // Don't show error to user, just log it
     }
   };
 
@@ -166,7 +163,7 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
       const isModelLoaded = await invoke<boolean>('is_model_loaded');
       
       if (!isModelLoaded) {
-        setError('Please initialize a model first in the Model Manager tab.');
+        setError(t('ui.modelManagerPrompt'));
         setIsInitialized(false);
         setIsInitializing(false);
         return;
@@ -207,24 +204,15 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
     setInput('');
     setError(null);
     
-    // Set processing state immediately so shimmer appears right away
     setIsProcessing(true);
-    
-    // Add user message
     setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
 
     try {
-      // Process query - use RAG only for health-related queries to improve speed
-      // Simple heuristic: use RAG if query contains health-related keywords
       const healthKeywords = ['health', 'medical', 'symptom', 'disease', 'illness', 'condition', 'treatment', 'medicine', 'doctor', 'pain', 'fever', 'ache', 'diagnosis'];
       const isHealthQuery = healthKeywords.some(keyword => userMessage.toLowerCase().includes(keyword));
       const response = await agent.processQuery(userMessage, { useRAG: isHealthQuery, userId, language: currentLanguage });
       
-      // Add assistant response
       setMessages(prev => [...prev, { role: 'assistant', content: response.response }]);
-      
-      if (response.sources && response.sources.length > 0) {
-      }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to process query';
       
@@ -257,10 +245,22 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
     }
   };
 
+  const handleLogOutClick = () => setShowLogOutModal(true);
+  const handleLogOutConfirm = () => {
+    setShowLogOutModal(false);
+    onLogOut?.();
+  };
+
   if (disabled) {
     return (
       <div className="chat-interface chat-disabled">
-        <ChatSidebar userId={userId} onOpenSettings={onOpenSettings} />
+        {showLogOutModal && (
+          <LogOutConfirmModal onConfirm={handleLogOutConfirm} onCancel={() => setShowLogOutModal(false)} userId={userId} />
+        )}
+        {showUserSettingsModal && (
+          <UserSettingsModal isOpen={showUserSettingsModal} onClose={() => setShowUserSettingsModal(false)} userId={userId} />
+        )}
+        <ChatSidebar userId={userId} onOpenSettings={onOpenSettings} onOpenUserSettings={() => setShowUserSettingsModal(true)} onLogOut={handleLogOutClick} />
         <div className="chat-main">
           <div className="chat-disabled-overlay">
             <div className="chat-disabled-content">
@@ -278,15 +278,6 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
               <p className="disabled-message">
                 {t('ui.downloadAndSetup')}
               </p>
-              {onOpenSettings && (
-                <button
-                  className="btn btn-primary"
-                  onClick={onOpenSettings}
-                  style={{ marginTop: '1.5rem' }}
-                >
-                  {t('ui.openSettings')}
-                </button>
-              )}
             </div>
           </div>
           <div className="chat-messages" style={{ opacity: 0.3, pointerEvents: 'none' }}>
@@ -303,7 +294,7 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
                 className="chat-input"
                 rows={1}
               />
-              <button disabled className="chat-send-button" aria-label="Send">
+              <button disabled className="chat-send-button" aria-label={t('ui.send')}>
                 <ArrowUp size={18} />
               </button>
             </div>
@@ -316,7 +307,13 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
   if (isInitializing) {
     return (
       <div className="chat-interface">
-        <ChatSidebar userId={userId} onOpenSettings={onOpenSettings} />
+        {showLogOutModal && (
+          <LogOutConfirmModal onConfirm={handleLogOutConfirm} onCancel={() => setShowLogOutModal(false)} userId={userId} />
+        )}
+        {showUserSettingsModal && (
+          <UserSettingsModal isOpen={showUserSettingsModal} onClose={() => setShowUserSettingsModal(false)} userId={userId} />
+        )}
+        <ChatSidebar userId={userId} onOpenSettings={onOpenSettings} onOpenUserSettings={() => setShowUserSettingsModal(true)} onLogOut={handleLogOutClick} />
         <div className="chat-main">
           <div className="chat-placeholder">
             <div className="loading-spinner"></div>
@@ -330,13 +327,19 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
   if (!isInitialized) {
     return (
       <div className="chat-interface">
-        <ChatSidebar userId={userId} onOpenSettings={onOpenSettings} />
+        {showLogOutModal && (
+          <LogOutConfirmModal onConfirm={handleLogOutConfirm} onCancel={() => setShowLogOutModal(false)} userId={userId} />
+        )}
+        {showUserSettingsModal && (
+          <UserSettingsModal isOpen={showUserSettingsModal} onClose={() => setShowUserSettingsModal(false)} userId={userId} />
+        )}
+        <ChatSidebar userId={userId} onOpenSettings={onOpenSettings} onOpenUserSettings={() => setShowUserSettingsModal(true)} onLogOut={handleLogOutClick} />
         <div className="chat-main">
           <div className="chat-placeholder">
             <p>{t('ui.preparingChat')}</p>
             {error && (
               <div className="error-message">
-                <strong>Error:</strong> {error}
+                <strong>{t('ui.errorLabel')}:</strong> {error}
               </div>
             )}
           </div>
@@ -347,19 +350,14 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
 
   return (
     <div className="chat-interface">
-      <ChatSidebar userId={userId} onOpenSettings={onOpenSettings} />
+      {showLogOutModal && (
+        <LogOutConfirmModal onConfirm={handleLogOutConfirm} onCancel={() => setShowLogOutModal(false)} userId={userId} />
+      )}
+      {showUserSettingsModal && (
+        <UserSettingsModal isOpen={showUserSettingsModal} onClose={() => setShowUserSettingsModal(false)} userId={userId} />
+      )}
+      <ChatSidebar userId={userId} onOpenSettings={onOpenSettings} onOpenUserSettings={() => setShowUserSettingsModal(true)} onLogOut={handleLogOutClick} />
       <div className="chat-main">
-        {onOpenSettings && (
-          <button
-            type="button"
-            className="settings-button"
-            onClick={onOpenSettings}
-            aria-label={t('ui.settings')}
-            title={t('ui.settings')}
-          >
-            <Settings size={20} />
-          </button>
-        )}
         <div className="chat-messages">
         {messages.map((msg, idx) => (
           <div key={idx} className={`message ${msg.role}`}>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { Plus, Edit, Trash2, X } from 'lucide-react';
+import { useTranslation } from '../i18n/hooks/useTranslation';
 import './UserKnowledgeBaseManager.css';
 
 interface KBEntry {
@@ -13,11 +14,20 @@ interface KBEntry {
   };
 }
 
+const categoryToLabel: Record<string, string> = {
+  diagnosis: 'healthDiagnosis',
+  condition: 'preExistingCondition',
+  history: 'medicalHistory',
+  general: 'generalInfo',
+  legal: 'legalHistory',
+};
+
 interface UserKnowledgeBaseManagerProps {
   userId: string;
 }
 
 export default function UserKnowledgeBaseManager({ userId }: UserKnowledgeBaseManagerProps) {
+  const { t } = useTranslation(userId);
   const [entries, setEntries] = useState<KBEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -154,7 +164,7 @@ export default function UserKnowledgeBaseManager({ userId }: UserKnowledgeBaseMa
       await loadStats();
     } catch (err) {
       console.error('Failed to save entry:', err);
-      alert('Failed to save entry. Please try again.');
+      alert(t('userKb.saveEntryFailed'));
     }
   };
 
@@ -178,7 +188,7 @@ export default function UserKnowledgeBaseManager({ userId }: UserKnowledgeBaseMa
   };
 
   const handleDelete = async (entryId: string) => {
-    if (!confirm('Are you sure you want to delete this entry?')) {
+    if (!confirm(t('userKb.deleteEntryConfirm'))) {
       return;
     }
 
@@ -208,13 +218,13 @@ export default function UserKnowledgeBaseManager({ userId }: UserKnowledgeBaseMa
   };
 
   if (loading) {
-    return <div className="user-kb-manager">Loading...</div>;
+    return <div className="user-kb-manager">{t('ui.loading')}</div>;
   }
 
   return (
     <div className="user-kb-manager">
       <div className="kb-header">
-        <h3>Personal Knowledge Base</h3>
+        <h3>{t('userKb.personalKnowledgeBase')}</h3>
         <div className="kb-stats">
           <span>{documentCount} document{documentCount !== 1 ? 's' : ''}</span>
         </div>
@@ -226,7 +236,7 @@ export default function UserKnowledgeBaseManager({ userId }: UserKnowledgeBaseMa
           onClick={() => setShowForm(true)}
         >
           <Plus size={16} />
-          Add Entry
+          {t('userKb.addEntry')}
         </button>
       </div>
 
@@ -234,7 +244,7 @@ export default function UserKnowledgeBaseManager({ userId }: UserKnowledgeBaseMa
         <div className="kb-form-modal">
           <div className="kb-form-content">
             <div className="kb-form-header">
-              <h4>{editingEntry ? 'Edit Entry' : 'Add Entry'}</h4>
+              <h4>{editingEntry ? t('userKb.editEntry') : t('userKb.addEntry')}</h4>
               <button className="close-button" onClick={resetForm}>
                 <X size={20} />
               </button>
@@ -242,26 +252,26 @@ export default function UserKnowledgeBaseManager({ userId }: UserKnowledgeBaseMa
 
             <div className="kb-form-body">
               <div className="form-group">
-                <label>Category</label>
+                <label>{t('userKb.category')}</label>
                 <select
                   value={category}
                   onChange={(e) => setCategory(e.target.value as any)}
                 >
-                  <option value="diagnosis">Health Diagnosis</option>
-                  <option value="condition">Pre-existing Condition</option>
-                  <option value="history">Medical History</option>
-                  <option value="general">General Information</option>
-                  <option value="legal">Legal History</option>
+                  <option value="diagnosis">{t('userKb.healthDiagnosis')}</option>
+                  <option value="condition">{t('userKb.preExistingCondition')}</option>
+                  <option value="history">{t('userKb.medicalHistory')}</option>
+                  <option value="general">{t('userKb.generalInfo')}</option>
+                  <option value="legal">{t('userKb.legalHistory')}</option>
                 </select>
               </div>
 
               {category === 'diagnosis' && (
                 <div className="form-group">
-                  <label>Health Diagnosis</label>
+                  <label>{t('userKb.healthDiagnosis')}</label>
                   <textarea
                     value={diagnosis}
                     onChange={(e) => setDiagnosis(e.target.value)}
-                    placeholder="Enter health diagnosis..."
+                    placeholder={t('userKb.enterHealthDiagnosis')}
                     rows={4}
                   />
                 </div>
@@ -269,7 +279,7 @@ export default function UserKnowledgeBaseManager({ userId }: UserKnowledgeBaseMa
 
               {category === 'condition' && (
                 <div className="form-group">
-                  <label>Pre-existing Conditions</label>
+                  <label>{t('userKb.preExistingCondition')}</label>
                   <div className="condition-input-group">
                     <input
                       type="text"
@@ -281,9 +291,9 @@ export default function UserKnowledgeBaseManager({ userId }: UserKnowledgeBaseMa
                           handleAddCondition();
                         }
                       }}
-                      placeholder="Enter condition and press Enter"
+                      placeholder={t('userKb.enterConditionAndPressEnter')}
                     />
-                    <button type="button" onClick={handleAddCondition}>Add</button>
+                    <button type="button" onClick={handleAddCondition}>{t('userKb.addTag')}</button>
                   </div>
                   {conditions.length > 0 && (
                     <div className="condition-tags">
@@ -306,11 +316,11 @@ export default function UserKnowledgeBaseManager({ userId }: UserKnowledgeBaseMa
 
               {category === 'history' && (
                 <div className="form-group">
-                  <label>Medical History</label>
+                  <label>{t('userKb.medicalHistory')}</label>
                   <textarea
                     value={medicalHistory}
                     onChange={(e) => setMedicalHistory(e.target.value)}
-                    placeholder="Enter medical history..."
+                    placeholder={t('userKb.enterMedicalHistory')}
                     rows={6}
                   />
                 </div>
@@ -318,11 +328,11 @@ export default function UserKnowledgeBaseManager({ userId }: UserKnowledgeBaseMa
 
               {category === 'general' && (
                 <div className="form-group">
-                  <label>General Information</label>
+                  <label>{t('userKb.generalInfo')}</label>
                   <textarea
                     value={generalInfo}
                     onChange={(e) => setGeneralInfo(e.target.value)}
-                    placeholder="Enter general information..."
+                    placeholder={t('userKb.enterGeneralInfo')}
                     rows={6}
                   />
                 </div>
@@ -330,11 +340,11 @@ export default function UserKnowledgeBaseManager({ userId }: UserKnowledgeBaseMa
 
               {category === 'legal' && (
                 <div className="form-group">
-                  <label>Legal History</label>
+                  <label>{t('userKb.legalHistory')}</label>
                   <textarea
                     value={legalHistory}
                     onChange={(e) => setLegalHistory(e.target.value)}
-                    placeholder="Enter legal history..."
+                    placeholder={t('userKb.enterLegalHistory')}
                     rows={6}
                   />
                 </div>
@@ -342,10 +352,10 @@ export default function UserKnowledgeBaseManager({ userId }: UserKnowledgeBaseMa
 
               <div className="form-actions">
                 <button className="btn btn-secondary" onClick={resetForm}>
-                  Cancel
+                  {t('ui.cancel')}
                 </button>
                 <button className="btn btn-primary" onClick={handleSubmit}>
-                  {editingEntry ? 'Update' : 'Save'}
+                  {editingEntry ? t('userKb.update') : t('userKb.save')}
                 </button>
               </div>
             </div>
@@ -356,13 +366,13 @@ export default function UserKnowledgeBaseManager({ userId }: UserKnowledgeBaseMa
       <div className="kb-entries">
         {entries.length === 0 ? (
           <div className="empty-state">
-            <p>No entries yet. Add your first entry to get started.</p>
+            <p>{t('userKb.noEntriesYet')}</p>
           </div>
         ) : (
           entries.map((entry) => (
             <div key={entry.id} className="kb-entry">
               <div className="entry-header">
-                <span className="entry-category">{entry.metadata.category}</span>
+                <span className="entry-category">{t(`userKb.${categoryToLabel[entry.metadata.category] ?? 'generalInfo'}`)}</span>
                 <span className="entry-date">
                   {new Date(entry.metadata.created_at).toLocaleDateString()}
                 </span>
@@ -372,14 +382,14 @@ export default function UserKnowledgeBaseManager({ userId }: UserKnowledgeBaseMa
                 <button
                   className="btn-icon"
                   onClick={() => handleEdit(entry)}
-                  title="Edit"
+                  title={t('userKb.edit')}
                 >
                   <Edit size={16} />
                 </button>
                 <button
                   className="btn-icon"
                   onClick={() => handleDelete(entry.id)}
-                  title="Delete"
+                  title={t('userKb.delete')}
                 >
                   <Trash2 size={16} />
                 </button>
