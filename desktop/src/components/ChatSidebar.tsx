@@ -1,3 +1,4 @@
+import { LogOut, Settings } from 'lucide-react';
 import { useTranslation } from '../i18n/hooks/useTranslation';
 import './ChatSidebar.css';
 
@@ -12,7 +13,7 @@ export default function ChatSidebar({ userId, onOpenSettings, onOpenUserSettings
   const { t } = useTranslation(userId);
 
   return (
-    <div className="chat-sidebar">
+    <nav className="chat-sidebar" aria-label={t('ui.navAccountAndSettings')}>
       <div className="sidebar-content">
         {onLogOut && (
           <button
@@ -20,6 +21,7 @@ export default function ChatSidebar({ userId, onOpenSettings, onOpenUserSettings
             className="sidebar-settings-label"
             onClick={onLogOut}
           >
+            <LogOut className="sidebar-settings-icon" aria-hidden />
             {t('ui.logOut')}
           </button>
         )}
@@ -29,10 +31,11 @@ export default function ChatSidebar({ userId, onOpenSettings, onOpenUserSettings
             className="sidebar-settings-label"
             onClick={onOpenUserSettings}
           >
+            <Settings className="sidebar-settings-icon" aria-hidden />
             {t('ui.settings')}
           </button>
         )}
       </div>
-    </div>
+    </nav>
   );
 }

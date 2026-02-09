@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { Eye, EyeOff } from 'lucide-react';
 import { useTranslation } from '../i18n/hooks/useTranslation';
+import { useModalFocusTrap } from '../hooks/useModalFocusTrap';
 import './CreateUserModal.css';
 
 interface CreateUserModalProps {
@@ -11,6 +12,8 @@ interface CreateUserModalProps {
 
 export default function CreateUserModal({ onUserCreated, onCancel }: CreateUserModalProps) {
   const { t } = useTranslation(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useModalFocusTrap(true, onCancel, dialogRef);
   const [step, setStep] = useState<'name' | 'password'>('name');
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
@@ -84,9 +87,16 @@ export default function CreateUserModal({ onUserCreated, onCancel }: CreateUserM
 
   return (
     <div className="modal-overlay" onClick={onCancel}>
-      <div className="modal-dialog create-user-modal" onClick={(e) => e.stopPropagation()}>
+      <div
+        ref={dialogRef}
+        className="modal-dialog create-user-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="create-user-modal-title"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="modal-header">
-          <h2>{step === 'name' ? t('ui.createProfile') : t('ui.setPassword')}</h2>
+          <h2 id="create-user-modal-title">{step === 'name' ? t('ui.createProfile') : t('ui.setPassword')}</h2>
         </div>
         <div className="modal-content">
           {step === 'name' ? (
@@ -106,7 +116,7 @@ export default function CreateUserModal({ onUserCreated, onCancel }: CreateUserM
                   maxLength={50}
                 />
                 {error && (
-                  <div className="form-error">{error}</div>
+                  <div className="form-error" role="alert">{error}</div>
                 )}
               </div>
 
@@ -180,7 +190,7 @@ export default function CreateUserModal({ onUserCreated, onCancel }: CreateUserM
                 </div>
                 
                 {error && (
-                  <div className="form-error">{error}</div>
+                  <div className="form-error" role="alert">{error}</div>
                 )}
               </div>
 

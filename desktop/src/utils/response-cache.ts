@@ -20,7 +20,7 @@ interface ResponseCache {
   responses: Record<string, CachedResponse>; // normalizedQuery -> response
 }
 
-const CACHE_VERSION = '1.1.0';
+const CACHE_VERSION = '1.2.0';
 const CACHE_DIR = 'cache';
 let cacheData: ResponseCache | null = null;
 
@@ -90,11 +90,9 @@ async function saveCache(cache: ResponseCache): Promise<void> {
  */
 export async function initializeCache(language: LanguageCode): Promise<void> {
   cacheData = await loadCache(language);
-  
-  // Pre-populate common queries if cache is empty
-  if (Object.keys(cacheData.responses).length === 0) {
-    await prePopulateCache(language);
-  }
+  // Always refresh the common pre-populated responses from i18n so updated
+  // strings (e.g. clinician copy) are shown without clearing the whole cache
+  await prePopulateCache(language);
 }
 
 /**

@@ -7,17 +7,3 @@
   color: var(--color-text-secondary);
   font-size: 1rem;
 }
-
-.btn-danger {
-  background: var(--color-danger-bg);
-  color: var(--color-danger-text);
-}
-
-.btn-danger:hover {
-  background: var(--color-danger-hover);
-  opacity: 1;
-}
-
-.btn-danger:active {
-  background: var(--color-danger-active);
-}

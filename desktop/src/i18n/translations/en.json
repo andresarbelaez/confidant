@@ -57,13 +57,14 @@
     "userFallback": "User",
     "userSettings": "User Settings",
     "settingsFor": "Settings for {{name}}",
-    "save": "Save"
+    "save": "Save",
+    "navAccountAndSettings": "Account and settings"
   },
   "agent": {
-    "welcome": "Hi! I'm Confidant, your privacy-first AI assistant for health questions.",
-    "privacy": "Everything runs on your device—your conversations stay private and never leave your computer.",
-    "disclaimer": "I'm not a substitute for professional medical advice. If you have serious health concerns, please see a healthcare professional.",
-    "askAnything": "Ask me anything about health—I'm here to help."
+    "welcome": "I'm Confidant. I'm here to have a private, supportive conversation about your health questions.",
+    "privacy": "Your conversations stay on your device and are not shared.",
+    "disclaimer": "I'm not a substitute for care from a clinician. For serious or ongoing concerns, please see a healthcare professional.",
+    "askAnything": "What would you like to talk about?"
   },
   "errors": {
     "title": "Error",
@@ -98,13 +99,13 @@
     "zeroBytesPrivacy": "✓ Zero bytes transmitted - Your queries are private"
   },
   "cached": {
-    "hi": "Hi! I'm Confidant, your privacy-first AI assistant for health questions. Everything runs on your device so your data stays private. What would you like to know?",
-    "hello": "Hello! I'm Confidant—a health assistant that runs entirely on your device. Your conversations stay private. How can I help you today?",
-    "hey": "Hey! I'm Confidant, your on-device health assistant. I'm not a substitute for professional medical advice, but I can help with general health questions. What's on your mind?",
-    "whatAreYou": "I'm Confidant, your privacy-first AI assistant for health questions. I run completely on your device, so your conversations stay private and never leave your computer.",
-    "whoAreYou": "I'm Confidant, your privacy-first AI assistant for health questions. I'm here to help answer your health-related questions while keeping everything private and secure on your device. I'm not a substitute for professional medical advice.",
-    "whatCanYouDo": "I can help answer health-related questions, provide information from my knowledge base, and assist with general health inquiries. Everything runs on your device for privacy. Remember, I'm not a substitute for professional medical advice—always consult a healthcare professional for serious concerns.",
-    "help": "I'm Confidant, your on-device health assistant. You can ask me about health, symptoms, conditions, treatments, and more. I'll use my knowledge base to help. For serious health concerns, please see a healthcare professional. What would you like to know?"
+    "hi": "I'm Confidant. I'm here to have a private, supportive conversation about your health questions. Your conversations stay on your device. What would you like to talk about?",
+    "hello": "I'm Confidant. I respond to health questions from a supportive, clinician-like perspective. Everything stays on your device. What would you like to discuss today?",
+    "hey": "I'm Confidant. I'm not a substitute for a clinician, but I can help you think through general health questions in a private way. What's on your mind?",
+    "whatAreYou": "I'm Confidant, an AI that responds to health questions from a clinician-like perspective—supportive, clear, and professional. Your conversations stay on your device and are not shared. I'm not a substitute for care from a clinician. What would you like to talk about?",
+    "whoAreYou": "I'm Confidant. I'm here to have a supportive, private conversation about health questions. I can help clarify and discuss symptoms, conditions, and general health; for serious or ongoing concerns, I recommend seeing a healthcare professional. What would you like to talk about?",
+    "whatCanYouDo": "I can help you think through health-related questions, clarify symptoms and conditions, and discuss general health—all in a private conversation on your device. I'm not a replacement for a clinician; for serious concerns, please see a healthcare professional. What would you like to talk about?",
+    "help": "I'm Confidant. I'm here to have a supportive conversation about health—symptoms, conditions, treatments, and general questions. Everything stays on your device. For serious health concerns, please see a healthcare professional. What would you like to talk about?"
   },
   "setup": {
     "privacyInfo": "Everything runs on your device—your conversations and data never leave your computer. This one-time setup downloads the AI model and knowledge base you need.",

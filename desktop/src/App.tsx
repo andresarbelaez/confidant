@@ -8,6 +8,7 @@ import { useAppState } from './hooks/useAppState';
 import { useTranslation } from './i18n/hooks/useTranslation';
 import { clearAllChatHistory } from './utils/clearChatHistory';
 import './App.css';
+import './components/SharedModal.css';
 
 function App() {
   const { t } = useTranslation(null);

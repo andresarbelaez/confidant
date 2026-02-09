@@ -57,13 +57,14 @@
     "userFallback": "Usuario",
     "userSettings": "Ajustes de usuario",
     "settingsFor": "Ajustes de {{name}}",
-    "save": "Guardar"
+    "save": "Guardar",
+    "navAccountAndSettings": "Cuenta y ajustes"
   },
   "agent": {
-    "welcome": "Hola, soy Confidant, tu asistente de IA con privacidad para preguntas de salud.",
-    "privacy": "Todo funciona en tu dispositivo: tus conversaciones son privadas y no salen de tu ordenador.",
-    "disclaimer": "No sustituyo el consejo médico profesional. Si tienes dudas serias de salud, consulta a un profesional sanitario.",
-    "askAnything": "Pregúntame lo que quieras sobre salud, estoy aquí para ayudarte."
+    "welcome": "Soy Confidant. Estoy aquí para tener una conversación privada y de apoyo sobre tus preguntas de salud.",
+    "privacy": "Tus conversaciones se quedan en tu dispositivo y no se comparten.",
+    "disclaimer": "No sustituyo la atención de un profesional sanitario. Para dudas serias o continuadas, consulta a un profesional de la salud.",
+    "askAnything": "¿Sobre qué te gustaría hablar?"
   },
   "errors": {
     "title": "Error",
@@ -98,13 +99,13 @@
     "zeroBytesPrivacy": "✓ Cero bytes transmitidos: tus consultas son privadas"
   },
   "cached": {
-    "hi": "¡Hola! Soy Confidant, tu asistente de IA con privacidad para preguntas de salud. Todo funciona en tu dispositivo para que tus datos estén privados. ¿Qué te gustaría saber?",
-    "hello": "¡Hola! Soy Confidant, un asistente de salud que funciona solo en tu dispositivo. Tus conversaciones son privadas. ¿Cómo puedo ayudarte hoy?",
-    "hey": "¡Hola! Soy Confidant, tu asistente de salud en el dispositivo. No sustituyo el consejo médico profesional, pero puedo ayudarte con preguntas generales de salud. ¿En qué piensas?",
-    "whatAreYou": "Soy Confidant, tu asistente de IA con privacidad para preguntas de salud. Funciono solo en tu dispositivo, así que tus conversaciones son privadas y no salen de tu ordenador.",
-    "whoAreYou": "Soy Confidant, tu asistente de IA con privacidad para preguntas de salud. Estoy aquí para responder preguntas de salud manteniendo todo privado y seguro en tu dispositivo. No sustituyo el consejo médico profesional.",
-    "whatCanYouDo": "Puedo responder preguntas de salud, dar información de mi base de conocimiento y ayudar con consultas generales. Todo en tu dispositivo para privacidad. Recuerda: no sustituyo el consejo médico profesional; consulta a un profesional para temas serios.",
-    "help": "Soy Confidant, tu asistente de salud en el dispositivo. Puedes preguntarme sobre salud, síntomas, afecciones, tratamientos y más. Usaré mi base de conocimiento para ayudarte. Para temas serios de salud, consulta a un profesional. ¿Qué te gustaría saber?"
+    "hi": "Soy Confidant. Estoy aquí para tener una conversación privada y de apoyo sobre tus preguntas de salud. Tus conversaciones se quedan en tu dispositivo. ¿Sobre qué te gustaría hablar?",
+    "hello": "Soy Confidant. Respondo a preguntas de salud desde una perspectiva de apoyo, parecida a la de un profesional sanitario. Todo se queda en tu dispositivo. ¿Qué te gustaría comentar hoy?",
+    "hey": "Soy Confidant. No sustituyo a un profesional sanitario, pero puedo ayudarte a reflexionar sobre preguntas generales de salud de forma privada. ¿En qué piensas?",
+    "whatAreYou": "Soy Confidant, una IA que responde a preguntas de salud desde una perspectiva parecida a la de un profesional: de apoyo, clara y profesional. Tus conversaciones se quedan en tu dispositivo y no se comparten. No sustituyo la atención de un profesional. ¿Sobre qué te gustaría hablar?",
+    "whoAreYou": "Soy Confidant. Estoy aquí para tener una conversación de apoyo y privada sobre preguntas de salud. Puedo ayudarte a aclarar y hablar de síntomas, afecciones y salud en general; para dudas serias o continuadas, recomiendo consultar a un profesional de la salud. ¿Sobre qué te gustaría hablar?",
+    "whatCanYouDo": "Puedo ayudarte a reflexionar sobre preguntas de salud, aclarar síntomas y afecciones y hablar de salud en general, todo en una conversación privada en tu dispositivo. No sustituyo a un profesional; para temas serios, consulta a un profesional de la salud. ¿Sobre qué te gustaría hablar?",
+    "help": "Soy Confidant. Estoy aquí para una conversación de apoyo sobre salud: síntomas, afecciones, tratamientos y preguntas generales. Todo se queda en tu dispositivo. Para temas serios de salud, consulta a un profesional. ¿Sobre qué te gustaría hablar?"
   },
   "setup": {
     "privacyInfo": "Todo funciona en tu dispositivo: tus conversaciones y datos no salen de tu ordenador. Esta configuración única descarga el modelo de IA y la base de conocimiento que necesitas.",

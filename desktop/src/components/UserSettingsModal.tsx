@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { useTranslation } from '../i18n/hooks/useTranslation';
+import { useModalFocusTrap } from '../hooks/useModalFocusTrap';
 import { getCurrentLanguage } from '../i18n';
 import type { LanguageCode } from '../i18n';
 import LanguageSelector from './LanguageSelector';
@@ -42,16 +43,23 @@ export default function UserSettingsModal({ isOpen, onClose, userId }: UserSetti
     onClose();
   };
 
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useModalFocusTrap(isOpen, onClose, dialogRef);
+
   if (!isOpen) return null;
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-dialog user-settings-modal" onClick={(e) => e.stopPropagation()}>
+      <div
+        ref={dialogRef}
+        className="modal-dialog user-settings-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="user-settings-modal-title"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="modal-header">
-          <h2>{t('ui.settingsFor', { name: userName || t('ui.userFallback') })}</h2>
-          <button className="modal-close" onClick={onClose} aria-label={t('ui.close')}>
-            ×
-          </button>
+          <h2 id="user-settings-modal-title">{t('ui.settingsFor', { name: userName || t('ui.userFallback') })}</h2>
         </div>
         <div className="modal-content">
           <div className="user-settings-section">

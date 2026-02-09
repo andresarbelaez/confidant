@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { Eye, EyeOff } from 'lucide-react';
 import { useTranslation } from '../i18n/hooks/useTranslation';
+import { useModalFocusTrap } from '../hooks/useModalFocusTrap';
 import './PasswordPrompt.css';
 
 interface PasswordPromptProps {
@@ -13,6 +14,8 @@ interface PasswordPromptProps {
 
 export default function PasswordPrompt({ userId, userName, onVerified, onCancel }: PasswordPromptProps) {
   const { t } = useTranslation(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useModalFocusTrap(true, onCancel, dialogRef);
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -51,12 +54,20 @@ export default function PasswordPrompt({ userId, userName, onVerified, onCancel 
 
   return (
     <div className="modal-overlay" onClick={onCancel}>
-      <div className="modal-dialog password-prompt" onClick={(e) => e.stopPropagation()}>
+      <div
+        ref={dialogRef}
+        className="modal-dialog password-prompt"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="password-prompt-title"
+        aria-describedby="password-prompt-desc"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="modal-header">
-          <h2>{t('ui.enterPasswordTitle')}</h2>
+          <h2 id="password-prompt-title">{t('ui.enterPasswordTitle')}</h2>
         </div>
         <div className="modal-content">
-          <p className="password-prompt-subtitle">{t('ui.enterPasswordFor', { name: userName })}</p>
+          <p id="password-prompt-desc" className="password-prompt-subtitle">{t('ui.enterPasswordFor', { name: userName })}</p>
           
           <form onSubmit={handleSubmit}>
             <div className="form-group">
@@ -84,7 +95,7 @@ export default function PasswordPrompt({ userId, userName, onVerified, onCancel 
               </div>
               
               {error && (
-                <div className="form-error">{error}</div>
+                <div className="form-error" role="alert">{error}</div>
               )}
             </div>
 

@@ -437,9 +437,10 @@
 }
 
 .chat-send-button {
-  width: 32px;
-  height: 32px;
-  min-width: 32px;
+  width: var(--touch-target-min);
+  height: var(--touch-target-min);
+  min-width: var(--touch-target-min);
+  min-height: var(--touch-target-min);
   flex-shrink: 0;
   padding: 0;
   background: var(--color-send-button-bg);

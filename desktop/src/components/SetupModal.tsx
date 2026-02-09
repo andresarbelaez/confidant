@@ -3,6 +3,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { MODEL_OPTIONS, ModelOption, getDefaultModel } from '../config/model-options';
 import { KB_OPTIONS, KBOption, getDefaultKB } from '../config/kb-options';
 import { useTranslation } from '../i18n/hooks/useTranslation';
+import { useModalFocusTrap } from '../hooks/useModalFocusTrap';
 import './SetupModal.css';
 
 type DownloadStatus = 'not-started' | 'downloading' | 'downloaded' | 'error' | 'checking';
@@ -45,6 +46,8 @@ export default function SetupModal({
   const [existingModels, setExistingModels] = useState<string[]>([]);
   const [showExistingModels, setShowExistingModels] = useState(false);
   const initializedRef = useRef<string | null>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useModalFocusTrap(isOpen, onClose ?? (() => {}), dialogRef);
 
   // Reset initialization ref when modal closes
   useEffect(() => {
@@ -235,9 +238,15 @@ export default function SetupModal({
   return (
     <>
       <div className="modal-overlay" onClick={showProceedButton || !onClose ? undefined : onClose} />
-      <div className="modal-dialog">
+      <div
+        ref={dialogRef}
+        className="modal-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="setup-modal-title"
+      >
         <div className="modal-header">
-          <h2>{title}</h2>
+          <h2 id="setup-modal-title">{title}</h2>
           {!showProceedButton && onClose && (
             <button className="modal-close" onClick={onClose} aria-label={t('ui.close')}>
               ×

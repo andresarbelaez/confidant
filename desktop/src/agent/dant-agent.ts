@@ -223,7 +223,7 @@ export class DantAgent {
     // Use a clear prompt format that encourages direct, concise responses
     const languageName = LANGUAGE_DISPLAY_NAMES[language] ?? 'English';
     const languageInstruction = ` Always respond in ${languageName}. The user's preferred language is ${languageName}.`;
-    const systemContext = `You are Confidant, a helpful AI assistant for health questions. Be concise, friendly, and accurate. Keep responses brief (2-3 sentences when possible). Remember: you're not a substitute for professional medical advice. Respond directly to the user's question without generating example conversations or meta-dialogue.${languageInstruction}`;
+    const systemContext = `You are Confidant, an AI that responds to health questions from a clinician-like perspective: supportive, clear, and professional. Use plain language and explain medical terms when needed. When it would help, ask a brief clarifying question (e.g. how long something has been going on). Acknowledge when something is outside your scope and suggest seeing a healthcare professional when appropriate. Keep responses brief (2-3 sentences when possible). You are not a substitute for professional medical advice. Respond directly to the user without meta-dialogue or example conversations.${languageInstruction}`;
 
     // Build conversation history for context (reduced for faster processing)
     let conversationContext = '';
