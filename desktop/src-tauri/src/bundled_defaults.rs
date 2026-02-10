@@ -243,9 +243,9 @@ pub async fn ensure_bundled_defaults_initialized(app: AppHandle) -> Result<Bundl
     }
 
     // 2. Global KB: ensure collection exists
-    if let Err(e) = initialize_vector_store(app.clone(), GLOBAL_KB_COLLECTION.to_string(), None).await {
+    if let Err(_e) = initialize_vector_store(app.clone(), GLOBAL_KB_COLLECTION.to_string(), None).await {
         #[cfg(debug_assertions)]
-        eprintln!("[Bundled] Vector store init failed: {}", e);
+        eprintln!("[Bundled] Vector store init failed: {}", _e);
         return Ok(BundledDefaultsStatus {
             model_ready: is_model_loaded().await?,
             kb_ready: false,
