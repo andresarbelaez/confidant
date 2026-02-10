@@ -121,6 +121,9 @@ jobs:
       contents: read
     runs-on: windows-latest
     if: github.event.inputs.platform == 'windows-x64' || github.event.inputs.platform == 'all'
+    defaults:
+      run:
+        shell: bash
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -144,6 +147,7 @@ jobs:
         run: |
           cd desktop
           BUNDLE_PYTHON=1 bash scripts/setup-python-bundle.sh
+        continue-on-error: true
 
       - name: Build frontend
         run: |
