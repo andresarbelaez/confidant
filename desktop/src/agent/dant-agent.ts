@@ -74,10 +74,7 @@ export class DantAgent {
     const cachedResponse = await getCachedResponse(normalizedQuery, language);
     
     if (cachedResponse) {
-      const cacheMs = Math.round(performance.now() - startMs);
       const wasFirstMessage = this.isFirstMessage;
-      console.log(`[Confidant] Cache hit: ${cacheMs}ms (query: "${normalizedQuery}")`);
-      
       this.isFirstMessage = false;
       this.conversationHistory.push({ role: 'user', content: query });
       this.conversationHistory.push({ role: 'assistant', content: cachedResponse });
@@ -208,8 +205,6 @@ export class DantAgent {
       
       this.isFirstMessage = false;
       this.conversationHistory.push({ role: 'user', content: query });
-      const firstMsgMs = Math.round(performance.now() - startMs);
-      console.log(`[Confidant] Agent response: ${firstMsgMs}ms (initial greeting, no RAG)`);
       return {
         response: hardcodedMessages[0],
         sources: undefined,
@@ -299,10 +294,8 @@ Assistant:`;
         this.conversationHistory = this.conversationHistory.slice(-this.maxHistoryLength * 2);
       }
 
-      const responseMs = Math.round(performance.now() - startMs);
       const usedRAGFlag = useRAG && sources.length > 0;
-      console.log(`[Confidant] Agent response: ${responseMs}ms (RAG: ${usedRAGFlag})`);
-      
+
       // Cache the response for common queries
       const normalized = normalizeQuery(query);
       const commonQueries = ['hi', 'hello', 'hey', 'what are you', 'who are you', 'what can you do', 'help'];
@@ -318,8 +311,6 @@ Assistant:`;
         usedRAG: usedRAGFlag
       };
     } catch (err) {
-      const errorMs = Math.round(performance.now() - startMs);
-      console.log(`[Confidant] Agent error after ${errorMs}ms`);
       // Extract the actual error message
       let errorMessage = 'Failed to generate response';
       if (err instanceof Error) {

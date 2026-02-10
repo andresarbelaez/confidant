@@ -2,9 +2,15 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { t } from '../i18n';
 
+export interface AppUser {
+  id: string;
+  name: string;
+  created_at: string;
+}
+
 export type AppView =
   | { type: 'loading' }
-  | { type: 'user-selection' }
+  | { type: 'user-selection'; preloadedUsers?: AppUser[] | null }
   | { type: 'chat', userId: string }
   | { type: 'error', message: string, retry?: () => void; onContinue?: () => void };
 
@@ -122,22 +128,22 @@ export function useAppState() {
     }));
   }, []);
 
-  const transitionToUserSelection = useCallback(async () => {
+  const transitionToUserSelection = useCallback(async (preloadedUsers?: AppUser[] | null) => {
     // Clear persisted user to force selection
     await invoke('set_current_user', { userId: null }).catch(console.error);
     setState(prev => ({
       ...prev,
-      view: { type: 'user-selection' },
+      view: { type: 'user-selection', preloadedUsers: preloadedUsers ?? undefined },
       showSettingsModal: false,
     }));
   }, []);
 
   /** Go to user-selection and open Settings (e.g. from the "defaults not found" error). */
-  const transitionToUserSelectionWithSettings = useCallback(async () => {
+  const transitionToUserSelectionWithSettings = useCallback(async (preloadedUsers?: AppUser[] | null) => {
     await invoke('set_current_user', { userId: null }).catch(console.error);
     setState(prev => ({
       ...prev,
-      view: { type: 'user-selection' },
+      view: { type: 'user-selection', preloadedUsers: preloadedUsers ?? undefined },
       showSettingsModal: true,
     }));
   }, []);
@@ -175,9 +181,15 @@ export function useAppState() {
 
   const switchProfile = useCallback(async () => {
     await invoke('set_current_user', { userId: null }).catch(console.error);
+    let preloaded: AppUser[] | null = null;
+    try {
+      preloaded = await invoke<AppUser[]>('get_users').catch(() => null);
+    } catch {
+      // ignore
+    }
     setState(prev => ({
       ...prev,
-      view: { type: 'user-selection' },
+      view: { type: 'user-selection', preloadedUsers: preloaded ?? undefined },
       showSettingsModal: false,
     }));
   }, []);
@@ -210,6 +222,7 @@ export function useAppState() {
     initializationRef.current = true;
 
     const initialize = async () => {
+      logAppTiming('initialize() start');
       try {
         // First check setup status
         let setupStatus = await checkSetup();
@@ -226,11 +239,13 @@ export function useAppState() {
           }
 
           if (!setupStatus.modelReady || !setupStatus.globalKBReady) {
-            transitionToError(
-              t('errors.bundledDefaultsNotFound'),
-              undefined,
-              () => transitionToUserSelectionWithSettings()
-            );
+            let preloaded: AppUser[] | null = null;
+            try {
+              preloaded = await invoke<AppUser[]>('get_users').catch(() => null);
+            } catch {
+              // ignore
+            }
+            await transitionToUserSelectionWithSettings(preloaded);
             return;
           }
         }
@@ -241,7 +256,13 @@ export function useAppState() {
         if (userId) {
           await transitionToChat(userId);
         } else {
-          await transitionToUserSelection();
+          let preloadedUsers: AppUser[] | null = null;
+          try {
+            preloadedUsers = await invoke<AppUser[]>('get_users').catch(() => null);
+          } catch {
+            // ignore
+          }
+          await transitionToUserSelection(preloadedUsers);
         }
       } catch (err) {
         console.error('Failed to initialize app:', err);

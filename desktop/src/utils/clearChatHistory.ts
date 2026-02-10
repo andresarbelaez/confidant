@@ -6,7 +6,6 @@ import { invoke } from '@tauri-apps/api/core';
 export async function clearChatHistoryForUser(userId: string): Promise<void> {
   try {
     await invoke('delete_user_chat', { userId });
-    console.log(`Chat history cleared for user: ${userId}`);
   } catch (err) {
     console.error(`Failed to clear chat history for user ${userId}:`, err);
     throw err;
@@ -22,7 +21,6 @@ export async function clearAllChatHistory(): Promise<void> {
     for (const user of users) {
       try {
         await invoke('delete_user_chat', { userId: user.id });
-        console.log(`Chat history cleared for user: ${user.name} (${user.id})`);
       } catch (err) {
         console.error(`Failed to clear chat history for user ${user.id}:`, err);
       }

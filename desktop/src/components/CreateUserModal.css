@@ -1,5 +1,9 @@
 .create-user-modal {
-  max-width: 500px;
+  max-width: 450px;
+}
+
+.create-user-modal .modal-content {
+  padding: 1.5rem 2rem;
 }
 
 .form-label {
@@ -25,6 +29,7 @@
 }
 
 .form-input {
+  box-sizing: border-box;
   width: 100%;
   padding: 0.75rem 3rem 0.75rem 1rem;
   border-radius: 8px;
@@ -33,6 +38,12 @@
   color: var(--color-text);
   font-size: 1rem;
   font-family: inherit;
+}
+
+/* Name field: no icon, so use symmetric horizontal padding */
+.create-user-modal .form-input--text {
+  padding-left: 1rem;
+  padding-right: 1rem;
 }
 
 .form-input:focus {

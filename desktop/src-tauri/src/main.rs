@@ -18,6 +18,7 @@ use vector_store::{
 use embeddings::{generate_embedding, generate_embeddings_batch};
 use user_management::{
     get_users, create_user, verify_password, get_current_user, set_current_user,
+    clear_current_user_on_exit,
     save_user_chat, load_user_chat, delete_user_chat, delete_user, get_user_language, set_user_language,
 };
 use cache::{read_cache_file, write_cache_file};
@@ -26,6 +27,11 @@ use bundled_defaults::ensure_bundled_defaults_initialized;
 fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
+        .on_window_event(|window, event| {
+            if let tauri::WindowEvent::CloseRequested { .. } = event {
+                let _ = clear_current_user_on_exit();
+            }
+        })
         .invoke_handler(tauri::generate_handler![
             // LLM commands
             initialize_model,

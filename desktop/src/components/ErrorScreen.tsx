@@ -1,4 +1,5 @@
 import { useTranslation } from '../i18n/hooks/useTranslation';
+import LanguageSelector from './LanguageSelector';
 import './ErrorScreen.css';
 
 interface ErrorScreenProps {
@@ -13,6 +14,9 @@ export default function ErrorScreen({ message, retry, onContinue }: ErrorScreenP
   return (
     <div className="error-screen">
       <div className="error-content">
+        <div className="error-language-row">
+          <LanguageSelector userId={null} />
+        </div>
         <h1 className="error-title">{t('errors.title')}</h1>
         <p className="error-message">{message}</p>
         <div className="error-actions">

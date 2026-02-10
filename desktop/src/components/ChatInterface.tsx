@@ -6,7 +6,9 @@ import ReactMarkdown from 'react-markdown';
 import { useTranslation } from '../i18n/hooks/useTranslation';
 import ChatSidebar from './ChatSidebar';
 import LogOutConfirmModal from './LogOutConfirmModal';
+import DeleteChatHistoryConfirmModal from './DeleteChatHistoryConfirmModal';
 import UserSettingsModal from './UserSettingsModal';
+import { clearChatHistoryForUser } from '../utils/clearChatHistory';
 import './ChatInterface.css';
 
 interface ChatInterfaceProps {
@@ -30,6 +32,7 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
   const [isInitialized, setIsInitialized] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
   const [showLogOutModal, setShowLogOutModal] = useState(false);
+  const [showDeleteChatHistoryModal, setShowDeleteChatHistoryModal] = useState(false);
   const [showUserSettingsModal, setShowUserSettingsModal] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -251,16 +254,40 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
     onLogOut?.();
   };
 
+  const handleDeleteChatHistoryClick = () => setShowDeleteChatHistoryModal(true);
+  const handleDeleteChatHistoryConfirm = async () => {
+    setShowDeleteChatHistoryModal(false);
+    try {
+      await clearChatHistoryForUser(userId);
+      setMessages([]);
+    } catch (err) {
+      console.error('Failed to clear chat history:', err);
+    }
+  };
+
   if (disabled) {
     return (
       <div className="chat-interface chat-disabled">
         {showLogOutModal && (
           <LogOutConfirmModal onConfirm={handleLogOutConfirm} onCancel={() => setShowLogOutModal(false)} userId={userId} />
         )}
+        {showDeleteChatHistoryModal && (
+          <DeleteChatHistoryConfirmModal
+            onConfirm={handleDeleteChatHistoryConfirm}
+            onCancel={() => setShowDeleteChatHistoryModal(false)}
+            userId={userId}
+          />
+        )}
         {showUserSettingsModal && (
           <UserSettingsModal isOpen={showUserSettingsModal} onClose={() => setShowUserSettingsModal(false)} userId={userId} />
         )}
-        <ChatSidebar userId={userId} onOpenSettings={onOpenSettings} onOpenUserSettings={() => setShowUserSettingsModal(true)} onLogOut={handleLogOutClick} />
+        <ChatSidebar
+          userId={userId}
+          onOpenSettings={onOpenSettings}
+          onOpenUserSettings={() => setShowUserSettingsModal(true)}
+          onLogOut={handleLogOutClick}
+          onDeleteChatHistory={handleDeleteChatHistoryClick}
+        />
         <div className="chat-main">
           <div className="chat-disabled-overlay">
             <div className="chat-disabled-content">
@@ -310,10 +337,23 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
         {showLogOutModal && (
           <LogOutConfirmModal onConfirm={handleLogOutConfirm} onCancel={() => setShowLogOutModal(false)} userId={userId} />
         )}
+        {showDeleteChatHistoryModal && (
+          <DeleteChatHistoryConfirmModal
+            onConfirm={handleDeleteChatHistoryConfirm}
+            onCancel={() => setShowDeleteChatHistoryModal(false)}
+            userId={userId}
+          />
+        )}
         {showUserSettingsModal && (
           <UserSettingsModal isOpen={showUserSettingsModal} onClose={() => setShowUserSettingsModal(false)} userId={userId} />
         )}
-        <ChatSidebar userId={userId} onOpenSettings={onOpenSettings} onOpenUserSettings={() => setShowUserSettingsModal(true)} onLogOut={handleLogOutClick} />
+        <ChatSidebar
+          userId={userId}
+          onOpenSettings={onOpenSettings}
+          onOpenUserSettings={() => setShowUserSettingsModal(true)}
+          onLogOut={handleLogOutClick}
+          onDeleteChatHistory={handleDeleteChatHistoryClick}
+        />
         <div className="chat-main">
           <div className="chat-placeholder">
             <div className="loading-spinner"></div>
@@ -330,10 +370,23 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
         {showLogOutModal && (
           <LogOutConfirmModal onConfirm={handleLogOutConfirm} onCancel={() => setShowLogOutModal(false)} userId={userId} />
         )}
+        {showDeleteChatHistoryModal && (
+          <DeleteChatHistoryConfirmModal
+            onConfirm={handleDeleteChatHistoryConfirm}
+            onCancel={() => setShowDeleteChatHistoryModal(false)}
+            userId={userId}
+          />
+        )}
         {showUserSettingsModal && (
           <UserSettingsModal isOpen={showUserSettingsModal} onClose={() => setShowUserSettingsModal(false)} userId={userId} />
         )}
-        <ChatSidebar userId={userId} onOpenSettings={onOpenSettings} onOpenUserSettings={() => setShowUserSettingsModal(true)} onLogOut={handleLogOutClick} />
+        <ChatSidebar
+          userId={userId}
+          onOpenSettings={onOpenSettings}
+          onOpenUserSettings={() => setShowUserSettingsModal(true)}
+          onLogOut={handleLogOutClick}
+          onDeleteChatHistory={handleDeleteChatHistoryClick}
+        />
         <div className="chat-main">
           <div className="chat-placeholder">
             <p>{t('ui.preparingChat')}</p>
@@ -353,10 +406,23 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
       {showLogOutModal && (
         <LogOutConfirmModal onConfirm={handleLogOutConfirm} onCancel={() => setShowLogOutModal(false)} userId={userId} />
       )}
+      {showDeleteChatHistoryModal && (
+        <DeleteChatHistoryConfirmModal
+          onConfirm={handleDeleteChatHistoryConfirm}
+          onCancel={() => setShowDeleteChatHistoryModal(false)}
+          userId={userId}
+        />
+      )}
       {showUserSettingsModal && (
         <UserSettingsModal isOpen={showUserSettingsModal} onClose={() => setShowUserSettingsModal(false)} userId={userId} />
       )}
-      <ChatSidebar userId={userId} onOpenSettings={onOpenSettings} onOpenUserSettings={() => setShowUserSettingsModal(true)} onLogOut={handleLogOutClick} />
+      <ChatSidebar
+        userId={userId}
+        onOpenSettings={onOpenSettings}
+        onOpenUserSettings={() => setShowUserSettingsModal(true)}
+        onLogOut={handleLogOutClick}
+        onDeleteChatHistory={handleDeleteChatHistoryClick}
+      />
       <div className="chat-main">
         <div className="chat-messages">
         {messages.map((msg, idx) => (

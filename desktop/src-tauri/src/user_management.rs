@@ -383,6 +383,16 @@ pub async fn get_current_user() -> Result<Option<String>, String> {
     }
 }
 
+/// Clear current user file (sync). Call on app exit so next launch shows user selection.
+pub fn clear_current_user_on_exit() -> Result<(), String> {
+    let current_user_file = get_current_user_file_path()?;
+    if current_user_file.exists() {
+        fs::remove_file(&current_user_file)
+            .map_err(|e| format!("Failed to remove current user file: {}", e))?;
+    }
+    Ok(())
+}
+
 /// Set current logged-in user (None for guest/logout)
 #[tauri::command]
 pub async fn set_current_user(user_id: Option<String>) -> Result<(), String> {

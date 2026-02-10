@@ -12,6 +12,12 @@
   max-width: 500px;
 }
 
+.error-language-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1rem;
+}
+
 .error-title {
   font-size: 2rem;
   font-weight: 600;

@@ -26,16 +26,10 @@ function App() {
 
   // Clear chat history for all users on app start (one-time operation)
   useEffect(() => {
-    const clearHistory = async () => {
-      try {
-        await clearAllChatHistory();
-        console.log('Chat history cleared for all users');
-      } catch (err) {
-        console.error('Failed to clear chat history:', err);
-      }
-    };
-    clearHistory();
-  }, []); // Run once on mount
+    clearAllChatHistory().catch((err) => {
+      console.error('Failed to clear chat history:', err);
+    });
+  }, []);
 
   const handleLoadingComplete = () => {
     setLoadingComplete(true);
@@ -55,7 +49,10 @@ function App() {
     case 'user-selection':
       return (
         <div className={`App ${showSettingsModal ? 'dimmed' : ''}`}>
-          <UserProfileSelector onUserSelected={handleUserSelected} />
+          <UserProfileSelector
+            onUserSelected={handleUserSelected}
+            initialUsers={view.preloadedUsers ?? undefined}
+          />
           {showSettingsModal && (
             <SetupModal
               isOpen={showSettingsModal}
@@ -113,7 +110,6 @@ function App() {
       );
 
     default:
-      // Fallback to loading if we're in an unknown state
       return <LoadingScreen onComplete={handleLoadingComplete} />;
   }
 }

@@ -14,15 +14,18 @@ interface User {
 
 interface UserProfileSelectorProps {
   onUserSelected: (userId: string) => void;
+  /** When provided, show profiles immediately and skip the loading state (still refresh in background). */
+  initialUsers?: User[] | null;
 }
 
-export default function UserProfileSelector({ onUserSelected }: UserProfileSelectorProps) {
+export default function UserProfileSelector({ onUserSelected, initialUsers }: UserProfileSelectorProps) {
   const { t } = useTranslation(null);
-  const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [users, setUsers] = useState<User[]>(initialUsers ?? []);
+  const [loading, setLoading] = useState(initialUsers == null);
   const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
   const [showCreateUser, setShowCreateUser] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+
   useEffect(() => {
     loadUsers();
   }, []);

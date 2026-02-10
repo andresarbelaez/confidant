@@ -10,9 +10,7 @@ interface LoadingScreenProps {
 export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
   const { t } = useTranslation(null);
   useEffect(() => {
-    // Show loading screen for a minimum duration (e.g., 1.5 seconds)
-    // This ensures users see the branding even if initialization is fast
-    const minDisplayTime = 1500;
+    const minDisplayTime = 800;
     const startTime = Date.now();
 
     const timer = setTimeout(() => {
