@@ -72,9 +72,12 @@ fn resolve_bundled_model_path(app: &AppHandle) -> Option<PathBuf> {
         }
     }
     if let Some(resource_dir) = app.path().resource_dir().ok() {
-        let p = resource_dir.join("models").join(BUNDLED_MODEL_FILENAME);
-        if p.exists() {
-            return Some(p);
+        // Try root (map format "resources/": "") then under "resources/" (list format "resources/")
+        for base in [resource_dir.clone(), resource_dir.join("resources")] {
+            let p = base.join("models").join(BUNDLED_MODEL_FILENAME);
+            if p.exists() {
+                return Some(p);
+            }
         }
     }
     // Dev fallback: use same location as Settings download (project data/models/)
@@ -123,10 +126,12 @@ fn resolve_bundled_kb_path(app: &AppHandle) -> Option<PathBuf> {
         }
     }
     if let Some(resource_dir) = app.path().resource_dir().ok() {
-        for rel in [BUNDLED_KB_FILENAME, &format!("kb/{}", BUNDLED_KB_FILENAME)] {
-            let p = resource_dir.join(rel);
-            if p.exists() {
-                return Some(p);
+        for base in [resource_dir.clone(), resource_dir.join("resources")] {
+            for rel in [BUNDLED_KB_FILENAME, &format!("kb/{}", BUNDLED_KB_FILENAME)] {
+                let p = base.join(rel);
+                if p.exists() {
+                    return Some(p);
+                }
             }
         }
     }
@@ -216,13 +221,23 @@ async fn ingest_kb_from_path(app: &AppHandle, path: &Path) -> Result<(), String>
 pub async fn ensure_bundled_defaults_initialized(app: AppHandle) -> Result<BundledDefaultsStatus, String> {
     // 1. Model: if not loaded, try bundled model path
     if !is_model_loaded().await? {
-        if let Some(model_path) = resolve_bundled_model_path(&app) {
-            let path_str = model_path.to_string_lossy().to_string();
-            #[cfg(debug_assertions)]
-            eprintln!("[Bundled] Initializing model from: {}", path_str);
-            if let Err(e) = initialize_model(app.clone(), path_str).await {
+        match resolve_bundled_model_path(&app) {
+            Some(model_path) => {
+                let path_str = model_path.to_string_lossy().to_string();
                 #[cfg(debug_assertions)]
-                eprintln!("[Bundled] Model init failed: {}", e);
+                eprintln!("[Bundled] Initializing model from: {}", path_str);
+                if let Err(e) = initialize_model(app.clone(), path_str).await {
+                    eprintln!("[Confidant] Bundled model load failed: {}", e);
+                }
+            }
+            None => {
+                if let Ok(rd) = app.path().resource_dir() {
+                    let expected = rd.join("models").join(BUNDLED_MODEL_FILENAME);
+                    eprintln!(
+                        "[Confidant] No bundled model found. Expected at: {} (add resources/models/default_model.gguf and rebuild)",
+                        expected.display()
+                    );
+                }
             }
         }
     }
@@ -244,12 +259,22 @@ pub async fn ensure_bundled_defaults_initialized(app: AppHandle) -> Result<Bundl
         .and_then(|v| v["document_count"].as_u64())
         .unwrap_or(0);
     if doc_count == 0 {
-        if let Some(kb_path) = resolve_bundled_kb_path(&app) {
-            #[cfg(debug_assertions)]
-            eprintln!("[Bundled] Ingesting KB from: {:?}", kb_path);
-            if let Err(e) = ingest_kb_from_path(&app, &kb_path).await {
+        match resolve_bundled_kb_path(&app) {
+            Some(kb_path) => {
                 #[cfg(debug_assertions)]
-                eprintln!("[Bundled] KB ingest failed: {}", e);
+                eprintln!("[Bundled] Ingesting KB from: {:?}", kb_path);
+                if let Err(e) = ingest_kb_from_path(&app, &kb_path).await {
+                    eprintln!("[Confidant] Bundled KB ingest failed: {}", e);
+                }
+            }
+            None => {
+                if let Ok(rd) = app.path().resource_dir() {
+                    eprintln!(
+                        "[Confidant] No bundled KB found. Expected {} or {} (add resources/default_kb.json and rebuild)",
+                        rd.join(BUNDLED_KB_FILENAME).display(),
+                        rd.join("resources").join(BUNDLED_KB_FILENAME).display()
+                    );
+                }
             }
         }
     }

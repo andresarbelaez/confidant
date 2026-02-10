@@ -14,19 +14,21 @@ const SCRIPTS_DIR: &str = "scripts";
 /// Call this from commands that need to run Python; when Some, use these paths instead of system Python.
 pub fn resolve_bundled_python(app: &AppHandle) -> Option<(PathBuf, PathBuf)> {
     let resource_dir = app.path().resource_dir().ok()?;
-    let python_root = resource_dir.join("python");
-    let scripts_dir = resource_dir.join(SCRIPTS_DIR);
+    // Try root (map format "resources/": "") then under "resources/" (list format "resources/")
+    for base in [resource_dir.clone(), resource_dir.join("resources")] {
+        let python_root = base.join("python");
+        let scripts_dir = base.join(SCRIPTS_DIR);
 
-    #[cfg(windows)]
-    let python_exe = python_root.join("python.exe");
-    #[cfg(not(windows))]
-    let python_exe = python_root.join("bin").join("python3");
+        #[cfg(windows)]
+        let python_exe = python_root.join("python.exe");
+        #[cfg(not(windows))]
+        let python_exe = python_root.join("bin").join("python3");
 
-    if python_exe.exists() && python_root.is_dir() && scripts_dir.is_dir() {
-        Some((python_exe, scripts_dir))
-    } else {
-        None
+        if python_exe.exists() && python_root.is_dir() && scripts_dir.is_dir() {
+            return Some((python_exe, scripts_dir));
+        }
     }
+    None
 }
 
 /// Resolve path to a specific script in the bundled scripts dir.
