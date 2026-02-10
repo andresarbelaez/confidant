@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { t } from '../i18n';
+import { logAppTiming, logViewEntered } from '../utils/appTiming';
 
 export interface AppUser {
   id: string;
@@ -122,6 +123,7 @@ export function useAppState() {
 
   // Transition functions
   const transitionToLoading = useCallback(() => {
+    logViewEntered('loading');
     setState(prev => ({
       ...prev,
       view: { type: 'loading' },
@@ -129,6 +131,7 @@ export function useAppState() {
   }, []);
 
   const transitionToUserSelection = useCallback(async (preloadedUsers?: AppUser[] | null) => {
+    logViewEntered('user-selection');
     // Clear persisted user to force selection
     await invoke('set_current_user', { userId: null }).catch(console.error);
     setState(prev => ({
@@ -140,6 +143,7 @@ export function useAppState() {
 
   /** Go to user-selection and open Settings (e.g. from the "defaults not found" error). */
   const transitionToUserSelectionWithSettings = useCallback(async (preloadedUsers?: AppUser[] | null) => {
+    logViewEntered('user-selection');
     await invoke('set_current_user', { userId: null }).catch(console.error);
     setState(prev => ({
       ...prev,
@@ -149,6 +153,7 @@ export function useAppState() {
   }, []);
 
   const transitionToChat = useCallback(async (userId: string) => {
+    logViewEntered('chat');
     // Set current user in backend
     await invoke('set_current_user', { userId }).catch(console.error);
     setState(prev => ({
@@ -159,6 +164,7 @@ export function useAppState() {
   }, []);
 
   const transitionToError = useCallback((message: string, retry?: () => void, onContinue?: () => void) => {
+    logViewEntered('error');
     setState(prev => ({
       ...prev,
       view: { type: 'error', message, retry, onContinue },
@@ -180,6 +186,7 @@ export function useAppState() {
   }, []);
 
   const switchProfile = useCallback(async () => {
+    logViewEntered('user-selection');
     await invoke('set_current_user', { userId: null }).catch(console.error);
     let preloaded: AppUser[] | null = null;
     try {
@@ -221,19 +228,25 @@ export function useAppState() {
     if (initializationRef.current) return;
     initializationRef.current = true;
 
+    logViewEntered('loading');
+    logAppTiming('initialize start');
+
     const initialize = async () => {
-      logAppTiming('initialize() start');
       try {
         // First check setup status
+        logAppTiming('checkSetup start');
         let setupStatus = await checkSetup();
+        logAppTiming('checkSetup done');
 
         // If setup is incomplete, try to initialize from bundled defaults once
         if (!setupStatus.modelReady || !setupStatus.globalKBReady) {
           try {
+            logAppTiming('ensure_bundled_defaults_initialized start');
             await invoke<{ model_ready: boolean; kb_ready: boolean }>(
               'ensure_bundled_defaults_initialized'
             );
             setupStatus = await checkSetup();
+            logAppTiming('ensure_bundled_defaults_initialized done');
           } catch (err) {
             console.warn('Bundled defaults init failed:', err);
           }
@@ -251,7 +264,9 @@ export function useAppState() {
         }
 
         // Setup is complete, check for current user
+        logAppTiming('checkCurrentUser start');
         const userId = await checkCurrentUser();
+        logAppTiming('checkCurrentUser done');
 
         if (userId) {
           await transitionToChat(userId);

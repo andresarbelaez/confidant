@@ -15,8 +15,9 @@
 
 3. **Build the installers**:
    ```bash
-   npm run build
+   npm run build:installer
    ```
+   This creates the Python bundle if missing (so testers don’t need Python), then runs the Tauri build. If you already ran `setup-full-bundle.sh`, plain `npm run build` is enough.
    First build can take several minutes (Rust + frontend). When it finishes, installers are in:
    ```text
    desktop/src-tauri/target/release/bundle/
@@ -120,7 +121,7 @@ Then run `npm run build` again. The app will use these on first launch and skip 
 To automate installer builds (e.g. for GitHub Actions):
 
 1. Add a job that installs Node, Rust, and system deps for the target OS.
-2. For Option A: fetch the matching python-build-standalone tarball, extract, copy scripts, run pip install, then run `npm run build` from `desktop/`.
+2. From `desktop/`, run **`npm run build:installer`** (or set **`BUNDLE_PYTHON=1`** and run `npm run build`). That ensures the Python bundle is created before the Tauri build, so the installer is self-contained.
 3. Upload the artifacts from `desktop/src-tauri/target/release/bundle/` as build outputs or release assets.
 
 Once the first installer runs successfully on your machine, repeat the same steps in CI for each target platform.

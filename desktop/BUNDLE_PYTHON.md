@@ -56,6 +56,15 @@ src-tauri/
 
 5. **Build**: from `desktop/`, run `npm run build`. The installers will include `resources/`.
 
+## Letting the installer build provide the bundle
+
+So the Python bundle is **not** stored in git, the **installer build** can populate it automatically:
+
+- **From `desktop/`:** run `npm run build:installer` (or `BUNDLE_PYTHON=1 npm run build`).  
+  This runs `scripts/setup-python-bundle.sh` if `resources/python/` is missing, then runs the Tauri build. The resulting installer will include the Python bundle so beta testers do not need to install Python.
+
+- **In CI:** set `BUNDLE_PYTHON=1` (or use `npm run build:installer`) before `npm run build` so the packaged app includes `resources/python/` and `resources/scripts/`.
+
 ## Optional: add `resources/` to .gitignore
 
 Because `resources/python/` is large and platform-specific, add:
@@ -64,7 +73,7 @@ Because `resources/python/` is large and platform-specific, add:
 desktop/src-tauri/resources/
 ```
 
-Then each builder (or CI) generates `resources/` before `tauri build`.
+Then each builder (or CI) generates `resources/` before `tauri build` (e.g. via `build:installer` or `BUNDLE_PYTHON=1`).
 
 ## Summary
 
