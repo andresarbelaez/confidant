@@ -47,13 +47,7 @@ fn call_embeddings_helper(
     } else {
         let script_path = get_embeddings_helper_path()?;
         let python_cmd = {
-            let venv_python = std::env::current_dir()
-                .ok()
-                .and_then(|dir| {
-                    let project_root = dir.parent().and_then(|p| p.parent());
-                    project_root.map(|root| root.join("venv").join("bin").join("python3"))
-                })
-                .filter(|p| p.exists());
+            let venv_python = crate::python_bundle::find_venv_python();
             if let Some(venv_py) = venv_python {
                 if Command::new(&venv_py).arg("--version").output().is_ok() {
                     venv_py.to_string_lossy().to_string()

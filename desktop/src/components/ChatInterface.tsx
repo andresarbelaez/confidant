@@ -20,13 +20,16 @@ interface ChatInterfaceProps {
   userId: string;
   onSwitchProfile?: () => void;
   onLogOut?: () => void;
+  /** Called when chat content has layout and has had time to paint (parent can remove loading overlay). */
+  onReady?: () => void;
 }
 
-export default function ChatInterface({ disabled = false, modelReady = false, kbReady = false, chatVisible = false, onOpenSettings, userId, onSwitchProfile, onLogOut }: ChatInterfaceProps) {
+export default function ChatInterface({ disabled = false, modelReady = false, kbReady = false, chatVisible: _chatVisible = false, onOpenSettings, userId, onSwitchProfile: _onSwitchProfile, onLogOut, onReady }: ChatInterfaceProps) {
   const { t, currentLanguage } = useTranslation(userId);
   const [messages, setMessages] = useState<Array<{ role: 'user' | 'assistant'; content: string }>>([]);
   const [input, setInput] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showThinking, setShowThinking] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [agent, setAgent] = useState<DantAgent | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
@@ -37,6 +40,9 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const loadedUserIdRef = useRef<string | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const onReadyCalledRef = useRef(false);
+  const sessionFirstMessageContentRef = useRef<string | null>(null);
 
   const resizeInput = () => {
     const el = inputRef.current;
@@ -59,11 +65,32 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
     scrollToBottom();
   }, [messages]);
 
+  // Signal when chat content has layout (ResizeObserver) + 2 frames for paint, so parent can remove overlay
+  useEffect(() => {
+    if (!onReady || disabled || isInitializing || !isInitialized || !containerRef.current) return;
+    onReadyCalledRef.current = false;
+    const el = containerRef.current;
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (!entry || entry.contentRect.width === 0) return;
+      if (onReadyCalledRef.current) return;
+      onReadyCalledRef.current = true;
+      observer.disconnect();
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => onReady());
+      });
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [onReady, disabled, isInitializing, isInitialized]);
+
   // Initialize user KB and load chat history when userId is available.
   useEffect(() => {
     if (userId && isInitialized && !disabled) {
       if (loadedUserIdRef.current !== userId) {
         loadedUserIdRef.current = userId;
+        agent?.clearHistory();
+        sessionFirstMessageContentRef.current = null;
         initializeUserKB();
         loadChatHistory();
       }
@@ -111,10 +138,32 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
         role: msg.role as 'user' | 'assistant',
         content: msg.content,
       }));
-      setMessages(loadedMessages);
+      const sessionFirstMessageContent = loadedMessages.length === 0
+        ? t('agent.sessionFirstMessageIntro')
+        : [t('agent.sessionFirstMessageReturning1'), t('agent.sessionFirstMessageReturning2'), t('agent.sessionFirstMessageReturning3')][Math.floor(Math.random() * 3)];
+      sessionFirstMessageContentRef.current = sessionFirstMessageContent;
+
+      // Show a brief "thinking" state (0.1s–0.5s) before revealing the session first message
+      const placeholder = [...loadedMessages, { role: 'assistant' as const, content: '' }];
+      setMessages(placeholder);
+      setShowThinking(true);
+      setIsProcessing(true);
+      const delayMs = 500 + Math.random() * 500;
+      await new Promise(resolve => setTimeout(resolve, delayMs));
+      setMessages(prev => {
+        const next = [...prev];
+        if (next.length > 0 && next[next.length - 1].role === 'assistant') {
+          next[next.length - 1] = { ...next[next.length - 1], content: sessionFirstMessageContent };
+        }
+        return next;
+      });
+      setShowThinking(false);
+      setIsProcessing(false);
     } catch (err) {
       console.error('Failed to load chat history:', err);
       setMessages([]);
+      setShowThinking(false);
+      setIsProcessing(false);
     }
   };
 
@@ -208,14 +257,46 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
     setError(null);
     
     setIsProcessing(true);
-    setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
+    setShowThinking(true);
+    setMessages(prev => [...prev, { role: 'user', content: userMessage }, { role: 'assistant', content: '' }]);
 
     try {
+      if (sessionFirstMessageContentRef.current != null) {
+        agent.setSessionFirstMessage(sessionFirstMessageContentRef.current);
+        sessionFirstMessageContentRef.current = null;
+      }
       const healthKeywords = ['health', 'medical', 'symptom', 'disease', 'illness', 'condition', 'treatment', 'medicine', 'doctor', 'pain', 'fever', 'ache', 'diagnosis'];
       const isHealthQuery = healthKeywords.some(keyword => userMessage.toLowerCase().includes(keyword));
-      const response = await agent.processQuery(userMessage, { useRAG: isHealthQuery, userId, language: currentLanguage });
-      
-      setMessages(prev => [...prev, { role: 'assistant', content: response.response }]);
+      const response = await agent.processQuery(userMessage, {
+        useRAG: isHealthQuery,
+        userId,
+        language: currentLanguage,
+        onStreamChunk: (text) => {
+          setShowThinking(false); // hide "Thinking" as soon as first text arrives
+          setMessages(prev => {
+            const next = [...prev];
+            const last = next[next.length - 1];
+            if (last?.role === 'assistant') {
+              next[next.length - 1] = { ...last, content: last.content + text };
+            }
+            return next;
+          });
+        },
+      });
+
+      if (response.fromCache) {
+        const delayMs = 500 + Math.random() * 500;
+        await new Promise(resolve => setTimeout(resolve, delayMs));
+      }
+
+      setMessages(prev => {
+        const next = [...prev];
+        const last = next[next.length - 1];
+        if (last?.role === 'assistant') {
+          next[next.length - 1] = { ...last, content: response.response };
+        }
+        return next;
+      });
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to process query';
       
@@ -224,7 +305,10 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
       if (errorMessage.includes('Model not initialized')) {
         userFriendlyError = t('errors.modelNotSetUp');
       } else if (errorMessage.includes('Python')) {
-        userFriendlyError = t('errors.pythonIssue');
+        // Show the actual backend error so users see spawn/import details; add hint if short
+        userFriendlyError = errorMessage.length > 80
+          ? errorMessage
+          : `${errorMessage} ${t('errors.pythonHint')}`;
       } else if (errorMessage.includes('timeout') || errorMessage.includes('time')) {
         userFriendlyError = t('errors.timeout');
       } else {
@@ -232,12 +316,19 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
       }
       
       setError(userFriendlyError);
-      setMessages(prev => [...prev, { 
-        role: 'assistant', 
-        content: userFriendlyError
-      }]);
+      setMessages(prev => {
+        const next = [...prev];
+        const last = next[next.length - 1];
+        if (last?.role === 'assistant') {
+          next[next.length - 1] = { ...last, content: userFriendlyError };
+        } else {
+          next.push({ role: 'assistant', content: userFriendlyError });
+        }
+        return next;
+      });
     } finally {
       setIsProcessing(false);
+      setShowThinking(false);
     }
   };
 
@@ -402,7 +493,7 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
   }
 
   return (
-    <div className="chat-interface">
+    <div className="chat-interface" ref={containerRef}>
       {showLogOutModal && (
         <LogOutConfirmModal onConfirm={handleLogOutConfirm} onCancel={() => setShowLogOutModal(false)} userId={userId} />
       )}
@@ -425,16 +516,19 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
       />
       <div className="chat-main">
         <div className="chat-messages">
-        {messages.map((msg, idx) => (
+        {messages.map((msg, idx) => {
+          const isLast = idx === messages.length - 1;
+          const isPlaceholderThinking = isLast && msg.role === 'assistant' && msg.content === '' && isProcessing && showThinking;
+          return (
           <div key={idx} className={`message ${msg.role}`}>
-            <div className="message-content">
+            <div className={`message-content${isPlaceholderThinking ? ' thinking-text' : ''}`}>
               {msg.role === 'assistant' ? (
-                <ReactMarkdown>{msg.content}</ReactMarkdown>
+                isPlaceholderThinking ? t('ui.thinking') : <ReactMarkdown>{msg.content}</ReactMarkdown>
               ) : (
                 msg.content
               )}
             </div>
-            {msg.role === 'assistant' && (
+            {msg.role === 'assistant' && !isPlaceholderThinking && (
               <div className="message-actions">
                 <div className="copy-action-wrap">
                   <button
@@ -452,13 +546,7 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
               </div>
             )}
           </div>
-        ))}
-        
-        {isProcessing && (
-          <div className="message assistant" key="thinking">
-            <div className="message-content thinking-text">{t('ui.thinking')}</div>
-          </div>
-        )}
+        );})}
         
         <div ref={messagesEndRef} />
         </div>

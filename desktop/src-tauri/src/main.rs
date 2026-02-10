@@ -9,7 +9,7 @@ mod cache;
 mod bundled_defaults;
 mod python_bundle;
 
-use llm::{initialize_model, generate_text, is_model_loaded, download_model, check_model_exists, get_app_data_dir, find_existing_models};
+use llm::{initialize_model, generate_text, generate_text_stream, is_model_loaded, download_model, check_model_exists, get_app_data_dir, find_existing_models};
 use vector_store::{
     initialize_vector_store, add_documents, add_documents_to_collection,
     search_similar, search_collection, get_collection_stats, get_collection_stats_by_name,
@@ -23,19 +23,21 @@ use user_management::{
 };
 use cache::{read_cache_file, write_cache_file};
 use bundled_defaults::ensure_bundled_defaults_initialized;
+use tauri::Manager;
 
 fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::CloseRequested { .. } = event {
-                let _ = clear_current_user_on_exit();
+                let _ = clear_current_user_on_exit(&window.app_handle());
             }
         })
         .invoke_handler(tauri::generate_handler![
             // LLM commands
             initialize_model,
             generate_text,
+            generate_text_stream,
             is_model_loaded,
             download_model,
             check_model_exists,

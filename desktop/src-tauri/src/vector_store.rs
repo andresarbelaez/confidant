@@ -6,7 +6,7 @@ use std::sync::Mutex;
 use std::path::PathBuf;
 use std::process::Command;
 use std::io::Write;
-use tauri::AppHandle;
+use tauri::{AppHandle, Manager};
 
 // Global state for the vector store
 struct VectorStoreState {
@@ -39,15 +39,16 @@ pub struct SearchResult {
     pub metadata: serde_json::Value,
 }
 
-/// Get the app data directory for storing ChromaDB
-fn get_app_data_dir() -> Result<PathBuf, String> {
-    let project_root = std::env::current_dir()
-        .map_err(|e| format!("Failed to get current directory: {}", e))?;
-    
-    let db_path = project_root.join("data").join("chromadb");
+/// Get the app data directory for storing ChromaDB. Uses Tauri's writable app data dir
+/// so the packaged app can write when run from DMG.
+fn get_app_data_dir(app: &AppHandle) -> Result<PathBuf, String> {
+    let base_dir = app
+        .path()
+        .app_data_dir()
+        .map_err(|e| format!("Failed to get app data dir: {}", e))?;
+    let db_path = base_dir.join("data").join("chromadb");
     std::fs::create_dir_all(&db_path)
         .map_err(|e| format!("Failed to create ChromaDB directory: {}", e))?;
-    
     Ok(db_path)
 }
 
@@ -97,13 +98,7 @@ fn call_python_helper(
     } else {
         let script_path = get_helper_script_path()?;
         let python_cmd = {
-            let venv_python = std::env::current_dir()
-                .ok()
-                .and_then(|dir| {
-                    let project_root = dir.parent().and_then(|p| p.parent());
-                    project_root.map(|root| root.join("venv").join("bin").join("python3"))
-                })
-                .filter(|p| p.exists());
+            let venv_python = crate::python_bundle::find_venv_python();
             if let Some(venv_py) = venv_python {
                 if Command::new(&venv_py).arg("--version").output().is_ok() {
                     venv_py.to_string_lossy().to_string()
@@ -187,7 +182,7 @@ pub async fn initialize_vector_store(app: AppHandle, collection_name: String, db
     let db_path = if let Some(path) = db_path {
         PathBuf::from(path)
     } else {
-        get_app_data_dir()?
+        get_app_data_dir(&app)?
     };
     
     // Ensure db_path is set in state

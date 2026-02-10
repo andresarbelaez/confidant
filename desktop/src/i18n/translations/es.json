@@ -69,7 +69,11 @@
     "welcome": "Soy Confidant. Estoy aquí para tener una conversación privada y de apoyo sobre tus preguntas de salud.",
     "privacy": "Tus conversaciones se quedan en tu dispositivo y no se comparten.",
     "disclaimer": "No sustituyo la atención de un profesional sanitario. Para dudas serias o continuadas, consulta a un profesional de la salud.",
-    "askAnything": "¿Sobre qué te gustaría hablar?"
+    "askAnything": "¿Sobre qué te gustaría hablar?",
+    "sessionFirstMessageIntro": "Soy Confidant. Estoy aquí para tener una conversación privada y de apoyo sobre tus preguntas de salud. Tus conversaciones se quedan en tu dispositivo y no se comparten. Puedo ayudarte a reflexionar sobre síntomas, afecciones y salud en general; no sustituyo a un profesional sanitario. ¿Sobre qué te gustaría hablar?",
+    "sessionFirstMessageReturning1": "¿Cómo estás hoy?",
+    "sessionFirstMessageReturning2": "¿En qué puedo ayudarte hoy?",
+    "sessionFirstMessageReturning3": "¿Hay algo en lo que te gustaría seguir?"
   },
   "errors": {
     "title": "Error",
@@ -78,6 +82,7 @@
     "somethingWentWrong": "Algo ha ido mal. Inténtalo de nuevo.",
     "modelNotSetUp": "El modelo aún no está configurado. Abre Ajustes e inicializa un modelo.",
     "pythonIssue": "Problema con Python. Instala Python 3 y llama-cpp-python e inténtalo de nuevo.",
+    "pythonHint": "Consulta PYTHON_SETUP.md para la configuración, o define VIRTUAL_ENV con la ruta de tu venv.",
     "timeout": "Ha tardado demasiado. Prueba con una pregunta más corta.",
     "failedToProcess": "Error al procesar la consulta",
     "failedToCreateUser": "Error al crear el usuario",
@@ -104,13 +109,14 @@
     "zeroBytesPrivacy": "✓ Cero bytes transmitidos: tus consultas son privadas"
   },
   "cached": {
-    "hi": "Soy Confidant. Estoy aquí para tener una conversación privada y de apoyo sobre tus preguntas de salud. Tus conversaciones se quedan en tu dispositivo. ¿Sobre qué te gustaría hablar?",
-    "hello": "Soy Confidant. Respondo a preguntas de salud desde una perspectiva de apoyo, parecida a la de un profesional sanitario. Todo se queda en tu dispositivo. ¿Qué te gustaría comentar hoy?",
-    "hey": "Soy Confidant. No sustituyo a un profesional sanitario, pero puedo ayudarte a reflexionar sobre preguntas generales de salud de forma privada. ¿En qué piensas?",
-    "whatAreYou": "Soy Confidant, una IA que responde a preguntas de salud desde una perspectiva parecida a la de un profesional: de apoyo, clara y profesional. Tus conversaciones se quedan en tu dispositivo y no se comparten. No sustituyo la atención de un profesional. ¿Sobre qué te gustaría hablar?",
-    "whoAreYou": "Soy Confidant. Estoy aquí para tener una conversación de apoyo y privada sobre preguntas de salud. Puedo ayudarte a aclarar y hablar de síntomas, afecciones y salud en general; para dudas serias o continuadas, recomiendo consultar a un profesional de la salud. ¿Sobre qué te gustaría hablar?",
-    "whatCanYouDo": "Puedo ayudarte a reflexionar sobre preguntas de salud, aclarar síntomas y afecciones y hablar de salud en general, todo en una conversación privada en tu dispositivo. No sustituyo a un profesional; para temas serios, consulta a un profesional de la salud. ¿Sobre qué te gustaría hablar?",
-    "help": "Soy Confidant. Estoy aquí para una conversación de apoyo sobre salud: síntomas, afecciones, tratamientos y preguntas generales. Todo se queda en tu dispositivo. Para temas serios de salud, consulta a un profesional. ¿Sobre qué te gustaría hablar?"
+    "hi": "¡Hola! ¿Sobre qué te gustaría hablar?",
+    "hello": "¡Hola! ¿Qué te gustaría comentar hoy?",
+    "hey": "¡Hola! ¿En qué piensas?",
+    "howAreYou": "Estoy aquí para ayudarte. ¿Sobre qué te gustaría hablar?",
+    "goodMorning": "Buenos días. ¿Qué te gustaría comentar?",
+    "iHaveAQuestion": "Claro. ¿Cuál es tu pregunta?",
+    "whatCanYouHelpWith": "Puedo ayudarte a reflexionar sobre preguntas de salud: síntomas, afecciones, tratamientos y salud en general. Todo se queda en tu dispositivo. ¿Sobre qué te gustaría hablar?",
+    "help": "Estoy aquí para ayudarte. Puedes preguntarme sobre síntomas, afecciones o salud en general. ¿En qué piensas?"
   },
   "setup": {
     "privacyInfo": "Todo funciona en tu dispositivo: tus conversaciones y datos no salen de tu ordenador. Esta configuración única descarga el modelo de IA y la base de conocimiento que necesitas.",

@@ -28,22 +28,24 @@ def load_model(model_path: str):
     
     try:
         print(f"Loading model from: {model_path}", file=sys.stderr)
-        # Auto-detect optimal thread count (use all available cores minus 1 for system)
         import os
         try:
             cpu_count = os.cpu_count() or 4
-            optimal_threads = max(2, cpu_count - 1)  # Leave one core for system
-        except:
+            optimal_threads = max(2, cpu_count - 1)
+        except Exception:
             optimal_threads = 4
-        
+        # Offload to GPU when available: Metal on macOS, CUDA on Linux. Requires llama-cpp-python built with GPU support (e.g. CMAKE_ARGS="-DGGML_METAL=on" on macOS).
+        n_gpu_layers = -1  # -1 = all layers to GPU; if build is CPU-only, this is ignored or may error
+        n_batch = 512  # Larger batch = fewer prefill passes = faster time-to-first-token
         _model = Llama(
             model_path=model_path,
-            n_ctx=2048,  # Reduced from 4096 for faster processing (still enough for conversation)
-            n_threads=optimal_threads,  # Auto-detect optimal thread count
+            n_ctx=2048,
+            n_threads=optimal_threads,
             verbose=False,
-            n_batch=256,  # Reduced batch size for faster initial response
-            use_mmap=True,  # Memory mapping for efficiency
-            use_mlock=False  # Don't lock memory
+            n_batch=n_batch,
+            n_gpu_layers=n_gpu_layers,
+            use_mmap=True,
+            use_mlock=False,
         )
         _model_path = model_path
         print("Model loaded successfully", file=sys.stderr)
@@ -147,6 +149,52 @@ def generate_text(model_path: str, prompt: str, temperature: float, top_p: float
         return {"status": "error", "message": str(e)}
 
 
+def generate_stream(model_path: str, prompt: str, temperature: float, top_p: float, max_tokens: int):
+    """Stream generated text as JSON lines: {"text": "..."} per chunk, then {"done": true, "full": "..."}."""
+    global _model, _model_path
+
+    if _model is None or _model_path != model_path:
+        print(f"Loading model for stream: {model_path}", file=sys.stderr)
+        load_result = load_model(model_path)
+        if load_result["status"] != "success":
+            print(json.dumps({"error": f"Failed to load model: {load_result.get('message', 'Unknown error')}"}), flush=True)
+            return
+    try:
+        stop_sequences = [
+            "User:", "\nUser:", "User: ", "\n\nUser:",
+            "user:", "\nuser:", "user: ", "\n\nuser:",
+            "\n\nAssistant:", "\nAssistant:", " Assistant:",
+            "\n\nassistant:", "\nassistant:", " assistant:",
+            "Doctor:", "\nDoctor:", "Doctor: ", "\n\nDoctor:",
+            "Patient:", "\nPatient:", "Patient: ", "\n\nPatient:",
+        ]
+        full_parts = []
+        # llama-cpp-python: create_completion(..., stream=True) returns an iterator of completion chunks
+        stream = _model.create_completion(
+            prompt,
+            temperature=temperature,
+            top_p=top_p,
+            max_tokens=max_tokens,
+            echo=False,
+            stop=stop_sequences,
+            stream=True,
+        )
+        for chunk in stream:
+            text = chunk.get("choices", [{}])[0].get("text", "")
+            if text:
+                full_parts.append(text)
+                print(json.dumps({"text": text}), flush=True)
+        full = "".join(full_parts).strip()
+        import re
+        full = re.sub(r'\s+[Aa]ssistant:\s*.*$', '', full).strip()
+        print(json.dumps({"done": True, "full": full}), flush=True)
+    except Exception as e:
+        print(f"Error in stream: {str(e)}", file=sys.stderr)
+        import traceback
+        traceback.print_exc(file=sys.stderr)
+        print(json.dumps({"error": str(e)}), flush=True)
+
+
 def main():
     if len(sys.argv) < 2:
         print("ERROR: Missing command", file=sys.stderr)
@@ -178,6 +226,22 @@ def main():
             )
             print(json.dumps(result))
             sys.stdout.flush()  # Ensure output is flushed
+
+        elif command == "generate_stream":
+            if len(sys.argv) < 4:
+                print("ERROR: Missing arguments for generate_stream (need model_path and config)", file=sys.stderr)
+                sys.exit(1)
+            model_path = sys.argv[2]
+            config_json = sys.argv[3]
+            prompt = sys.stdin.read()
+            config = json.loads(config_json)
+            generate_stream(
+                model_path=model_path,
+                prompt=prompt,
+                temperature=config.get("temperature", 0.7),
+                top_p=config.get("top_p", 0.9),
+                max_tokens=config.get("max_tokens", 512),
+            )
             
         else:
             print(f"ERROR: Unknown command: {command}", file=sys.stderr)

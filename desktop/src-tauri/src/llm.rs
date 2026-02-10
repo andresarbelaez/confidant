@@ -3,11 +3,12 @@
 
 use serde::{Deserialize, Serialize};
 use std::sync::Mutex;
-use std::process::Command;
-use std::io::Write;
+use std::process::{Command, Stdio};
+use std::io::{BufRead, BufReader, Read, Write};
 use std::fs;
 use std::path::{Path, PathBuf};
-use tauri::AppHandle;
+use std::thread;
+use tauri::{AppHandle, Emitter, Manager};
 
 use crate::python_bundle;
 
@@ -76,6 +77,53 @@ fn get_llama_helper_path() -> Result<std::path::PathBuf, String> {
     Ok(script_path)
 }
 
+/// Resolve Python executable and llama_helper.py path.
+/// Prefer venv when present; then bundled; then system Python.
+fn resolve_python_and_script(bundled: Option<(PathBuf, PathBuf)>) -> Result<(String, PathBuf), String> {
+    if let Some(venv_py) = crate::python_bundle::find_venv_python() {
+        if Command::new(&venv_py).arg("--version").output().is_ok() {
+            let dev_script = get_llama_helper_path()?;
+            #[cfg(debug_assertions)]
+            eprintln!("[LLM] Using venv Python: {}", venv_py.display());
+            return Ok((venv_py.to_string_lossy().to_string(), dev_script));
+        }
+        if let Some((python_exe, scripts_dir)) = bundled {
+            let script = scripts_dir.join("llama_helper.py");
+            if python_exe.exists() && script.exists() {
+                return Ok((python_exe.to_string_lossy().to_string(), script));
+            }
+        }
+        let script_path = get_llama_helper_path()?;
+        let python_cmd = if Command::new("python3").arg("--version").output().is_ok() {
+            "python3".to_string()
+        } else if Command::new("python").arg("--version").output().is_ok() {
+            "python".to_string()
+        } else {
+            return Err("Python not found. Please install Python 3.".to_string());
+        };
+        return Ok((python_cmd, script_path));
+    }
+    if let Some((python_exe, scripts_dir)) = bundled {
+        let script = scripts_dir.join("llama_helper.py");
+        if python_exe.exists() && script.exists() {
+            return Ok((python_exe.to_string_lossy().to_string(), script));
+        }
+    }
+    #[cfg(debug_assertions)]
+    if let Ok(cwd) = std::env::current_dir() {
+        eprintln!("[LLM] No venv found (walked up from cwd: {}), using system Python", cwd.display());
+    }
+    let script_path = get_llama_helper_path()?;
+    let python_cmd = if Command::new("python3").arg("--version").output().is_ok() {
+        "python3".to_string()
+    } else if Command::new("python").arg("--version").output().is_ok() {
+        "python".to_string()
+    } else {
+        return Err("Python not found. Please install Python 3.".to_string());
+    };
+    Ok((python_cmd, script_path))
+}
+
 /// Call Python helper script for LLM operations.
 /// If `bundled` is Some((python_exe, scripts_dir)), use that Python and scripts_dir/llama_helper.py; otherwise use system/venv Python and dev script path.
 fn call_llama_helper(
@@ -84,43 +132,7 @@ fn call_llama_helper(
     args: &[&str],
     stdin_data: Option<&str>,
 ) -> Result<String, String> {
-    let (python_cmd, script_path) = if let Some((python_exe, scripts_dir)) = bundled {
-        let script = scripts_dir.join("llama_helper.py");
-        if !python_exe.exists() || !script.exists() {
-            return Err("Bundled Python or script not found.".to_string());
-        }
-        (python_exe.to_string_lossy().to_string(), script)
-    } else {
-        let script_path = get_llama_helper_path()?;
-        // Find Python (try venv first, then python3, then python)
-        let python_cmd = {
-            let venv_python = std::env::current_dir()
-                .ok()
-                .and_then(|dir| {
-                    let project_root = dir.parent().and_then(|p| p.parent());
-                    project_root.map(|root| root.join("venv").join("bin").join("python3"))
-                })
-                .filter(|p| p.exists());
-            if let Some(venv_py) = venv_python {
-                if Command::new(&venv_py).arg("--version").output().is_ok() {
-                    venv_py.to_string_lossy().to_string()
-                } else if Command::new("python3").arg("--version").output().is_ok() {
-                    "python3".to_string()
-                } else if Command::new("python").arg("--version").output().is_ok() {
-                    "python".to_string()
-                } else {
-                    return Err("Python not found. Please install Python 3.".to_string());
-                }
-            } else if Command::new("python3").arg("--version").output().is_ok() {
-                "python3".to_string()
-            } else if Command::new("python").arg("--version").output().is_ok() {
-                "python".to_string()
-            } else {
-                return Err("Python not found. Please install Python 3.".to_string());
-            }
-        };
-        (python_cmd, script_path)
-    };
+    let (python_cmd, script_path) = resolve_python_and_script(bundled)?;
 
     let mut cmd = Command::new(&python_cmd);
     cmd.arg(&script_path);
@@ -342,6 +354,140 @@ pub async fn generate_text(
     })
 }
 
+/// Stream LLM response token-by-token. Returns immediately; chunks/done/error are delivered via Tauri events:
+/// - `llm-stream-chunk`: { streamId, text }
+/// - `llm-stream-done`: { streamId, full }
+/// - `llm-stream-error`: { streamId, error }
+#[tauri::command]
+pub fn generate_text_stream(
+    app: AppHandle,
+    stream_id: String,
+    prompt: String,
+    config: LLMConfig,
+) -> Result<(), String> {
+    let model_path = {
+        let state = LLM_STATE.lock().map_err(|e| format!("Failed to lock state: {}", e))?;
+        if !state.is_initialized {
+            return Err("Model not initialized. Call initialize_model first.".to_string());
+        }
+        state
+            .model_path
+            .as_ref()
+            .ok_or("Model path not set")?
+            .clone()
+    };
+
+    let config_json = serde_json::to_string(&serde_json::json!({
+        "temperature": config.temperature,
+        "top_p": config.top_p,
+        "max_tokens": config.max_tokens
+    }))
+    .map_err(|e| format!("Failed to serialize config: {}", e))?;
+
+    #[cfg(debug_assertions)]
+    eprintln!("[LLM] Starting stream {} (prompt len: {} chars)", stream_id, prompt.len());
+
+    let app = app.clone();
+    thread::spawn(move || {
+        if let Err(e) = run_stream_process(&app, &stream_id, &prompt, &model_path, &config_json) {
+            let _ = app.emit(
+                "llm-stream-error",
+                serde_json::json!({ "streamId": stream_id, "error": e }),
+            );
+        }
+    });
+
+    Ok(())
+}
+
+fn run_stream_process(
+    app: &AppHandle,
+    stream_id: &str,
+    prompt: &str,
+    model_path: &str,
+    config_json: &str,
+) -> Result<(), String> {
+    let bundled = python_bundle::resolve_bundled_python(app);
+    let (python_cmd, script_path) = resolve_python_and_script(bundled)?;
+
+    let mut child = Command::new(&python_cmd)
+        .arg(&script_path)
+        .arg("generate_stream")
+        .arg(model_path)
+        .arg(config_json)
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .map_err(|e| format!("Failed to spawn Python process: {}", e))?;
+
+    if let Some(mut stdin) = child.stdin.take() {
+        stdin
+            .write_all(prompt.as_bytes())
+            .map_err(|e| format!("Failed to write prompt to Python stdin: {}", e))?;
+    }
+
+    let reader = BufReader::new(child.stdout.take().ok_or("No stdout from Python process")?);
+    let mut stream_done = false;
+    for line in reader.lines() {
+        let line = line.map_err(|e| format!("Failed to read line from Python: {}", e))?;
+        let v: serde_json::Value =
+            serde_json::from_str(&line).map_err(|e| format!("Invalid JSON from Python: {}", e))?;
+
+        if let Some(text) = v.get("text").and_then(|t| t.as_str()) {
+            let _ = app.emit(
+                "llm-stream-chunk",
+                serde_json::json!({ "streamId": stream_id, "text": text }),
+            );
+        }
+        if v.get("done").and_then(|d| d.as_bool()) == Some(true) {
+            let full = v.get("full").and_then(|f| f.as_str()).unwrap_or("");
+            let _ = app.emit(
+                "llm-stream-done",
+                serde_json::json!({ "streamId": stream_id, "full": full }),
+            );
+            stream_done = true;
+            break;
+        }
+        if let Some(err) = v.get("error").and_then(|e| e.as_str()) {
+            let _ = app.emit(
+                "llm-stream-error",
+                serde_json::json!({ "streamId": stream_id, "error": err }),
+            );
+            stream_done = true;
+            break;
+        }
+    }
+
+    let status = child.wait().map_err(|e| format!("Failed to wait for Python process: {}", e))?;
+    if !stream_done {
+        let mut msg = if status.success() {
+            "Stream ended without a response. The model may have exited unexpectedly.".to_string()
+        } else {
+            "Python process failed.".to_string()
+        };
+        if let Some(mut stderr) = child.stderr {
+            let mut err = String::new();
+            if stderr.read_to_string(&mut err).is_ok() && !err.trim().is_empty() {
+                let last_line = err.lines().filter(|l| !l.trim().is_empty()).last().unwrap_or("");
+                if last_line.contains("llama_cpp") || last_line.contains("ModuleNotFoundError") {
+                    msg = format!("Python: {} Install with: pip install llama-cpp-python", last_line.trim());
+                } else {
+                    msg = format!("{} Stderr: {}", msg, last_line.trim());
+                }
+            }
+        }
+        if msg == "Python process failed." {
+            msg = "Python process failed. Check that the model is loaded and llama-cpp-python is installed (pip install llama-cpp-python).".to_string();
+        }
+        let _ = app.emit(
+            "llm-stream-error",
+            serde_json::json!({ "streamId": stream_id, "error": msg }),
+        );
+    }
+    Ok(())
+}
+
 /// Check if model is loaded
 #[tauri::command]
 pub async fn is_model_loaded() -> Result<bool, String> {
@@ -349,50 +495,20 @@ pub async fn is_model_loaded() -> Result<bool, String> {
     Ok(state.is_initialized)
 }
 
-/// Get app data directory for storing models
+/// Get app data directory for storing models. Uses Tauri's writable app data dir
+/// (e.g. ~/Library/Application Support/com.confidant) so the packaged app can write when run from DMG.
 #[tauri::command]
-pub async fn get_app_data_dir() -> Result<String, String> {
-    // Try to find project root by going up from current directory
-    // When running from Tauri, current_dir might be desktop/src-tauri/ or target/debug/
-    let mut current = std::env::current_dir()
-        .map_err(|e| format!("Failed to get current directory: {}", e))?;
-    
-    // Try to find project root (where data/ directory should be)
-    // Look for data/ directory by going up multiple levels
-    let mut project_root = None;
-    
-    // First, try current directory
-    if current.join("data").exists() {
-        project_root = Some(current.clone());
-    } else {
-        // Try going up multiple levels (up to 5 levels)
-        for _ in 0..5 {
-            if let Some(parent) = current.parent() {
-                if parent.join("data").exists() {
-                    project_root = Some(parent.to_path_buf());
-                    break;
-                }
-                current = parent.to_path_buf();
-            } else {
-                break;
-            }
-        }
-    }
-    
-    // If we found project root, use it; otherwise use current directory
-    let base_dir = project_root.unwrap_or_else(|| {
-        std::env::current_dir()
-            .unwrap_or_else(|_| PathBuf::from("."))
-    });
-    
+pub async fn get_app_data_dir(app: AppHandle) -> Result<String, String> {
+    let base_dir = app
+        .path()
+        .app_data_dir()
+        .map_err(|e| format!("Failed to get app data dir: {}", e))?;
     let data_dir = base_dir.join("data");
     std::fs::create_dir_all(&data_dir)
         .map_err(|e| format!("Failed to create data directory: {}", e))?;
-    
     let models_dir = data_dir.join("models");
     std::fs::create_dir_all(&models_dir)
         .map_err(|e| format!("Failed to create models directory: {}", e))?;
-    
     #[cfg(debug_assertions)]
     eprintln!("[App Data Dir] Using data directory: {}", data_dir.display());
     Ok(data_dir.to_string_lossy().to_string())

@@ -6,7 +6,7 @@ Desktop application for Confidant — privacy-first, offline AI assistant for he
 
 - **Frontend**: React 18, TypeScript, Vite
 - **Backend**: Rust (Tauri 2.0) for app shell, file I/O, and model download
-- **LLM**: llama-cpp-python (Python subprocess), GGUF models (Mistral-7B default, Llama-3.2-3B option)
+- **LLM**: llama-cpp-python (Python subprocess), GGUF models (Llama-3.2-3B default, Mistral-7B option)
 - **RAG**: ChromaDB + sentence-transformers (Python subprocess)
 
 ## Prerequisites

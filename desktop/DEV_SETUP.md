@@ -6,10 +6,9 @@ This describes how to get the same “defaults ready” experience locally as a 
 
 From the `desktop/` directory, run either:
 
-- **Full default model (~4.4 GB):** `npm run seed-defaults`
-- **Lightweight model for testing (~2.5 GB):** `npm run seed-defaults-lite`
+- **Default model (~2.5 GB):** `npm run seed-defaults` — downloads Llama-3.2-3B (default; faster).
 
-Both download to `data/models/` (the same path the app uses). The app will find it on startup and will auto-ingest the knowledge base from `desktop/test_knowledge_base.json` on first run. After the download finishes, run `npm run dev` and the app should open directly to the user selector.
+Downloads go to `data/models/` (the same path the app uses). The app will find it on startup and will auto-ingest the knowledge base from `desktop/test_knowledge_base.json` on first run. After the download finishes, run `npm run dev` and the app should open directly to the user selector.
 
 ## What the app does on startup
 
@@ -19,8 +18,8 @@ On launch, the app calls `ensure_bundled_defaults_initialized`, which:
    - `CONFIDANT_BUNDLED_MODEL_PATH` (env, full path to a `.gguf` file)
    - Bundled resource: `models/default_model.gguf` (production only)
    - **Dev fallback:** `data/models/` under the project (same place Settings uses):
-     - `mistral-7b-instruct-v0.2-q4_k_m.gguf` or
-     - `mistral-7b-instruct-v0.2.Q4_K_M.gguf` or
+     - `llama-3.2-3b-instruct-q4_k_m.gguf` or
+     - `Llama-3.2-3B-Instruct-Q4_K_M.gguf` or
      - Any `.gguf` in `data/models/`
 
 2. **Knowledge base** – Ensures the global KB collection exists; if it’s empty, ingests from:
@@ -61,7 +60,7 @@ Use this if you already have a `.gguf` and a KB JSON (e.g. `desktop/test_knowled
 
 ### Option C: Seed files by hand
 
-- **Model:** Put a default model `.gguf` in the project under `data/models/`. The app looks for that directory by walking up from the current working directory (e.g. when you run from `desktop/`, it will use `../data/models/` or the repo’s `data/models/`). Name the file e.g. `mistral-7b-instruct-v0.2-q4_k_m.gguf` or `mistral-7b-instruct-v0.2.Q4_K_M.gguf`, or any single `.gguf` in that folder.
+- **Model:** Put a default model `.gguf` in the project under `data/models/`. The app looks for that directory by walking up from the current working directory (e.g. when you run from `desktop/`, it will use `../data/models/` or the repo’s `data/models/`). Name the file e.g. `Llama-3.2-3B-Instruct-Q4_K_M.gguf` or any single `.gguf` in that folder.
 - **KB:** Leave `desktop/test_knowledge_base.json` in place (it’s in the repo). If the global KB collection is empty, the app will ingest from that file when it finds it via the dev fallback.
 
 ## Summary

@@ -25,14 +25,29 @@ The app will automatically detect and use a virtual environment at the project r
    pip install chromadb sentence-transformers llama-cpp-python
    ```
 
+   **macOS – faster LLM with Metal GPU:** Install a Metal-built `llama-cpp-python` so the app can use the GPU:
+   ```bash
+   CMAKE_ARGS="-DGGML_METAL=on" pip install llama-cpp-python --no-cache-dir --force-reinstall
+   pip install chromadb sentence-transformers
+   ```
+
 3. **Verify Installation**:
    ```bash
    python3 -c "import chromadb; import sentence_transformers; import llama_cpp; print('All packages installed!')"
    ```
 
-4. **Restart the Desktop App**:
-   - The app will automatically use `venv/bin/python3` if it exists
-   - If not found, it will fall back to system Python (which may not have packages)
+4. **Run the app from the repo** so it can find the venv:
+   ```bash
+   cd /Users/dres/Documents/2026/dant/desktop
+   npm run dev
+   ```
+   The app looks for `venv/` by walking up from the current working directory (e.g. `desktop/` → `dant/`), so it will use `dant/venv/bin/python3` if the venv is at repo root.
+
+5. **If the app still reports "Python setup issue"**, point it at your venv explicitly:
+   - From the same terminal where you run `npm run dev`, set one of:
+     - `export VIRTUAL_ENV=/path/to/dant/venv`
+     - or `export CONFIDANT_PYTHON=/path/to/dant/venv/bin/python3`
+   - Then run `npm run dev` again. The app will use that Python instead of auto-detecting.
 
 ## Alternative: Install System-Wide
 
@@ -61,6 +76,20 @@ pip3 install --user chromadb sentence-transformers llama-cpp-python
    python3 -m pip install chromadb sentence-transformers llama-cpp-python
    ```
 3. Or use virtual environment (recommended)
+
+### Error: "externally-managed-environment" (Homebrew Python)
+
+**Cause**: Homebrew’s Python blocks `pip install` into the system environment.
+
+**Solution**: Use a virtual environment (see setup steps above). From the repo root:
+```bash
+cd /path/to/dant
+python3 -m venv venv
+source venv/bin/activate
+pip install chromadb sentence-transformers llama-cpp-python
+# macOS Metal build for faster LLM:
+# CMAKE_ARGS="-DGGML_METAL=on" pip install llama-cpp-python --no-cache-dir --force-reinstall
+```
 
 ### Error: "Python not found"
 

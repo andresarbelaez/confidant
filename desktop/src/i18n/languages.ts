@@ -2,15 +2,17 @@
  * Language definitions and metadata
  */
 
-import { Language, LanguageCode } from './index';
+import type { Language, LanguageCode } from './index';
+import { SUPPORTED_LANGUAGES } from './index';
 
-export { Language, LanguageCode, SUPPORTED_LANGUAGES } from './index';
+export type { Language, LanguageCode };
+export { SUPPORTED_LANGUAGES } from './index';
 
 /**
  * Get language by code
  */
 export function getLanguage(code: LanguageCode): Language | undefined {
-  return SUPPORTED_LANGUAGES.find(l => l.code === code);
+  return SUPPORTED_LANGUAGES.find((l: Language) => l.code === code);
 }
 
 /**

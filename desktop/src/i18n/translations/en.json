@@ -69,7 +69,11 @@
     "welcome": "I'm Confidant. I'm here to have a private, supportive conversation about your health questions.",
     "privacy": "Your conversations stay on your device and are not shared.",
     "disclaimer": "I'm not a substitute for care from a clinician. For serious or ongoing concerns, please see a healthcare professional.",
-    "askAnything": "What would you like to talk about?"
+    "askAnything": "What would you like to talk about?",
+    "sessionFirstMessageIntro": "I'm Confidant. I'm here to have a private, supportive conversation about your health questions. Your conversations stay on your device and are not shared. I can help you think through symptoms, conditions, and general health—and I'm not a substitute for a clinician. What would you like to talk about?",
+    "sessionFirstMessageReturning1": "How are you today?",
+    "sessionFirstMessageReturning2": "How can I help you today?",
+    "sessionFirstMessageReturning3": "Is there something you'd like to follow up on?"
   },
   "errors": {
     "title": "Error",
@@ -78,6 +82,7 @@
     "somethingWentWrong": "Something went wrong. Please try again.",
     "modelNotSetUp": "The model isn't set up yet. Open Settings and initialize a model.",
     "pythonIssue": "Python setup issue. Install Python 3 and llama-cpp-python, then try again.",
+    "pythonHint": "See PYTHON_SETUP.md for setup, or set VIRTUAL_ENV to your venv path.",
     "timeout": "That took too long. Try a shorter question.",
     "failedToProcess": "Failed to process query",
     "failedToCreateUser": "Failed to create user",
@@ -104,13 +109,14 @@
     "zeroBytesPrivacy": "✓ Zero bytes transmitted - Your queries are private"
   },
   "cached": {
-    "hi": "I'm Confidant. I'm here to have a private, supportive conversation about your health questions. Your conversations stay on your device. What would you like to talk about?",
-    "hello": "I'm Confidant. I respond to health questions from a supportive, clinician-like perspective. Everything stays on your device. What would you like to discuss today?",
-    "hey": "I'm Confidant. I'm not a substitute for a clinician, but I can help you think through general health questions in a private way. What's on your mind?",
-    "whatAreYou": "I'm Confidant, an AI that responds to health questions from a clinician-like perspective—supportive, clear, and professional. Your conversations stay on your device and are not shared. I'm not a substitute for care from a clinician. What would you like to talk about?",
-    "whoAreYou": "I'm Confidant. I'm here to have a supportive, private conversation about health questions. I can help clarify and discuss symptoms, conditions, and general health; for serious or ongoing concerns, I recommend seeing a healthcare professional. What would you like to talk about?",
-    "whatCanYouDo": "I can help you think through health-related questions, clarify symptoms and conditions, and discuss general health—all in a private conversation on your device. I'm not a replacement for a clinician; for serious concerns, please see a healthcare professional. What would you like to talk about?",
-    "help": "I'm Confidant. I'm here to have a supportive conversation about health—symptoms, conditions, treatments, and general questions. Everything stays on your device. For serious health concerns, please see a healthcare professional. What would you like to talk about?"
+    "hi": "Hi! What would you like to talk about?",
+    "hello": "Hello! What would you like to discuss today?",
+    "hey": "Hey! What's on your mind?",
+    "howAreYou": "I'm here to help. What would you like to talk about?",
+    "goodMorning": "Good morning! What would you like to discuss?",
+    "iHaveAQuestion": "Of course. What's your question?",
+    "whatCanYouHelpWith": "I can help you think through health-related questions—symptoms, conditions, treatments, and general health. Everything stays on your device. What would you like to talk about?",
+    "help": "I'm here to help. You can ask me about symptoms, conditions, or general health. What's on your mind?"
   },
   "setup": {
     "privacyInfo": "Everything runs on your device—your conversations and data never leave your computer. This one-time setup downloads the AI model and knowledge base you need.",

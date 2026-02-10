@@ -4,7 +4,9 @@
  */
 
 import { invoke } from '@tauri-apps/api/core';
+import { listen } from '@tauri-apps/api/event';
 import { getCachedResponse, cacheResponse, normalizeQuery, initializeCache } from '../utils/response-cache';
+import { logLLMGeneration, logLLMStreamStats } from '../utils/appTiming';
 import { LanguageCode } from '../i18n';
 
 /** Language code to display name for system prompt (model responds in this language) */
@@ -26,7 +28,8 @@ export interface AgentResponse {
   sources?: Array<{ id: string; text: string; score: number }>;
   usedRAG: boolean;
   isFirstMessage?: boolean;
-  followUpMessages?: string[];
+  /** True when the response came from cache (for UI e.g. fake thinking delay). */
+  fromCache?: boolean;
 }
 
 export interface AgentConfig {
@@ -53,13 +56,28 @@ export class DantAgent {
   }
 
   /**
+   * Mark that the session first message (intro or returning) was already shown by the UI.
+   * Seeds conversation history so the next user message uses normal LLM/cache path.
+   */
+  setSessionFirstMessage(content: string): void {
+    this.conversationHistory.push({ role: 'assistant', content });
+    this.isFirstMessage = false;
+  }
+
+  /**
    * Process a user query with optional RAG
    */
   async processQuery(
     query: string,
-    options: { stream?: boolean; useRAG?: boolean; userId?: string; language?: LanguageCode } = {}
+    options: {
+      stream?: boolean;
+      useRAG?: boolean;
+      userId?: string;
+      language?: LanguageCode;
+      /** Called for each streamed token chunk (only when using LLM streaming path). */
+      onStreamChunk?: (text: string) => void;
+    } = {}
   ): Promise<AgentResponse> {
-    const startMs = performance.now();
     const useRAG = options.useRAG ?? true;
     const language = options.language || this.currentLanguage;
     
@@ -88,6 +106,7 @@ export class DantAgent {
         sources: undefined,
         usedRAG: false,
         isFirstMessage: wasFirstMessage,
+        fromCache: true,
       };
     }
 
@@ -186,34 +205,7 @@ export class DantAgent {
       }
     }
 
-    // For first message, use hardcoded messages instead of generating
-    // This is more reliable than trying to get the LLM to generate with separators
-    if (this.isFirstMessage) {
-      // Import i18n for first message
-      const i18n = await import('../i18n');
-      
-      // Ensure i18n is initialized: user language when userId present, else app language
-      await i18n.initializeI18n(options.userId ?? null);
-      
-      // Use i18n for first messages
-      const hardcodedMessages = [
-        i18n.t('agent.welcome'),
-        i18n.t('agent.privacy'),
-        i18n.t('agent.disclaimer'),
-        i18n.t('agent.askAnything')
-      ];
-      
-      this.isFirstMessage = false;
-      this.conversationHistory.push({ role: 'user', content: query });
-      return {
-        response: hardcodedMessages[0],
-        sources: undefined,
-        usedRAG: false,
-        isFirstMessage: true,
-        followUpMessages: hardcodedMessages.slice(1)
-      };
-    }
-
+    // Session first message is shown by the UI at load time; first user message goes through cache then LLM
     // For subsequent messages, use normal LLM generation
     // Use a clear prompt format that encourages direct, concise responses
     const languageName = LANGUAGE_DISPLAY_NAMES[language] ?? 'English';
@@ -238,82 +230,124 @@ Assistant:`;
     // Add to conversation history
     this.conversationHistory.push({ role: 'user', content: query });
 
-    // Generate response using LLM
+    // Generate response using LLM (streaming)
     try {
-      const response = await invoke<{ text: string; finish_reason?: string }>('generate_text', {
-        prompt: fullPrompt,
-        config: {
-          temperature: 0.7,
-          top_p: 0.9,
-          max_tokens: 256  // Reduced from 512 for faster responses
-        }
-      });
+    const streamId = crypto.randomUUID();
+    const config = { temperature: 0.7, top_p: 0.9, max_tokens: 256 };
+    const llmStart = Date.now();
+    let firstChunkAt: number | null = null;
 
-      let assistantMessage = response.text.trim();
-      
-      // Clean up any remaining format artifacts
-      // Remove any "User:" or "Assistant:" labels (case-insensitive) that might appear
+    const unlistenChunk = await listen<{ streamId: string; text: string }>('llm-stream-chunk', (e) => {
+      if (e.payload.streamId !== streamId) return;
+      if (firstChunkAt === null) firstChunkAt = Date.now();
+      options.onStreamChunk?.(e.payload.text ?? '');
+    });
+    const unlistenDone = await listen<{ streamId: string; full: string }>('llm-stream-done', (e) => {
+      if (e.payload.streamId !== streamId) return;
+      resolveDone(e.payload.full);
+    });
+    const unlistenError = await listen<{ streamId: string; error: string }>('llm-stream-error', (e) => {
+      if (e.payload.streamId !== streamId) return;
+      rejectErr(e.payload.error ?? 'Stream error');
+    });
+
+    let resolveDone!: (full: string) => void;
+    let rejectErr!: (err: string) => void;
+    const streamPromise = new Promise<string>((resolve, reject) => {
+      resolveDone = resolve;
+      rejectErr = reject;
+    });
+
+    // Timeout so we don't hang if the backend never sends done/error (e.g. Python crash without JSON)
+    const STREAM_TIMEOUT_MS = 120_000;
+    const timeoutPromise = new Promise<string>((_, reject) => {
+      setTimeout(() => reject(new Error('Response timed out. The model may still be loading or something went wrong. Try again.')), STREAM_TIMEOUT_MS);
+    });
+
+    // Fire invoke without awaiting its callback - we only care about stream events.
+    // This avoids "Couldn't find callback id" when the app reloads or the promise is dropped
+    // while Rust is still running; any startup error (e.g. model not initialized) is still
+    // sent via llm-stream-error from the backend.
+    invoke('generate_text_stream', {
+      streamId,
+      prompt: fullPrompt,
+      config,
+    }).catch((invokeErr: unknown) => {
+      const msg = invokeErr instanceof Error ? invokeErr.message : String(invokeErr);
+      rejectErr(msg);
+    });
+
+    let assistantMessage: string;
+    try {
+      assistantMessage = await Promise.race([streamPromise, timeoutPromise]);
+    } finally {
+      unlistenChunk();
+      unlistenDone();
+      unlistenError();
+    }
+
+    const llmDurationMs = Date.now() - llmStart;
+    const charCount = assistantMessage?.length ?? 0;
+    logLLMGeneration(llmDurationMs, charCount);
+    const timeToFirstTokenMs = firstChunkAt !== null ? firstChunkAt - llmStart : -1;
+    if (timeToFirstTokenMs >= 0) {
+      logLLMStreamStats(timeToFirstTokenMs, llmDurationMs, charCount);
+    }
+
+    // Backend sends cleaned "full"; light client-side cleanup if needed
+    assistantMessage = (assistantMessage ?? '').trim();
+    assistantMessage = assistantMessage
+      .split('\n')
+      .filter(line => {
+        const trimmed = line.trim();
+        const lowerTrimmed = trimmed.toLowerCase();
+        return !lowerTrimmed.startsWith('user:') && !lowerTrimmed.startsWith('assistant:');
+      })
+      .join('\n')
+      .trim();
+    const lowerMessage = assistantMessage.toLowerCase();
+    if (lowerMessage.includes('user:') || lowerMessage.includes('assistant:')) {
+      const userIndex = Math.min(
+        lowerMessage.indexOf('user:') !== -1 ? lowerMessage.indexOf('user:') : Infinity,
+        lowerMessage.indexOf('\nuser:') !== -1 ? lowerMessage.indexOf('\nuser:') + 1 : Infinity,
+        lowerMessage.indexOf(' user:') !== -1 ? lowerMessage.indexOf(' user:') : Infinity
+      );
+      if (userIndex !== Infinity && userIndex > 0) {
+        assistantMessage = assistantMessage.substring(0, userIndex).trim();
+      }
       assistantMessage = assistantMessage
-        .split('\n')
-        .filter(line => {
-          const trimmed = line.trim();
-          const lowerTrimmed = trimmed.toLowerCase();
-          return !lowerTrimmed.startsWith('user:') && !lowerTrimmed.startsWith('assistant:');
-        })
-        .join('\n')
+        .replace(/^Assistant:\s*/gmi, '')
+        .replace(/\nAssistant:\s*/gmi, '\n')
+        .replace(/\s+Assistant:\s*/gmi, ' ')
         .trim();
-      
-      // If the message still contains "User:" or "Assistant:" patterns (case-insensitive), clean them up
-      const lowerMessage = assistantMessage.toLowerCase();
-      if (lowerMessage.includes('user:') || lowerMessage.includes('assistant:')) {
-        // Try to extract content before any "User:" label appears (case-insensitive)
-        const userIndex = Math.min(
-          lowerMessage.indexOf('user:'),
-          lowerMessage.indexOf('\nuser:'),
-          lowerMessage.indexOf(' user:')
-        );
-        if (userIndex > 0 && userIndex !== -1) {
-          assistantMessage = assistantMessage.substring(0, userIndex).trim();
-        }
-        // Remove any "Assistant:" labels (case-insensitive) and keep the content
-        assistantMessage = assistantMessage
-          .replace(/^Assistant:\s*/gmi, '')
-          .replace(/\nAssistant:\s*/gmi, '\n')
-          .replace(/\s+Assistant:\s*/gmi, ' ')
-          .trim();
-      }
-      
-      // Final cleanup: remove any trailing "assistant:" or "Assistant:" text
-      assistantMessage = assistantMessage.replace(/\s+[Aa]ssistant:\s*.*$/g, '').trim();
-      
-      // Add to conversation history
-      this.conversationHistory.push({ role: 'assistant', content: assistantMessage });
+    }
+    assistantMessage = assistantMessage.replace(/\s+[Aa]ssistant:\s*.*$/g, '').trim();
 
-      // Trim history if too long
-      if (this.conversationHistory.length > this.maxHistoryLength * 2) {
-        this.conversationHistory = this.conversationHistory.slice(-this.maxHistoryLength * 2);
-      }
+    this.conversationHistory.push({ role: 'assistant', content: assistantMessage });
+    if (this.conversationHistory.length > this.maxHistoryLength * 2) {
+      this.conversationHistory = this.conversationHistory.slice(-this.maxHistoryLength * 2);
+    }
 
-      const usedRAGFlag = useRAG && sources.length > 0;
+    const usedRAGFlag = useRAG && sources.length > 0;
+    const normalized = normalizeQuery(query);
+    const commonQueries = ['hi', 'hello', 'hey', 'how are you', 'good morning', 'i have a question', 'what can you help with', 'help'];
+    if (commonQueries.includes(normalized)) {
+      cacheResponse(normalized, assistantMessage, language).catch(err => {
+        console.warn('[Agent] Failed to cache response:', err);
+      });
+    }
 
-      // Cache the response for common queries
-      const normalized = normalizeQuery(query);
-      const commonQueries = ['hi', 'hello', 'hey', 'what are you', 'who are you', 'what can you do', 'help'];
-      if (commonQueries.includes(normalized)) {
-        cacheResponse(normalized, assistantMessage, language).catch(err => {
-          console.warn('[Agent] Failed to cache response:', err);
-        });
-      }
-      
-      return {
-        response: assistantMessage,
-        sources: sources.length > 0 ? sources : undefined,
-        usedRAG: usedRAGFlag
-      };
+    return {
+      response: assistantMessage,
+      sources: sources.length > 0 ? sources : undefined,
+      usedRAG: usedRAGFlag,
+    };
     } catch (err) {
-      // Extract the actual error message
+      // Extract the actual error message (stream rejects with string, invoke/timeout throw Error)
       let errorMessage = 'Failed to generate response';
-      if (err instanceof Error) {
+      if (typeof err === 'string') {
+        errorMessage = err;
+      } else if (err instanceof Error) {
         errorMessage = err.message;
         // Remove duplicate "Failed to process query:" prefix if present
         if (errorMessage.includes('Failed to process query:')) {
@@ -363,7 +397,6 @@ Assistant:`;
     
     // Allocate 60% to user KB, 40% to global KB
     const userAllocation = Math.floor(remaining * 0.6);
-    const globalAllocation = remaining - userAllocation;
     
     // Process user KB results first (higher priority)
     let userUsed = 0;

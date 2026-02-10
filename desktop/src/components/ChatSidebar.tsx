@@ -10,7 +10,7 @@ interface ChatSidebarProps {
   onDeleteChatHistory?: () => void;
 }
 
-export default function ChatSidebar({ userId, onOpenSettings, onOpenUserSettings, onLogOut, onDeleteChatHistory }: ChatSidebarProps) {
+export default function ChatSidebar({ userId, onOpenSettings: _onOpenSettings, onOpenUserSettings, onLogOut, onDeleteChatHistory }: ChatSidebarProps) {
   const { t } = useTranslation(userId);
 
   return (

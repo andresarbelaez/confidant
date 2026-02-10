@@ -28,7 +28,7 @@ The app will create the global collection `dant_knowledge_global` and ingest the
 
 ## Config alignment
 
-- **Default model:** [src/config/model-options.ts](src/config/model-options.ts) — the option with `default: true` (e.g. Mistral 7B) is the intended default. The bundled file can be that model renamed to `default_model.gguf`, or any compatible GGUF that the packager chooses.
+- **Default model:** [src/config/model-options.ts](src/config/model-options.ts) — the option with `default: true` (Llama-3.2-3B) is the intended default. The bundled file can be that model renamed to `default_model.gguf`, or any compatible GGUF that the packager chooses.
 - **Default KB:** [src/config/kb-options.ts](src/config/kb-options.ts) — the option with `default: true` (e.g. Lightweight Health KB) is the intended default. The `url` in that config is still used by **Settings** for “Download” when the user chooses to download a KB; for the initial bundled path, the app uses the resource paths above, not `url`.
 
 ## Example: adding resources in tauri.conf.json

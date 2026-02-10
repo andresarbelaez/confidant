@@ -20,10 +20,10 @@ const GLOBAL_KB_COLLECTION: &str = "dant_knowledge_global";
 const BUNDLED_MODEL_FILENAME: &str = "default_model.gguf";
 
 /// Default model ID from frontend config (used for dev fallback path).
-const DEFAULT_MODEL_ID: &str = "mistral-7b-instruct-v0.2-q4_k_m";
+const DEFAULT_MODEL_ID: &str = "llama-3.2-3b-instruct-q4_k_m";
 
 /// Filename used when downloading default model from URL (last segment of HuggingFace URL).
-const DEFAULT_MODEL_DOWNLOAD_FILENAME: &str = "mistral-7b-instruct-v0.2.Q4_K_M.gguf";
+const DEFAULT_MODEL_DOWNLOAD_FILENAME: &str = "Llama-3.2-3B-Instruct-Q4_K_M.gguf";
 
 /// Relative path to bundled KB JSON in resources (same format as URL-loaded package: manifest, documents, embeddings).
 const BUNDLED_KB_FILENAME: &str = "default_kb.json";

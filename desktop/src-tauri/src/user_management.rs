@@ -1,23 +1,12 @@
 // User Management - User profiles, password hashing, and chat persistence
 
 use serde::{Deserialize, Serialize};
-use std::sync::Mutex;
 use std::fs;
 use std::path::PathBuf;
 use bcrypt::{hash, verify, DEFAULT_COST};
 use chrono::Utc;
+use tauri::{AppHandle, Manager};
 use uuid::Uuid;
-
-// Global state for user management
-struct UserManagementState {
-    app_data_dir: Option<PathBuf>,
-}
-
-lazy_static::lazy_static! {
-    static ref USER_MANAGEMENT_STATE: Mutex<UserManagementState> = Mutex::new(UserManagementState {
-        app_data_dir: None,
-    });
-}
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct User {
@@ -48,67 +37,34 @@ pub struct ChatMessage {
     pub timestamp: String,
 }
 
-/// Get app data directory (reuse from llm module pattern)
-fn get_app_data_dir() -> Result<PathBuf, String> {
-    let mut state = USER_MANAGEMENT_STATE.lock()
-        .map_err(|e| format!("Failed to lock state: {}", e))?;
-    
-    if let Some(ref dir) = state.app_data_dir {
-        return Ok(dir.clone());
-    }
-    
-    // Try to find project root by going up from current directory
-    let mut current = std::env::current_dir()
-        .map_err(|e| format!("Failed to get current directory: {}", e))?;
-    
-    let mut project_root = None;
-    
-    // First, try current directory
-    if current.join("data").exists() {
-        project_root = Some(current.clone());
-    } else {
-        // Try going up multiple levels (up to 5 levels)
-        for _ in 0..5 {
-            if let Some(parent) = current.parent() {
-                if parent.join("data").exists() {
-                    project_root = Some(parent.to_path_buf());
-                    break;
-                }
-                current = parent.to_path_buf();
-            } else {
-                break;
-            }
-        }
-    }
-    
-    let base_dir = project_root.unwrap_or_else(|| {
-        std::env::current_dir()
-            .unwrap_or_else(|_| PathBuf::from("."))
-    });
-    
+/// Get app data directory. Uses Tauri's writable app data dir (e.g. ~/Library/Application Support/com.confidant)
+/// so the packaged app can write when run from DMG; falls back to project-relative path for dev.
+fn get_app_data_dir(app: &AppHandle) -> Result<PathBuf, String> {
+    let base_dir = app
+        .path()
+        .app_data_dir()
+        .map_err(|e| format!("Failed to get app data dir: {}", e))?;
     let data_dir = base_dir.join("data");
     fs::create_dir_all(&data_dir)
         .map_err(|e| format!("Failed to create data directory: {}", e))?;
-    
-    state.app_data_dir = Some(data_dir.clone());
     Ok(data_dir)
 }
 
 /// Get users file path
-fn get_users_file_path() -> Result<PathBuf, String> {
-    let data_dir = get_app_data_dir()?;
+fn get_users_file_path(app: &AppHandle) -> Result<PathBuf, String> {
+    let data_dir = get_app_data_dir(app)?;
     Ok(data_dir.join("users.json"))
 }
 
 /// Get current user file path
-fn get_current_user_file_path() -> Result<PathBuf, String> {
-    let data_dir = get_app_data_dir()?;
+fn get_current_user_file_path(app: &AppHandle) -> Result<PathBuf, String> {
+    let data_dir = get_app_data_dir(app)?;
     Ok(data_dir.join("current_user.json"))
 }
 
 /// Get user directory path
-fn get_user_dir_path(user_id: &str) -> Result<PathBuf, String> {
-    let data_dir = get_app_data_dir()?;
+fn get_user_dir_path(app: &AppHandle, user_id: &str) -> Result<PathBuf, String> {
+    let data_dir = get_app_data_dir(app)?;
     let users_dir = data_dir.join("users");
     fs::create_dir_all(&users_dir)
         .map_err(|e| format!("Failed to create users directory: {}", e))?;
@@ -116,8 +72,8 @@ fn get_user_dir_path(user_id: &str) -> Result<PathBuf, String> {
 }
 
 /// Path to single chat file per user.
-fn get_chat_history_path(user_id: &str) -> Result<PathBuf, String> {
-    let user_dir = get_user_dir_path(user_id)?;
+fn get_chat_history_path(app: &AppHandle, user_id: &str) -> Result<PathBuf, String> {
+    let user_dir = get_user_dir_path(app, user_id)?;
     Ok(user_dir.join("chats.json"))
 }
 
@@ -134,8 +90,8 @@ struct ChatListLegacy {
     chats: Vec<ChatSummaryLegacy>,
 }
 
-fn migrate_multi_chat_to_single_if_needed(user_id: &str) -> Result<(), String> {
-    let user_dir = get_user_dir_path(user_id)?;
+fn migrate_multi_chat_to_single_if_needed(app: &AppHandle, user_id: &str) -> Result<(), String> {
+    let user_dir = get_user_dir_path(app, user_id)?;
     let list_path = user_dir.join("chat_list.json");
     if !list_path.exists() {
         return Ok(());
@@ -156,7 +112,7 @@ fn migrate_multi_chat_to_single_if_needed(user_id: &str) -> Result<(), String> {
         .map_err(|e| format!("Failed to read chat messages: {}", e))?;
     let messages: Vec<ChatMessage> = serde_json::from_str(&msg_content)
         .map_err(|e| format!("Failed to parse chat messages: {}", e))?;
-    let chat_file = get_chat_history_path(user_id)?;
+    let chat_file = get_chat_history_path(app, user_id)?;
     if let Some(p) = chat_file.parent() {
         fs::create_dir_all(p).map_err(|e| format!("Failed to create user dir: {}", e))?;
     }
@@ -179,8 +135,8 @@ fn migrate_multi_chat_to_single_if_needed(user_id: &str) -> Result<(), String> {
 }
 
 /// Load users from file
-fn load_users() -> Result<Vec<User>, String> {
-    let users_file = get_users_file_path()?;
+fn load_users(app: &AppHandle) -> Result<Vec<User>, String> {
+    let users_file = get_users_file_path(app)?;
     
     if !users_file.exists() {
         return Ok(Vec::new());
@@ -206,7 +162,7 @@ fn load_users() -> Result<Vec<User>, String> {
                   original_count - valid_users.len());
         // Save the cleaned list back to prevent future parsing errors
         if !valid_users.is_empty() {
-            save_users(&valid_users)?;
+            save_users(app, &valid_users)?;
         } else {
             // If all users were invalid, delete the file
             let _ = fs::remove_file(&users_file);
@@ -217,8 +173,8 @@ fn load_users() -> Result<Vec<User>, String> {
 }
 
 /// Save users to file
-fn save_users(users: &[User]) -> Result<(), String> {
-    let users_file = get_users_file_path()?;
+fn save_users(app: &AppHandle, users: &[User]) -> Result<(), String> {
+    let users_file = get_users_file_path(app)?;
     
     #[cfg(debug_assertions)]
     eprintln!("[User Management] Saving {} users to: {:?}", users.len(), users_file);
@@ -248,8 +204,8 @@ fn save_users(users: &[User]) -> Result<(), String> {
 
 /// Get all users (public info only, no password hashes)
 #[tauri::command]
-pub async fn get_users() -> Result<Vec<UserPublic>, String> {
-    let users = load_users()?;
+pub async fn get_users(app: AppHandle) -> Result<Vec<UserPublic>, String> {
+    let users = load_users(&app)?;
     
     Ok(users.into_iter().map(|u| UserPublic {
         id: u.id,
@@ -260,7 +216,7 @@ pub async fn get_users() -> Result<Vec<UserPublic>, String> {
 
 /// Create a new user
 #[tauri::command]
-pub async fn create_user(name: String, password: String) -> Result<UserPublic, String> {
+pub async fn create_user(app: AppHandle, name: String, password: String) -> Result<UserPublic, String> {
     #[cfg(debug_assertions)]
     eprintln!("[User Management] Creating user: name='{}', password_len={}", name, password.len());
     
@@ -285,7 +241,7 @@ pub async fn create_user(name: String, password: String) -> Result<UserPublic, S
     }
     
     // Load existing users
-    let mut users = load_users().map_err(|e| {
+    let mut users = load_users(&app).map_err(|e| {
         #[cfg(debug_assertions)]
         eprintln!("[User Management] Failed to load users: {}", e);
         e
@@ -327,7 +283,7 @@ pub async fn create_user(name: String, password: String) -> Result<UserPublic, S
     users.push(user.clone());
     
     // Save users
-    save_users(&users).map_err(|e| {
+    save_users(&app, &users).map_err(|e| {
         #[cfg(debug_assertions)]
         eprintln!("[User Management] Failed to save users: {}", e);
         e
@@ -346,8 +302,8 @@ pub async fn create_user(name: String, password: String) -> Result<UserPublic, S
 
 /// Verify password for a user
 #[tauri::command]
-pub async fn verify_password(user_id: String, password: String) -> Result<bool, String> {
-    let users = load_users()?;
+pub async fn verify_password(app: AppHandle, user_id: String, password: String) -> Result<bool, String> {
+    let users = load_users(&app)?;
     
     let user = users.iter()
         .find(|u| u.id == user_id)
@@ -359,8 +315,8 @@ pub async fn verify_password(user_id: String, password: String) -> Result<bool, 
 
 /// Get current logged-in user
 #[tauri::command]
-pub async fn get_current_user() -> Result<Option<String>, String> {
-    let current_user_file = get_current_user_file_path()?;
+pub async fn get_current_user(app: AppHandle) -> Result<Option<String>, String> {
+    let current_user_file = get_current_user_file_path(&app)?;
     
     if !current_user_file.exists() {
         return Ok(None);
@@ -373,19 +329,19 @@ pub async fn get_current_user() -> Result<Option<String>, String> {
         .map_err(|e| format!("Failed to parse current user file: {}", e))?;
     
     // Verify user still exists
-    let users = load_users()?;
+    let users = load_users(&app)?;
     if users.iter().any(|u| u.id == user_id) {
         Ok(Some(user_id))
     } else {
         // User doesn't exist anymore, clear current user
-        set_current_user(None).await?;
+        set_current_user(app, None).await?;
         Ok(None)
     }
 }
 
 /// Clear current user file (sync). Call on app exit so next launch shows user selection.
-pub fn clear_current_user_on_exit() -> Result<(), String> {
-    let current_user_file = get_current_user_file_path()?;
+pub fn clear_current_user_on_exit(app: &AppHandle) -> Result<(), String> {
+    let current_user_file = get_current_user_file_path(app)?;
     if current_user_file.exists() {
         fs::remove_file(&current_user_file)
             .map_err(|e| format!("Failed to remove current user file: {}", e))?;
@@ -395,12 +351,12 @@ pub fn clear_current_user_on_exit() -> Result<(), String> {
 
 /// Set current logged-in user (None for guest/logout)
 #[tauri::command]
-pub async fn set_current_user(user_id: Option<String>) -> Result<(), String> {
-    let current_user_file = get_current_user_file_path()?;
+pub async fn set_current_user(app: AppHandle, user_id: Option<String>) -> Result<(), String> {
+    let current_user_file = get_current_user_file_path(&app)?;
     
     if let Some(id) = user_id {
         // Verify user exists
-        let users = load_users()?;
+        let users = load_users(&app)?;
         if !users.iter().any(|u| u.id == id) {
             return Err("User not found".to_string());
         }
@@ -423,13 +379,13 @@ pub async fn set_current_user(user_id: Option<String>) -> Result<(), String> {
 
 /// Load chat history for a user (single chat).
 #[tauri::command]
-pub async fn load_user_chat(user_id: String) -> Result<Vec<ChatMessage>, String> {
-    let users = load_users()?;
+pub async fn load_user_chat(app: AppHandle, user_id: String) -> Result<Vec<ChatMessage>, String> {
+    let users = load_users(&app)?;
     if !users.iter().any(|u| u.id == user_id) {
         return Err("User not found".to_string());
     }
-    migrate_multi_chat_to_single_if_needed(&user_id)?;
-    let chat_file = get_chat_history_path(&user_id)?;
+    migrate_multi_chat_to_single_if_needed(&app, &user_id)?;
+    let chat_file = get_chat_history_path(&app, &user_id)?;
     if !chat_file.exists() {
         return Ok(Vec::new());
     }
@@ -442,13 +398,13 @@ pub async fn load_user_chat(user_id: String) -> Result<Vec<ChatMessage>, String>
 
 /// Save chat history for a user (single chat).
 #[tauri::command]
-pub async fn save_user_chat(user_id: String, messages: Vec<ChatMessage>) -> Result<(), String> {
-    let users = load_users()?;
+pub async fn save_user_chat(app: AppHandle, user_id: String, messages: Vec<ChatMessage>) -> Result<(), String> {
+    let users = load_users(&app)?;
     if !users.iter().any(|u| u.id == user_id) {
         return Err("User not found".to_string());
     }
-    migrate_multi_chat_to_single_if_needed(&user_id)?;
-    let chat_file = get_chat_history_path(&user_id)?;
+    migrate_multi_chat_to_single_if_needed(&app, &user_id)?;
+    let chat_file = get_chat_history_path(&app, &user_id)?;
     if let Some(parent) = chat_file.parent() {
         fs::create_dir_all(parent)
             .map_err(|e| format!("Failed to create user directory: {}", e))?;
@@ -462,18 +418,18 @@ pub async fn save_user_chat(user_id: String, messages: Vec<ChatMessage>) -> Resu
 
 /// Delete all chat history for a user.
 #[tauri::command]
-pub async fn delete_user_chat(user_id: String) -> Result<(), String> {
-    let users = load_users()?;
+pub async fn delete_user_chat(app: AppHandle, user_id: String) -> Result<(), String> {
+    let users = load_users(&app)?;
     if !users.iter().any(|u| u.id == user_id) {
         return Err("User not found".to_string());
     }
-    migrate_multi_chat_to_single_if_needed(&user_id)?;
-    let chat_file = get_chat_history_path(&user_id)?;
+    migrate_multi_chat_to_single_if_needed(&app, &user_id)?;
+    let chat_file = get_chat_history_path(&app, &user_id)?;
     if chat_file.exists() {
         fs::remove_file(&chat_file)
             .map_err(|e| format!("Failed to delete chat history: {}", e))?;
     }
-    let user_dir = get_user_dir_path(&user_id)?;
+    let user_dir = get_user_dir_path(&app, &user_id)?;
     let list_path = user_dir.join("chat_list.json");
     if list_path.exists() {
         let _ = fs::remove_file(&list_path);
@@ -492,9 +448,9 @@ pub async fn delete_user_chat(user_id: String) -> Result<(), String> {
 
 /// Delete a user and their data
 #[tauri::command]
-pub async fn delete_user(user_id: String) -> Result<(), String> {
+pub async fn delete_user(app: AppHandle, user_id: String) -> Result<(), String> {
     // Load users
-    let mut users = load_users()?;
+    let mut users = load_users(&app)?;
     
     // Find user index
     let index = users.iter()
@@ -505,19 +461,19 @@ pub async fn delete_user(user_id: String) -> Result<(), String> {
     users.remove(index);
     
     // Save updated users list
-    save_users(&users)?;
+    save_users(&app, &users)?;
     
     // Delete user directory and all its contents
-    let user_dir = get_user_dir_path(&user_id)?;
+    let user_dir = get_user_dir_path(&app, &user_id)?;
     if user_dir.exists() {
         fs::remove_dir_all(&user_dir)
             .map_err(|e| format!("Failed to delete user directory: {}", e))?;
     }
     
     // If this was the current user, clear current user
-    if let Ok(Some(current_id)) = get_current_user().await {
+    if let Ok(Some(current_id)) = get_current_user(app.clone()).await {
         if current_id == user_id {
-            set_current_user(None).await?;
+            set_current_user(app, None).await?;
         }
     }
     
@@ -526,8 +482,8 @@ pub async fn delete_user(user_id: String) -> Result<(), String> {
 
 /// Get user's language preference
 #[tauri::command]
-pub async fn get_user_language(user_id: String) -> Result<Option<String>, String> {
-    let users = load_users()?;
+pub async fn get_user_language(app: AppHandle, user_id: String) -> Result<Option<String>, String> {
+    let users = load_users(&app)?;
     
     let user = users.iter()
         .find(|u| u.id == user_id)
@@ -538,8 +494,8 @@ pub async fn get_user_language(user_id: String) -> Result<Option<String>, String
 
 /// Set user's language preference
 #[tauri::command]
-pub async fn set_user_language(user_id: String, language: String) -> Result<(), String> {
-    let mut users = load_users()?;
+pub async fn set_user_language(app: AppHandle, user_id: String, language: String) -> Result<(), String> {
+    let mut users = load_users(&app)?;
     
     let user = users.iter_mut()
         .find(|u| u.id == user_id)
@@ -547,7 +503,7 @@ pub async fn set_user_language(user_id: String, language: String) -> Result<(), 
     
     user.language = language;
     
-    save_users(&users)?;
+    save_users(&app, &users)?;
     
     Ok(())
 }

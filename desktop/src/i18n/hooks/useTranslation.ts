@@ -3,7 +3,6 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { invoke } from '@tauri-apps/api/core';
 import { t as translate, setLanguage, getCurrentLanguage, initializeI18n, subscribeToLanguageChange, LanguageCode, SUPPORTED_LANGUAGES } from '../index';
 
 export interface UseTranslationReturn {
@@ -19,7 +18,7 @@ export interface UseTranslationReturn {
  */
 export function useTranslation(userId?: string | null): UseTranslationReturn {
   const [lang, setLang] = useState<LanguageCode>(getCurrentLanguage());
-  const [isInitialized, setIsInitialized] = useState(false);
+  const [, setIsInitialized] = useState(false);
 
   // Initialize i18n on mount
   useEffect(() => {

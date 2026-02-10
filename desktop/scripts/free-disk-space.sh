@@ -94,11 +94,25 @@ if [ -d "$HOME/Library/Caches" ]; then
 fi
 
 # Cargo/rust build artifacts for this project only (optional; rebuilds on next build)
-if [ -d "$DESKTOP_DIR/src-tauri/target" ]; then
-  size=$(du -sm "$DESKTOP_DIR/src-tauri/target" 2>/dev/null | cut -f1)
+TARGET_DIR="$DESKTOP_DIR/src-tauri/target"
+if [ -d "$TARGET_DIR" ]; then
+  size=$(du -sm "$TARGET_DIR" 2>/dev/null | cut -f1)
   echo "=== Tauri target (this project, ~${size} MB) ==="
+  # Show breakdown so you can see what is using space
+  for sub in debug release; do
+    if [ -d "$TARGET_DIR/$sub" ]; then
+      subsize=$(du -sm "$TARGET_DIR/$sub" 2>/dev/null | cut -f1)
+      echo "  $sub: ~${subsize} MB"
+    fi
+  done
+  if [ -d "$TARGET_DIR/release/bundle" ]; then
+    bundlesize=$(du -sm "$TARGET_DIR/release/bundle" 2>/dev/null | cut -f1)
+    echo "  release/bundle (installer outputs): ~${bundlesize} MB"
+  fi
+  echo "  (Target grows due to: debug + release artifacts, incremental compilation, and"
+  echo "   each release bundle embedding a full copy of resources/ e.g. Python + model.)"
   if [ "$MODE" = "run" ]; then
-    rm -rf "$DESKTOP_DIR/src-tauri/target"
+    rm -rf "$TARGET_DIR"
     echo "  Deleted. Run 'npm run build' again when needed."
   else
     echo "  Would run: rm -rf desktop/src-tauri/target"

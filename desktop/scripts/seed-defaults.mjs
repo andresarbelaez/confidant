@@ -16,8 +16,8 @@ import { fileURLToPath } from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const DEFAULT_MODEL_URL =
-  'https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.2-GGUF/resolve/main/mistral-7b-instruct-v0.2.Q4_K_M.gguf';
-const MODEL_FILENAME = 'mistral-7b-instruct-v0.2.Q4_K_M.gguf';
+  'https://huggingface.co/bartowski/Llama-3.2-3B-Instruct-GGUF/resolve/main/Llama-3.2-3B-Instruct-Q4_K_M.gguf';
+const MODEL_FILENAME = 'Llama-3.2-3B-Instruct-Q4_K_M.gguf';
 
 function findDataDir() {
   const desktopDir = join(__dirname, '..');
@@ -103,7 +103,7 @@ async function main() {
     console.log('Created', modelsDir);
   }
 
-  console.log('Downloading default model (~4.4 GB) to', modelPath);
+  console.log('Downloading default model (~2.5 GB) to', modelPath);
   console.log('This may take a while depending on your connection.\n');
 
   try {

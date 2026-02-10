@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import UserProfileCard from './UserProfileCard';
 import PasswordPrompt from './PasswordPrompt';
@@ -16,19 +16,42 @@ interface UserProfileSelectorProps {
   onUserSelected: (userId: string) => void;
   /** When provided, show profiles immediately and skip the loading state (still refresh in background). */
   initialUsers?: User[] | null;
+  /** Called when the profile grid has layout and has had time to paint (parent can remove loading overlay). */
+  onReady?: () => void;
 }
 
-export default function UserProfileSelector({ onUserSelected, initialUsers }: UserProfileSelectorProps) {
+export default function UserProfileSelector({ onUserSelected, initialUsers, onReady }: UserProfileSelectorProps) {
   const { t } = useTranslation(null);
   const [users, setUsers] = useState<User[]>(initialUsers ?? []);
   const [loading, setLoading] = useState(initialUsers == null);
   const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
   const [showCreateUser, setShowCreateUser] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const onReadyCalledRef = useRef(false);
 
   useEffect(() => {
     loadUsers();
   }, []);
+
+  // Signal when content has layout (ResizeObserver) + 2 frames; parent keeps overlay for MIN_OVERLAY_MS (WebView compositor)
+  useEffect(() => {
+    if (loading || !onReady || !containerRef.current) return;
+    onReadyCalledRef.current = false;
+    const el = containerRef.current;
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (!entry || entry.contentRect.width === 0) return;
+      if (onReadyCalledRef.current) return;
+      onReadyCalledRef.current = true;
+      observer.disconnect();
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => onReady());
+      });
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [loading, onReady]);
 
   const loadUsers = async () => {
     try {
@@ -72,7 +95,7 @@ export default function UserProfileSelector({ onUserSelected, initialUsers }: Us
   }
 
   return (
-    <div className="user-profile-selector">
+    <div className="user-profile-selector" ref={containerRef}>
       <div className="selector-header">
         <h1 className="selector-title">{t('ui.whoIsUsing')}</h1>
       </div>

@@ -21,7 +21,7 @@ interface ResponseCache {
 }
 
 const CACHE_VERSION = '1.2.0';
-const CACHE_DIR = 'cache';
+const _CACHE_DIR = 'cache';
 let cacheData: ResponseCache | null = null;
 
 /**
@@ -105,14 +105,15 @@ async function prePopulateCache(language: LanguageCode): Promise<void> {
   // Ensure i18n is initialized for this language
   await initializeI18n(null);
   
-  // Use i18n translations for cached responses
+  // Use i18n translations for cached responses (common user inputs after session first message)
   const commonQueries: Record<string, string> = {
     'hi': t('cached.hi'),
     'hello': t('cached.hello'),
     'hey': t('cached.hey'),
-    'what are you': t('cached.whatAreYou'),
-    'who are you': t('cached.whoAreYou'),
-    'what can you do': t('cached.whatCanYouDo'),
+    'how are you': t('cached.howAreYou'),
+    'good morning': t('cached.goodMorning'),
+    'i have a question': t('cached.iHaveAQuestion'),
+    'what can you help with': t('cached.whatCanYouHelpWith'),
     'help': t('cached.help'),
   };
 

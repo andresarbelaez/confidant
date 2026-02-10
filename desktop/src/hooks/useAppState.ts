@@ -202,7 +202,7 @@ export function useAppState() {
   }, []);
 
   // Handle model ready
-  const handleModelReady = useCallback((path: string) => {
+  const handleModelReady = useCallback((_path: string) => {
     setState(prev => ({
       ...prev,
       setupStatus: {
