@@ -157,7 +157,7 @@ jobs:
       - name: Build Tauri app
         run: |
           cd desktop
-          npx tauri build --bundles app,msi,nsis
+          npx tauri build --bundles msi,nsis
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
