@@ -62,3 +62,6 @@ config.yaml
 # Service Worker
 sw.js
 sw.js.map
+
+# Bundled Python / PyTorch (exceeds GitHub 100MB limit)
+desktop/src-tauri/resources/python/

@@ -1,2 +1,5 @@
 target
 Cargo.lock
+
+# Bundled Python env (PyTorch, etc. - exceeds GitHub 100MB file limit)
+resources/python/
