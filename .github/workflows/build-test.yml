@@ -1,0 +1,99 @@
+name: Build Test
+
+on:
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: 'Platform to build for'
+        required: true
+        type: choice
+        options:
+          - macos-x64
+          - macos-arm64
+          - windows-x64
+          - all
+
+jobs:
+  build:
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: 'macos-latest'
+            target: 'x86_64-apple-darwin'
+            name: 'macos-x64'
+            condition: ${{ github.event.inputs.platform == 'macos-x64' || github.event.inputs.platform == 'all' }}
+          - platform: 'macos-latest'
+            target: 'aarch64-apple-darwin'
+            name: 'macos-arm64'
+            condition: ${{ github.event.inputs.platform == 'macos-arm64' || github.event.inputs.platform == 'all' }}
+          - platform: 'windows-latest'
+            target: 'x86_64-pc-windows-msvc'
+            name: 'windows-x64'
+            condition: ${{ github.event.inputs.platform == 'windows-x64' || github.event.inputs.platform == 'all' }}
+
+    runs-on: ${{ matrix.platform }}
+    if: ${{ matrix.condition }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Install dependencies (macOS)
+        if: matrix.platform == 'macos-latest'
+        run: |
+          brew install jq || true
+
+      - name: Install frontend dependencies
+        run: |
+          cd desktop
+          npm ci
+
+      - name: Setup Python bundle
+        run: |
+          cd desktop
+          BUNDLE_PYTHON=1 bash scripts/setup-python-bundle.sh
+
+      - name: Build frontend
+        run: |
+          cd desktop
+          npm run build:frontend
+
+      - name: Build Tauri app
+        run: |
+          cd desktop
+          if [ "${{ matrix.platform }}" == "macos-latest" ]; then
+            npx tauri build --target ${{ matrix.target }} --bundles app,dmg
+          else
+            npx tauri build --bundles app,msi,nsis
+          fi
+
+      - name: Upload macOS artifacts
+        if: matrix.platform == 'macos-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.name }}-installers
+          path: |
+            desktop/src-tauri/target/release/bundle/macos/Confidant.app
+            desktop/src-tauri/target/release/bundle/dmg/*.dmg
+
+      - name: Upload Windows artifacts
+        if: matrix.platform == 'windows-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.name }}-installers
+          path: |
+            desktop/src-tauri/target/release/bundle/msi/*.msi
+            desktop/src-tauri/target/release/bundle/nsis/*.exe

@@ -1,0 +1,78 @@
+name: Build Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: 'macos-latest'
+            args: '--target x86_64-apple-darwin'
+          - platform: 'macos-latest'
+            args: '--target aarch64-apple-darwin'
+          - platform: 'windows-latest'
+            args: ''
+
+    runs-on: ${{ matrix.platform }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.platform == 'windows-latest' && 'x86_64-pc-windows-msvc' || (matrix.platform == 'macos-latest' && matrix.args == '--target x86_64-apple-darwin' && 'x86_64-apple-darwin' || 'aarch64-apple-darwin') }}
+
+      - name: Install dependencies (macOS)
+        if: matrix.platform == 'macos-latest'
+        run: |
+          brew install jq || true
+          brew install create-dmg || true
+
+      - name: Install frontend dependencies
+        run: |
+          cd desktop
+          npm ci
+
+      - name: Setup Python bundle (macOS)
+        if: matrix.platform == 'macos-latest'
+        run: |
+          cd desktop
+          BUNDLE_PYTHON=1 bash scripts/setup-python-bundle.sh
+
+      - name: Setup Python bundle (Windows)
+        if: matrix.platform == 'windows-latest'
+        run: |
+          cd desktop
+          BUNDLE_PYTHON=1 bash scripts/setup-python-bundle.sh
+
+      - name: Build frontend
+        run: |
+          cd desktop
+          npm run build:frontend
+
+      - name: Build Tauri app
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          projectPath: desktop
+          tagName: ${{ github.ref_name }}
+          releaseName: 'Confidant ${{ github.ref_name }}'
+          releaseBody: 'See the assets to download this version and install.'
+          releaseDraft: false
+          prerelease: false
+          args: ${{ matrix.args }}
