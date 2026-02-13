@@ -1,37 +1,109 @@
 <!DOCTYPE html>
+<!--
+  GitHub URLs: andresarbelaez/confidant.
+  Tauri build outputs: Check desktop/src-tauri/target/release/bundle/ for actual filenames.
+-->
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Confidant – A privacy-first, offline AI companion for mental health. Gratitude, mindfulness, mood support. No account. No data sent to the cloud.">
   <title>Confidant – Offline Mental Health Companion</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="download-site.css">
 </head>
 <body>
-  <div class="container">
-    <h1>Confidant</h1>
-    <p class="tagline">Privacy-first, offline mental health companion. No account, no data sent to the cloud.</p>
+  <header class="header">
+    <div class="container">
+      <a href="#" class="logo">Confidant</a>
+      <nav class="nav">
+        <a href="#features">Features</a>
+        <a href="#download">Download</a>
+        <a href="https://github.com/andresarbelaez/confidant" target="_blank" rel="noopener">GitHub</a>
+      </nav>
+    </div>
+  </header>
 
-    <section class="downloads">
-      <h2>Download (Beta)</h2>
-      <p class="requirements">macOS 11+ · Windows 10+ · <a href="https://github.com/andresarbelaez/confidant/blob/main/desktop/SETUP_INSTRUCTIONS.md">Setup guide</a></p>
-      <div class="download-list">
-        <a href="https://github.com/andresarbelaez/confidant/releases/latest/download/Confidant_0.1.0_aarch64.dmg" class="dl-btn">Download for macOS (Apple Silicon)</a>
-        <a href="https://github.com/andresarbelaez/confidant/releases/latest/download/Confidant_0.1.0_x64.dmg" class="dl-btn">Download for macOS (Intel)</a>
-        <a href="https://github.com/andresarbelaez/confidant/releases/latest/download/Confidant_0.1.0_x64_en-US.msi" class="dl-btn">Download for Windows (MSI)</a>
-        <a href="https://github.com/andresarbelaez/confidant/releases/latest/download/Confidant_0.1.0_x64_en-US-setup.exe" class="dl-btn">Download for Windows (EXE)</a>
+  <main>
+    <section class="hero">
+      <div class="container">
+        <h1 class="hero-title">Your mental health companion.<br>Fully offline. Fully private.</h1>
+        <p class="hero-tagline">Support for gratitude, mindfulness, mood, stress, and more—with an AI that runs entirely on your device. No account. Nothing leaves your computer.</p>
+        <div class="hero-cta">
+          <a href="#download" class="btn btn-primary">Download for free</a>
+          <a href="https://github.com/andresarbelaez/confidant#readme" class="btn btn-secondary">Learn more</a>
+        </div>
       </div>
-      <p class="security-note">Beta builds are unsigned. You may see a security or Gatekeeper warning; see the <a href="https://github.com/andresarbelaez/confidant#readme">README</a> for details.</p>
     </section>
 
-    <div class="beta-notice">
-      <strong>Beta.</strong> We’d love your feedback. <a href="https://github.com/andresarbelaez/confidant/issues">Open an issue</a> or start a discussion.
-    </div>
+    <section id="features" class="features">
+      <div class="container">
+        <h2 class="section-title">Why Confidant?</h2>
+        <div class="feature-grid">
+          <article class="feature">
+            <div class="feature-icon">🔒</div>
+            <h3>Privacy first</h3>
+            <p>All processing happens locally. Your conversations never leave your device.</p>
+          </article>
+          <article class="feature">
+            <div class="feature-icon">📴</div>
+            <h3>Works offline</h3>
+            <p>No internet needed after setup. Use it anywhere, anytime.</p>
+          </article>
+          <article class="feature">
+            <div class="feature-icon">💭</div>
+            <h3>Mental health support</h3>
+            <p>Gratitude, mindfulness, mood, stress—a supportive companion, not a substitute for professional care.</p>
+          </article>
+        </div>
+      </div>
+    </section>
 
-    <footer class="footer">
-      <a href="https://github.com/andresarbelaez/confidant">Source</a> ·
-      <a href="https://github.com/andresarbelaez/confidant/blob/main/LICENSE">License</a> ·
-      <a href="https://github.com/andresarbelaez/confidant/blob/main/CONTRIBUTING.md">Contributing</a>
-    </footer>
-  </div>
+    <section id="download" class="download">
+      <div class="container">
+        <h2 class="section-title">Download</h2>
+        <p class="download-intro">macOS 11+ · Windows 10+</p>
+        <div class="download-grid">
+          <a href="https://github.com/andresarbelaez/confidant/releases/latest/download/Confidant_0.1.0_aarch64.dmg" class="dl-card">
+            <span class="dl-icon">🍎</span>
+            <span class="dl-label">macOS (Apple Silicon)</span>
+            <span class="dl-file">.dmg</span>
+          </a>
+          <a href="https://github.com/andresarbelaez/confidant/releases/latest/download/Confidant_0.1.0_x64.dmg" class="dl-card">
+            <span class="dl-icon">🖥️</span>
+            <span class="dl-label">macOS (Intel)</span>
+            <span class="dl-file">.dmg</span>
+          </a>
+          <a href="https://github.com/andresarbelaez/confidant/releases/latest/download/Confidant_0.1.0_x64_en-US.msi" class="dl-card">
+            <span class="dl-icon">🪟</span>
+            <span class="dl-label">Windows (MSI)</span>
+            <span class="dl-file">.msi</span>
+          </a>
+          <a href="https://github.com/andresarbelaez/confidant/releases/latest/download/Confidant_0.1.0_x64_en-US-setup.exe" class="dl-card">
+            <span class="dl-icon">🪟</span>
+            <span class="dl-label">Windows (EXE)</span>
+            <span class="dl-file">.exe</span>
+          </a>
+        </div>
+        <p class="security-note">Beta builds are unsigned. You may see a security or Gatekeeper warning; see the <a href="https://github.com/andresarbelaez/confidant#readme">README</a> for details.</p>
+        <div class="beta-notice">
+          <strong>Beta.</strong> We'd love your feedback. <a href="https://github.com/andresarbelaez/confidant/issues">Open an issue</a> or start a discussion.
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <p>Confidant is not a substitute for therapy or professional mental health care.</p>
+      <nav>
+        <a href="https://github.com/andresarbelaez/confidant">Source</a>
+        <a href="https://github.com/andresarbelaez/confidant/blob/main/LICENSE">License</a>
+        <a href="https://github.com/andresarbelaez/confidant/blob/main/CONTRIBUTING.md">Contributing</a>
+      </nav>
+    </div>
+  </footer>
 </body>
 </html>

@@ -61,7 +61,7 @@ See [desktop/SETUP_INSTRUCTIONS.md](desktop/SETUP_INSTRUCTIONS.md) for detailed 
 
 ### Download (Beta)
 
-Pre-built installers for macOS and Windows are available via [GitHub Releases](https://github.com/confidant/confidant/releases). A small [download page](docs/index.html) is in `docs/` for use with [GitHub Pages](docs/GITHUB_PAGES.md); enable Pages from the `docs/` folder to serve it.
+Pre-built installers for macOS and Windows are available via [GitHub Releases](https://github.com/andresarbelaez/confidant/releases). A small [download page](docs/index.html) is in `docs/` for use with [GitHub Pages](docs/GITHUB_PAGES.md); enable Pages from the `docs/` folder to serve it.
 
 ## Contributing
 

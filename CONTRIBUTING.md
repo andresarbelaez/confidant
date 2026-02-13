@@ -30,7 +30,7 @@ Thank you for your interest in contributing to Confidant. This document explains
 
 1. **Clone the repo**
    ```bash
-   git clone https://github.com/YOUR_ORG/confidant.git
+   git clone https://github.com/andresarbelaez/confidant.git
    cd confidant
    ```
 
