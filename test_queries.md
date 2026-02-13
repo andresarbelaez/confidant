@@ -1,15 +1,8 @@
-# Confidant Agent Reasoning Test Queries
+# Confidant Test Queries
 
-This document contains test queries organized by reasoning type to evaluate the agent's capabilities.
+Sample prompts for testing the desktop app Chat interface. Use these in the Chat tab to explore the agent's capabilities.
 
-## How to Use
-Run the agent in text mode:
-```bash
-source venv/bin/activate
-python src/main.py --text
-```
-
-Then copy and paste queries from the sections below.
+For mental health topics, try prompts like: "I'm feeling stressed," "How can gratitude help my mood?," or "What are signs I should talk to someone?"
 
 ---
 

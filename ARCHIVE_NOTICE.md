@@ -27,22 +27,11 @@ The following files in the root directory are from previous implementations or h
 - `PI4_VS_PI5_DECISION.md` - Hardware decision
 - `PI5_4GB_VS_8GB_DECISION.md` - RAM decision
 
-### Still Relevant Files
-- `LLM_INFO.md` - Model information (still useful)
-- `test_queries.md` - Test queries (still useful for testing)
-- `VALUE_PROPOSITION.md` - Current value proposition
-- `PITCH.md` - Current pitch materials
-- `DEMO_STRATEGY.md` - Demo strategy (may need updates)
-- `FUTURE_TECHNOLOGY.md` - Future considerations
-- `MVP_DEVELOPMENT.md` - MVP strategy (may need updates)
-- `PHASE1_*.md` - Validation phase documents (historical but informative)
-
 ## Current Active Files
 
-### Web App (Current Implementation)
-- `web/` - Main PWA application
+### Desktop App (Current Implementation)
+- `desktop/` - Main desktop application (Tauri 2.0 + React)
 - `docs/` - Current documentation
-- `ARCHITECTURE.md` - Architecture overview
 - `README.md` - Main project README
 
 ## Note on File Organization
@@ -55,8 +44,8 @@ The `archive/` directory structure is set up for future organization:
 
 ## Contributing
 
-When contributing to dant, focus on:
-- `web/` directory - Current implementation
+When contributing to Confidant, focus on:
+- `desktop/` directory - Current implementation
 - `docs/` directory - Current documentation
 - Files in root marked as "Current" or without archive notices
 

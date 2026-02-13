@@ -8,7 +8,7 @@ interface KBEntry {
   id: string;
   text: string;
   metadata: {
-    category: 'diagnosis' | 'condition' | 'history' | 'general' | 'legal';
+    category: 'diagnosis' | 'condition' | 'history' | 'general' | 'legal'; // 'legal' for legacy entries only
     created_at: string;
     updated_at: string;
   };
@@ -19,7 +19,7 @@ const categoryToLabel: Record<string, string> = {
   condition: 'preExistingCondition',
   history: 'medicalHistory',
   general: 'generalInfo',
-  legal: 'legalHistory',
+  legal: 'generalInfo', // legacy entries: display as general
 };
 
 interface UserKnowledgeBaseManagerProps {
@@ -35,14 +35,13 @@ export default function UserKnowledgeBaseManager({ userId }: UserKnowledgeBaseMa
   const [documentCount, setDocumentCount] = useState(0);
   
   // Form state
-  const [category, setCategory] = useState<'diagnosis' | 'condition' | 'history' | 'general' | 'legal'>('general');
+  const [category, setCategory] = useState<'diagnosis' | 'condition' | 'history' | 'general'>('general');
   const [text, setText] = useState('');
   const [diagnosis, setDiagnosis] = useState('');
   const [conditions, setConditions] = useState<string[]>([]);
   const [conditionInput, setConditionInput] = useState('');
   const [medicalHistory, setMedicalHistory] = useState('');
   const [generalInfo, setGeneralInfo] = useState('');
-  const [legalHistory, setLegalHistory] = useState('');
 
   useEffect(() => {
     loadEntries();
@@ -95,7 +94,7 @@ export default function UserKnowledgeBaseManager({ userId }: UserKnowledgeBaseMa
   };
 
   const handleSubmit = async () => {
-    if (!text.trim() && !diagnosis.trim() && !medicalHistory.trim() && !generalInfo.trim() && !legalHistory.trim()) {
+    if (!text.trim() && !diagnosis.trim() && !medicalHistory.trim() && !generalInfo.trim()) {
       return;
     }
 
@@ -115,9 +114,6 @@ export default function UserKnowledgeBaseManager({ userId }: UserKnowledgeBaseMa
         if (!entryText) return;
       } else if (category === 'general') {
         entryText = generalInfo.trim();
-        if (!entryText) return;
-      } else if (category === 'legal') {
-        entryText = legalHistory.trim();
         if (!entryText) return;
       }
 
@@ -170,18 +166,17 @@ export default function UserKnowledgeBaseManager({ userId }: UserKnowledgeBaseMa
 
   const handleEdit = (entry: KBEntry) => {
     setEditingEntry(entry);
-    setCategory(entry.metadata.category);
+    const cat = entry.metadata.category;
+    setCategory(cat === 'legal' ? 'general' : cat);
     
-    if (entry.metadata.category === 'diagnosis') {
+    if (cat === 'diagnosis') {
       setDiagnosis(entry.text);
-    } else if (entry.metadata.category === 'condition') {
+    } else if (cat === 'condition') {
       setConditions(entry.text.split(', ').filter(c => c.trim()));
-    } else if (entry.metadata.category === 'history') {
+    } else if (cat === 'history') {
       setMedicalHistory(entry.text);
-    } else if (entry.metadata.category === 'general') {
+    } else if (cat === 'general' || cat === 'legal') {
       setGeneralInfo(entry.text);
-    } else if (entry.metadata.category === 'legal') {
-      setLegalHistory(entry.text);
     }
     
     setShowForm(true);
@@ -212,7 +207,6 @@ export default function UserKnowledgeBaseManager({ userId }: UserKnowledgeBaseMa
     setConditionInput('');
     setMedicalHistory('');
     setGeneralInfo('');
-    setLegalHistory('');
     setEditingEntry(null);
     setShowForm(false);
   };
@@ -255,13 +249,12 @@ export default function UserKnowledgeBaseManager({ userId }: UserKnowledgeBaseMa
                 <label>{t('userKb.category')}</label>
                 <select
                   value={category}
-                  onChange={(e) => setCategory(e.target.value as any)}
+                  onChange={(e) => setCategory(e.target.value as typeof category)}
                 >
                   <option value="diagnosis">{t('userKb.healthDiagnosis')}</option>
                   <option value="condition">{t('userKb.preExistingCondition')}</option>
                   <option value="history">{t('userKb.medicalHistory')}</option>
                   <option value="general">{t('userKb.generalInfo')}</option>
-                  <option value="legal">{t('userKb.legalHistory')}</option>
                 </select>
               </div>
 
@@ -333,18 +326,6 @@ export default function UserKnowledgeBaseManager({ userId }: UserKnowledgeBaseMa
                     value={generalInfo}
                     onChange={(e) => setGeneralInfo(e.target.value)}
                     placeholder={t('userKb.enterGeneralInfo')}
-                    rows={6}
-                  />
-                </div>
-              )}
-
-              {category === 'legal' && (
-                <div className="form-group">
-                  <label>{t('userKb.legalHistory')}</label>
-                  <textarea
-                    value={legalHistory}
-                    onChange={(e) => setLegalHistory(e.target.value)}
-                    placeholder={t('userKb.enterLegalHistory')}
                     rows={6}
                   />
                 </div>

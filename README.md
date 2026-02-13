@@ -1,35 +1,35 @@
-# Confidant - Offline AI Assistant
+# Confidant - Offline Mental Health Companion
 
-**Confidant** is an open-source, privacy-first AI assistant that provides offline AI health consultation. All processing happens locally with no network access for queries.
+**Confidant** is an open-source, privacy-first AI assistant that provides offline mental health support as a supportive companion. All processing happens locally with no network access for queries.
 
-> **Note**: This project has evolved from an original Python-based Raspberry Pi implementation to a web app, and is now being migrated to a desktop app (Tauri 2.0) to eliminate browser limitations. See [archive/README.md](archive/README.md) for information about previous implementations.
+> **Note**: This project has evolved from an original Python-based Raspberry Pi implementation, then a web app, to the current desktop app (Tauri 2.0). See [archive/README.md](archive/README.md) for information about previous implementations.
 
 ## Features
 
 - **Fully Offline**: All AI processing happens client-side, no backend required
 - **Privacy-First**: All processing is local; no data is sent to external servers
-- **Health & Legal**: Optimized for health and legal questions with RAG over your knowledge base
-- **Local LLM**: Runs optimized models locally (Mistral-7B-Instruct default, Llama-3.2-3B option)
+- **Mental Health Companion**: Supports gratitude, mindfulness, mood, stress, anxiety, and depression—with RAG over your knowledge base. Not a substitute for therapy or professional care.
+- **Local LLM**: Runs optimized models locally (Llama-3.2-3B default, Mistral-7B option)
 - **RAG System**: Retrieval Augmented Generation with ChromaDB and sentence-transformers
 - **Open Source**: MIT license; fully auditable codebase
 
 ## AI Models
 
-Confidant supports two optimized LLM models, selected for their performance on health and legal questions:
+Confidant supports two optimized LLM models for mental health conversations:
 
-### Enhanced Model (Default)
-- **Mistral-7B-Instruct v0.2** (~4.4GB)
-- **Why**: Achieves 63% accuracy on MedQA (medical question answering), approaching Med-PaLM performance
-- **Best for**: Users who want the highest quality medical and legal responses
-- **Performance**: Strong reasoning capabilities, optimized for health consultation
-
-### Standard Model (Optional)
+### Standard Model (Default)
 - **Llama-3.2-3B-Instruct** (~2.5GB)
 - **Why**: Smaller size for resource-constrained systems while maintaining good quality
-- **Best for**: Users with limited storage or slower hardware
+- **Best for**: Most mental health conversations; fast and efficient
 - **Performance**: Good quality with lower resource requirements
 
-Both models use GGUF quantization and run completely offline via llama.cpp. The Enhanced Model is the default recommendation for best results on health and legal questions.
+### Enhanced Model (Optional)
+- **Mistral-7B-Instruct v0.2** (~4.4GB)
+- **Why**: Strong reasoning and contextual understanding
+- **Best for**: Users who want deeper, more nuanced conversations
+- **Performance**: Strong reasoning capabilities, optimized for complex discussions
+
+Both models use GGUF quantization and run completely offline via llama.cpp. The Standard Model is the default for most users; the Enhanced Model is recommended for more complex discussions.
 
 ## Architecture
 

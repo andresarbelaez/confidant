@@ -265,10 +265,10 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
         agent.setSessionFirstMessage(sessionFirstMessageContentRef.current);
         sessionFirstMessageContentRef.current = null;
       }
-      const healthKeywords = ['health', 'medical', 'symptom', 'disease', 'illness', 'condition', 'treatment', 'medicine', 'doctor', 'pain', 'fever', 'ache', 'diagnosis'];
-      const isHealthQuery = healthKeywords.some(keyword => userMessage.toLowerCase().includes(keyword));
+      const mentalHealthKeywords = ['mood', 'anxiety', 'depression', 'mental', 'therapy', 'gratitude', 'stress', 'emotion', 'feeling', 'sad', 'worried', 'diagnosis', 'condition', 'sleep', 'mindfulness'];
+      const useRAGForQuery = mentalHealthKeywords.some(keyword => userMessage.toLowerCase().includes(keyword));
       const response = await agent.processQuery(userMessage, {
-        useRAG: isHealthQuery,
+        useRAG: useRAGForQuery,
         userId,
         language: currentLanguage,
         onStreamChunk: (text) => {

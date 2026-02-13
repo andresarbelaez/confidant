@@ -73,7 +73,7 @@ pip install chromadb sentence-transformers llama-cpp-python
 ### 4. Test Chat with RAG
 
 1. Go to Chat tab
-2. Ask a health question
+2. Ask a mental health question or share what's on your mind
 3. Should get response using LLM + RAG
 
 ## Troubleshooting

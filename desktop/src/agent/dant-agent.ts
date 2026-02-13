@@ -1,6 +1,6 @@
 /**
  * Dant Agent - Main agent orchestrator
- * Combines LLM and RAG for health consultation
+ * Combines LLM and RAG for mental health support
  */
 
 import { invoke } from '@tauri-apps/api/core';
@@ -210,7 +210,7 @@ export class DantAgent {
     // Use a clear prompt format that encourages direct, concise responses
     const languageName = LANGUAGE_DISPLAY_NAMES[language] ?? 'English';
     const languageInstruction = ` Always respond in ${languageName}. The user's preferred language is ${languageName}.`;
-    const systemContext = `You are Confidant, an AI that responds to health questions from a clinician-like perspective: supportive, clear, and professional. Use plain language and explain medical terms when needed. When it would help, ask a brief clarifying question (e.g. how long something has been going on). Acknowledge when something is outside your scope and suggest seeing a healthcare professional when appropriate. Keep responses brief (2-3 sentences when possible). You are not a substitute for professional medical advice. Respond directly to the user without meta-dialogue or example conversations.${languageInstruction}`;
+    const systemContext = `You are Confidant, a supportive mental health companion. You help with gratitude, mindfulness, mood, stress, anxiety, and depression—in a supportive, clarifying way. Ask brief clarifying questions when it helps. Acknowledge limits and suggest professional help when appropriate. Never diagnose. You are a supportive companion, not a therapist or substitute for professional mental health care. Keep responses brief (2-3 sentences when possible). Use plain language. Respond directly to the user without meta-dialogue or example conversations.${languageInstruction}`;
 
     // Build conversation history for context (reduced for faster processing)
     let conversationContext = '';
@@ -330,7 +330,7 @@ Assistant:`;
 
     const usedRAGFlag = useRAG && sources.length > 0;
     const normalized = normalizeQuery(query);
-    const commonQueries = ['hi', 'hello', 'hey', 'how are you', 'good morning', 'i have a question', 'what can you help with', 'help'];
+    const commonQueries = ['hi', 'hello', 'hey', 'how are you', 'good morning', 'i have a question', 'what can you help with', 'help', 'i am struggling', "i'm struggling"];
     if (commonQueries.includes(normalized)) {
       cacheResponse(normalized, assistantMessage, language).catch(err => {
         console.warn('[Agent] Failed to cache response:', err);

@@ -38,53 +38,71 @@ def generate_embeddings(texts):
         return embeddings
 
 def create_test_knowledge_base():
-    """Create a small test knowledge base"""
+    """Create a small test knowledge base with mental health topics (ICD-11-aligned, original content)."""
     
-    # Sample health-related documents
+    # Mental health documents (section 6a: ICD-11 primary, DSM-5-inspired paraphrases, no verbatim copy)
     documents = [
         {
             "id": "doc_1",
-            "text": "The common cold is a viral infection of the upper respiratory tract. Symptoms include runny nose, sneezing, coughing, and sometimes fever. Most colds resolve on their own within 7-10 days. Rest, hydration, and over-the-counter medications can help manage symptoms.",
+            "text": "Gratitude practice can support mental well-being. Taking time each day to notice and acknowledge things you're thankful for—whether small or large—can shift focus toward the positive. This is not a substitute for professional care. If you're struggling, consider reaching out to a mental health professional.",
             "metadata": {
-                "source": "health",
-                "category": "general",
-                "title": "Common Cold"
+                "source": "mental_health",
+                "category": "gratitude",
+                "title": "Gratitude Practice"
             }
         },
         {
             "id": "doc_2",
-            "text": "Regular exercise is important for maintaining good health. The World Health Organization recommends at least 150 minutes of moderate-intensity physical activity per week for adults. Exercise helps improve cardiovascular health, strengthen muscles, and boost mental well-being.",
+            "text": "Mindfulness and meditation help many people manage stress and improve mood. Simple techniques include focused breathing, body scans, and observing thoughts without judgment. These practices are supportive tools, not treatment for mental health conditions. Professional support is important for persistent difficulties.",
             "metadata": {
-                "source": "health",
-                "category": "exercise",
-                "title": "Exercise and Health"
+                "source": "mental_health",
+                "category": "mindfulness",
+                "title": "Mindfulness and Meditation"
             }
         },
         {
             "id": "doc_3",
-            "text": "A balanced diet includes a variety of foods from all food groups: fruits, vegetables, grains, protein sources, and dairy. Eating a variety of nutrient-rich foods helps ensure you get all the vitamins and minerals your body needs. Limit processed foods and added sugars.",
+            "text": "Sleep and mood are closely linked. Most adults need 7–9 hours of sleep per night. Poor or irregular sleep can affect mood, energy, and emotional regulation. Good sleep hygiene includes a regular schedule, a comfortable environment, and limiting screens before bed. If sleep problems persist, consider professional evaluation.",
             "metadata": {
-                "source": "health",
-                "category": "nutrition",
-                "title": "Balanced Diet"
+                "source": "mental_health",
+                "category": "sleep",
+                "title": "Sleep and Mood"
             }
         },
         {
             "id": "doc_4",
-            "text": "Sleep is essential for physical and mental health. Most adults need 7-9 hours of sleep per night. Poor sleep can affect mood, cognitive function, and immune system. Good sleep hygiene includes maintaining a regular sleep schedule and creating a comfortable sleep environment.",
+            "text": "Stress and coping: Chronic stress can impact mental and physical health. Helpful strategies include deep breathing, exercise, connecting with others, and setting boundaries. If stress feels overwhelming or interferes with daily life, reaching out to a mental health professional is recommended.",
             "metadata": {
-                "source": "health",
-                "category": "sleep",
-                "title": "Sleep and Health"
+                "source": "mental_health",
+                "category": "stress",
+                "title": "Stress and Coping"
             }
         },
         {
             "id": "doc_5",
-            "text": "Stress management is important for overall well-being. Chronic stress can lead to physical and mental health problems. Techniques like deep breathing, meditation, exercise, and talking to friends or professionals can help manage stress effectively.",
+            "text": "Anxiety: Common signs include persistent worry, restlessness, difficulty concentrating, and physical symptoms like tension or sleep problems. If anxiety interferes with daily life or causes significant distress, professional evaluation is recommended. This is not a substitute for diagnosis or treatment.",
             "metadata": {
-                "source": "health",
-                "category": "mental_health",
-                "title": "Stress Management"
+                "source": "mental_health",
+                "category": "anxiety",
+                "title": "Anxiety—When to Seek Support"
+            }
+        },
+        {
+            "id": "doc_6",
+            "text": "Depression: Common signs include low mood, loss of interest, fatigue, sleep or appetite changes, and difficulty concentrating. If low mood persists for weeks or interferes with daily life, professional evaluation is important. This is not a substitute for diagnosis or treatment.",
+            "metadata": {
+                "source": "mental_health",
+                "category": "depression",
+                "title": "Depression—When to Seek Support"
+            }
+        },
+        {
+            "id": "doc_7",
+            "text": "Therapy and professional support: Mental health professionals can provide assessment, therapy, and treatment. Reaching out is a sign of strength. Support looks different across cultures—what matters is finding help that feels right for you. Confidant is a supportive companion, not a substitute for professional care.",
+            "metadata": {
+                "source": "mental_health",
+                "category": "therapy",
+                "title": "Therapy and Professional Support"
             }
         }
     ]
@@ -97,8 +115,8 @@ def create_test_knowledge_base():
     # Create manifest
     manifest = {
         "version": "1.0.0",
-        "name": "dant-test-kb",
-        "description": "Small test knowledge base for dant desktop app",
+        "name": "dant-mental-health-kb",
+        "description": "Mental health knowledge base for Confidant—gratitude, mindfulness, mood, stress, anxiety, depression",
         "documentCount": len(documents),
         "embeddingDimension": len(embeddings[0]) if embeddings else 384,
         "createdAt": datetime.now().isoformat() + "Z",

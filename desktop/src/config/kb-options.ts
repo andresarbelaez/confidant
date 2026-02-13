@@ -15,18 +15,18 @@ export interface KBOption {
 
 export const KB_OPTIONS: KBOption[] = [
   {
-    id: 'lightweight-health-kb',
-    name: 'Lightweight Health KB',
-    description: 'Essential health topics. Quick to download and use.',
+    id: 'lightweight-mental-health-kb',
+    name: 'Lightweight Mental Health KB',
+    description: 'Essential mental health topics—gratitude, mindfulness, mood, stress. Quick to download and use.',
     size: '~500MB',
     documentCount: '~1,000 documents',
     url: '', // TODO: Add actual URL when KB is hosted
     default: true,
   },
   {
-    id: 'comprehensive-health-kb',
-    name: 'Comprehensive Health KB',
-    description: 'Broader coverage and more detail. Best if you have space and want depth.',
+    id: 'comprehensive-mental-health-kb',
+    name: 'Comprehensive Mental Health KB',
+    description: 'Broader mental health coverage and more detail. Best if you have space and want depth.',
     size: '~2GB',
     documentCount: '~5,000 documents',
     url: '', // TODO: Add actual URL when KB is hosted

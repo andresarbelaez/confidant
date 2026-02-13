@@ -38,8 +38,8 @@
     "externalBin": [],
     "copyright": "",
     "category": "Productivity",
-    "shortDescription": "Privacy-first offline AI assistant",
-    "longDescription": "Confidant is a privacy-first, offline AI assistant for health consultation. All processing happens locally on your device with no internet connection required."
+    "shortDescription": "Privacy-first offline mental health companion",
+    "longDescription": "Confidant is a privacy-first, offline AI companion for mental health support. All processing happens locally on your device with no internet connection required."
   },
   "plugins": {}
 }

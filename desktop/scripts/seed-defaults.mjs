@@ -120,7 +120,7 @@ async function main() {
     process.exit(1);
   }
 
-  console.log('\nKnowledge base: the app will use desktop/test_knowledge_base.json on first run.');
+  console.log('\nKnowledge base: the app will use desktop/test_knowledge_base.json (mental health content) on first run.');
   console.log('Run the app with: npm run dev');
 }
 

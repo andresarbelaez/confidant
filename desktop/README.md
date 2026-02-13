@@ -1,6 +1,6 @@
 # Confidant Desktop App
 
-Desktop application for Confidant — privacy-first, offline AI assistant for health and legal questions.
+Desktop application for Confidant — privacy-first, offline mental health companion.
 
 ## Tech stack
 

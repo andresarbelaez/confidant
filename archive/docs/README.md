@@ -20,7 +20,7 @@ This directory contains documentation from previous implementations of dant.
 For current documentation, see:
 - Main project: `README.md`
 - Desktop app: `desktop/README.md` and `desktop/` directory
-- Desktop migration: `desktop/MIGRATION_STATUS.md`
+- Desktop app: See `desktop/README.md` and `desktop/SETUP_INSTRUCTIONS.md`
 - Desktop setup: `desktop/SETUP_INSTRUCTIONS.md`
 - Desktop integration: `desktop/FULL_INTEGRATION_SETUP.md`
 

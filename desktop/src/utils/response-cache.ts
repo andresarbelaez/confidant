@@ -91,7 +91,7 @@ async function saveCache(cache: ResponseCache): Promise<void> {
 export async function initializeCache(language: LanguageCode): Promise<void> {
   cacheData = await loadCache(language);
   // Always refresh the common pre-populated responses from i18n so updated
-  // strings (e.g. clinician copy) are shown without clearing the whole cache
+  // strings (e.g. mental health copy) are shown without clearing the whole cache
   await prePopulateCache(language);
 }
 
@@ -115,6 +115,8 @@ async function prePopulateCache(language: LanguageCode): Promise<void> {
     'i have a question': t('cached.iHaveAQuestion'),
     'what can you help with': t('cached.whatCanYouHelpWith'),
     'help': t('cached.help'),
+    'i am struggling': t('cached.iAmStruggling'),
+    "i'm struggling": t('cached.iAmStruggling'),
   };
 
   const now = new Date().toISOString();

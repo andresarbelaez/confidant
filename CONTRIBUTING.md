@@ -23,7 +23,7 @@ Thank you for your interest in contributing to Confidant. This document explains
 
 - **Frontend**: React 18, TypeScript, Vite
 - **Backend**: Rust (Tauri 2), Python 3 (subprocess for LLM, ChromaDB, embeddings)
-- **LLM**: llama-cpp-python, GGUF models (Mistral-7B default, Llama-3.2-3B option)
+- **LLM**: llama-cpp-python, GGUF models (Llama-3.2-3B default, Mistral-7B option)
 - **RAG**: ChromaDB, sentence-transformers
 
 ## Getting started
@@ -73,6 +73,6 @@ Thank you for your interest in contributing to Confidant. This document explains
 
 - Be respectful and inclusive.
 - Welcome newcomers and give constructive feedback.
-- Focus on the project’s goal: a privacy-first, offline AI assistant for health and legal information.
+- Focus on the project’s goal: a privacy-first, offline AI companion for mental health support.
 
 Thank you for contributing to Confidant.
