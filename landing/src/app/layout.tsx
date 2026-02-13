@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Confidant – Offline Mental Health Companion",
-  description: "Privacy-first, offline AI companion for mental health. Gratitude, mindfulness, mood support. No account. No data sent to the cloud.",
+  description: "Privacy-first AI you can chat with about mental health. Gratitude, mood, stress—fully offline. No account. Nothing leaves your device.",
 };
 
 export default function RootLayout({

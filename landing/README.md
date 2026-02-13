@@ -27,6 +27,14 @@ npm run build
 
 Static output goes to `out/`. Configured for GitHub Pages (copy `out/*` to `docs/`).
 
+## Platform logos (download buttons)
+
+Add `apple-logo.png` and `windows-logo.png` to `landing/public/` for custom icons on the download cards. Requirements:
+
+- **Format:** PNG with transparency (or JPEG)
+- **Size:** 48×48px min; 96×96px or 128×128px for retina
+- **Display:** Rendered at 40×40px; fallback to emoji if file missing
+
 ## Adding components
 
 - **shadcn components:** `npx shadcn add <component>`

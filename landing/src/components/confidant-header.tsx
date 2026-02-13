@@ -11,7 +11,6 @@ const REPO = 'https://github.com/andresarbelaez/confidant'
 
 const menuItems = [
   { name: 'Features', href: '#features' },
-  { name: 'Download', href: '#download' },
   { name: 'GitHub', href: REPO, external: true },
 ]
 

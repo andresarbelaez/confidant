@@ -6,8 +6,8 @@ import { cn } from '@/lib/utils'
 const buttonVariants = cva('cursor-pointer active:scale-99 duration-200 font-medium inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full text-sm font-medium focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0', {
     variants: {
         variant: {
-            default: 'bg-foreground text-background hover:brightness-95',
-            neutral: 'bg-foreground text-background hover:brightness-95',
+            default: 'bg-primary text-primary-foreground hover:opacity-90',
+            neutral: 'bg-primary text-primary-foreground hover:opacity-90',
             destructive: 'bg-destructive text-destructive-foreground shadow-md hover:bg-destructive/90',
             outline: 'shadow-sm text-foreground shadow-black/6.5 border border-transparent bg-card ring-1 ring-foreground/15 duration-200 hover:bg-muted/50',
             secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',

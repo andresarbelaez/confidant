@@ -11,10 +11,10 @@ export function ConfidantHero() {
         <section className="bg-background pt-32 pb-24 md:pt-40 md:pb-32">
           <div className="mx-auto max-w-3xl px-6 text-center">
             <h1 className="text-balance font-serif text-4xl font-medium sm:text-5xl md:text-6xl">
-              Your mental health companion. Fully offline. Fully private.
+              A private AI companion for your mental health. Runs entirely on your device.
             </h1>
             <p className="text-muted-foreground mt-6 text-lg text-balance">
-              Support for gratitude, mindfulness, mood, stress, and more—with an AI that runs entirely on your device. No account. Nothing leaves your computer.
+              Chat about gratitude, mindfulness, mood, and stress—with an AI that never leaves your computer. No account. No cloud.
             </p>
             <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
               <Button asChild size="lg" className="pr-2">
@@ -25,7 +25,7 @@ export function ConfidantHero() {
               </Button>
               <Button asChild variant="outline" size="lg">
                 <Link href="https://github.com/andresarbelaez/confidant#readme" target="_blank" rel="noopener">
-                  Learn more
+                  View on GitHub
                 </Link>
               </Button>
             </div>
