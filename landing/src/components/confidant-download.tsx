@@ -7,8 +7,8 @@ const REPO = 'https://github.com/andresarbelaez/confidant'
 
 const downloads = [
   { label: 'macOS (Apple Silicon)', file: 'Confidant_0.1.0_aarch64.dmg', logo: 'apple-logo.png' },
-  { label: 'macOS (Intel)', file: 'Confidant_0.1.0_x64.dmg', logo: 'apple-logo.png' },
   { label: 'Windows (MSI)', file: 'Confidant_0.1.0_x64_en-US.msi', logo: 'windows-logo.png' },
+  { label: 'macOS (Intel)', file: 'Confidant_0.1.0_x64.dmg', logo: 'apple-logo.png' },
   { label: 'Windows (EXE)', file: 'Confidant_0.1.0_x64_en-US-setup.exe', logo: 'windows-logo.png' },
 ]
 

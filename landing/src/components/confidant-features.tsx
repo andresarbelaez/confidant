@@ -14,8 +14,8 @@ const features = [
   },
   {
     icon: RiHeartFill,
-    title: 'Mental health support',
-    description: 'A supportive companion for everyday reflection. Not a substitute for therapy or professional care.',
+    title: 'Thoughtful support',
+    description: "A space to process what's on your mind, meant to complement — not replace — professional care.",
   },
 ]
 
