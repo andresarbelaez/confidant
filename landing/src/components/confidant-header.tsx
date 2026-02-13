@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { Menu, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { scrollToHash } from '@/lib/scroll-to-hash'
 import React from 'react'
 import { cn } from '@/lib/utils'
 import { ConfidantLogo } from './confidant-logo'
@@ -31,13 +32,14 @@ export function ConfidantHeader() {
                   <Link
                     href={item.href}
                     {...(item.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                    {...(item.href.startsWith('#') ? { onClick: (e) => scrollToHash(e, item.href) } : {})}
                   >
                     {item.name}
                   </Link>
                 </Button>
               ))}
               <Button asChild size="sm" className="ml-2">
-                <Link href="#download">Download</Link>
+                <Link href="#download" onClick={(e) => scrollToHash(e, '#download')}>Download</Link>
               </Button>
             </div>
             <button
@@ -55,12 +57,22 @@ export function ConfidantHeader() {
                   key={item.name}
                   href={item.href}
                   {...(item.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-                  onClick={() => setMenuState(false)}
+                  {...(item.href.startsWith('#') ? { onClick: (e) => { scrollToHash(e, item.href); setMenuState(false) } } : { onClick: () => setMenuState(false) })}
                   className="block py-2 text-muted-foreground hover:text-foreground"
                 >
                   {item.name}
                 </Link>
               ))}
+              <Link
+                href="#download"
+                onClick={(e) => {
+                  scrollToHash(e, '#download')
+                  setMenuState(false)
+                }}
+                className="block py-2 text-muted-foreground hover:text-foreground"
+              >
+                Download
+              </Link>
             </div>
           )}
         </div>

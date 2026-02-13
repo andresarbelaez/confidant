@@ -1,5 +1,8 @@
+'use client'
+
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
+import { scrollToHash } from '@/lib/scroll-to-hash'
 import { ChevronRight } from 'lucide-react'
 import { ConfidantHeader } from './confidant-header'
 
@@ -18,7 +21,7 @@ export function ConfidantHero() {
             </p>
             <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
               <Button asChild size="lg" className="pr-2">
-                <Link href="#download">
+                <Link href="#download" onClick={(e) => scrollToHash(e, '#download')}>
                   Download for free
                   <ChevronRight className="ml-1 size-4 opacity-70" />
                 </Link>
