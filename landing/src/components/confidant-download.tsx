@@ -1,13 +1,14 @@
 import Link from 'next/link'
+import { Apple, LayoutGrid } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 
 const REPO = 'https://github.com/andresarbelaez/confidant'
 
 const downloads = [
-  { label: 'macOS (Apple Silicon)', file: 'Confidant_0.1.0_aarch64.dmg', icon: '🍎' },
-  { label: 'macOS (Intel)', file: 'Confidant_0.1.0_x64.dmg', icon: '🖥️' },
-  { label: 'Windows (MSI)', file: 'Confidant_0.1.0_x64_en-US.msi', icon: '🪟' },
-  { label: 'Windows (EXE)', file: 'Confidant_0.1.0_x64_en-US-setup.exe', icon: '🪟' },
+  { label: 'macOS (Apple Silicon)', file: 'Confidant_0.1.0_aarch64.dmg', Icon: Apple },
+  { label: 'macOS (Intel)', file: 'Confidant_0.1.0_x64.dmg', Icon: Apple },
+  { label: 'Windows (MSI)', file: 'Confidant_0.1.0_x64_en-US.msi', Icon: LayoutGrid },
+  { label: 'Windows (EXE)', file: 'Confidant_0.1.0_x64_en-US-setup.exe', Icon: LayoutGrid },
 ]
 
 export function ConfidantDownload() {
@@ -29,7 +30,7 @@ export function ConfidantDownload() {
                 variant="mixed"
                 className="p-6 flex items-center gap-4 hover:bg-muted/50 transition-colors"
               >
-                <span className="text-2xl">{d.icon}</span>
+                <d.Icon className="size-10 shrink-0 text-muted-foreground" strokeWidth={1.5} />
                 <div>
                   <span className="font-medium">{d.label}</span>
                   <span className="text-muted-foreground text-sm block">{d.file.split('.').pop()}</span>
