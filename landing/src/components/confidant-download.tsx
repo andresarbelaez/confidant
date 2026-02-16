@@ -50,7 +50,7 @@ export function ConfidantDownload() {
             >
               <Link href={`${REPO}/releases/latest/download/${d.file}`}>
                 <div className="w-10 h-10 shrink-0 flex items-center justify-center text-2xl text-muted-foreground">
-                  <PlatformLogo src={`/confidant/${d.logo}`} alt="" />
+                  <PlatformLogo src={`/${d.logo}`} alt="" />
                   <span style={{ display: 'none' }}>{d.logo.includes('apple') ? '🍎' : '🪟'}</span>
                 </div>
                 <div className="flex flex-col items-start gap-0">
