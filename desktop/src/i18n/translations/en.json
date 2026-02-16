@@ -3,6 +3,8 @@
     "settings": "Settings",
     "createUser": "Create User",
     "password": "Password",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
     "confirmPassword": "Confirm Password",
     "name": "Name",
     "profileName": "Profile Name",

@@ -78,8 +78,12 @@
 
 .selector-dropdown:focus {
   outline: none;
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.1);
+  border-color: -webkit-focus-ring-color;
+  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.15);
+}
+.selector-dropdown:focus-visible {
+  outline: 2px solid -webkit-focus-ring-color;
+  outline-offset: 2px;
 }
 
 .selector-description {

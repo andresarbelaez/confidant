@@ -1,3 +1,11 @@
+/* Wrapper so chat-interface can use height: 100% (fills flex parent) */
+.chat-interface-wrapper {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  width: 100%;
+}
+
 .chat-interface {
   display: flex;
   flex-direction: row;
@@ -402,6 +410,7 @@
   border: 1px solid var(--color-chat-input-wrap-border);
   border-radius: 9999px;
   box-sizing: border-box;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
 }
 
 .chat-input {
@@ -429,6 +438,10 @@
 
 .chat-input:focus {
   outline: none;
+}
+.chat-input:focus-visible {
+  outline: 2px solid -webkit-focus-ring-color;
+  outline-offset: 2px;
 }
 
 .chat-input:disabled {
@@ -586,7 +599,7 @@
   }
 
   .chat-input-form {
-    background: var(--color-surface-subtle);
+    background: var(--color-bg);
   }
 
   .chat-input-wrap {

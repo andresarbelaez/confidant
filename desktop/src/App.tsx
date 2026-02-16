@@ -124,7 +124,7 @@ function App() {
           />
           {userSelectionTransitioning && (
             <div className="App-loading-overlay" aria-hidden="true">
-              <LoadingScreen onComplete={() => {}} />
+              <LoadingScreen onComplete={() => {}} showLanguageSelector={false} />
             </div>
           )}
           {showSettingsModal && (
@@ -158,7 +158,7 @@ function App() {
             />
             {chatTransitioning && (
               <div className="App-loading-overlay" aria-hidden="true">
-                <LoadingScreen onComplete={() => {}} />
+                <LoadingScreen onComplete={() => {}} showLanguageSelector={false} />
               </div>
             )}
           </main>

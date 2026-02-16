@@ -79,7 +79,8 @@ export default function PasswordPrompt({ userId, userName, onVerified, onCancel 
                     setPassword(e.target.value);
                     setError(null);
                   }}
-                    placeholder={t('ui.password')}
+                  placeholder={t('ui.password')}
+                  aria-label={t('ui.password')}
                   className="form-input"
                   autoFocus
                   disabled={isVerifying}
@@ -88,7 +89,7 @@ export default function PasswordPrompt({ userId, userName, onVerified, onCancel 
                   type="button"
                   className="password-toggle"
                   onClick={() => setShowPassword(!showPassword)}
-                  tabIndex={-1}
+                  aria-label={showPassword ? t('ui.hidePassword') : t('ui.showPassword')}
                 >
                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>

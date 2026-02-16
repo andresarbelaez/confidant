@@ -120,7 +120,7 @@ export default function CreateUserModal({ onUserCreated, onCancel }: CreateUserM
                   type="button"
                   className="password-toggle"
                   onClick={() => setShowPassword(!showPassword)}
-                  tabIndex={-1}
+                  aria-label={showPassword ? t('ui.hidePassword') : t('ui.showPassword')}
                 >
                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
@@ -148,7 +148,7 @@ export default function CreateUserModal({ onUserCreated, onCancel }: CreateUserM
                   type="button"
                   className="password-toggle"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  tabIndex={-1}
+                  aria-label={showConfirmPassword ? t('ui.hidePassword') : t('ui.showPassword')}
                 >
                   {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>

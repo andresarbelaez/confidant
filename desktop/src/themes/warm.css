@@ -1,0 +1,223 @@
+/**
+ * Warm palette experiment — cream/golden yellow tones, Confidant purple accents.
+ * To revert to the default (cool grey) palette: comment out the import in main.tsx
+ *
+ * Hue 100 = warmer yellow (less green than 90). Confidant purple: #4f46e5
+ */
+
+@media (prefers-color-scheme: light) {
+  :root {
+    /* Warm scale: hue 100 = golden yellow, less green */
+    --color-bg: oklch(0.985 0.008 100);
+    --color-surface: oklch(0.96 0.012 100);
+    --color-surface-subtle: oklch(0.96 0.012 100);
+    --color-surface-input: oklch(0.92 0.018 100);
+    --color-border: oklch(0.92 0.018 100);
+    --color-border-subtle: oklch(0.92 0.012 100);
+    --color-text: oklch(0.25 0.03 100);
+    --color-text-secondary: oklch(0.35 0.025 100);
+    --color-text-muted: oklch(0.48 0.035 100);
+    --color-text-faint: oklch(0.55 0.02 100);
+    --color-warning-bg: oklch(0.96 0.03 100);
+    --color-warning-text: oklch(0.48 0.035 100);
+    --color-info-bg: oklch(0.95 0.025 280);
+    --color-info-border: oklch(0.88 0.05 280);
+    --color-success-bg: oklch(0.92 0.06 145);
+    --color-success-text: oklch(0.35 0.1 145);
+    /* AI messages: low contrast, close to background */
+    --color-assistant-bubble: oklch(0.97 0.01 100);
+    --color-assistant-bubble-text: oklch(0.28 0.03 100);
+    /* User messages: near-black with slight Confidant purple tint */
+    --color-user-bubble: oklch(0.18 0.04 280);
+    --color-user-bubble-text: rgba(255, 255, 255, 0.95);
+    /* Send button: dark (same as user bubble) */
+    --color-send-button-bg: var(--color-user-bubble);
+    --color-send-button-icon: #ffffff;
+    --color-chat-surface: oklch(0.99 0.004 90);
+    --color-chat-input-wrap-bg: var(--color-chat-surface);
+    --color-chat-input-wrap-border: oklch(0.92 0.018 100);
+    --color-chat-input-wrap-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    --color-placeholder: oklch(0.55 0.02 100);
+    color: var(--color-text);
+    background-color: var(--color-bg);
+  }
+  button {
+    background-color: oklch(0.96 0.012 100);
+  }
+
+  /* Sidebar: use shared surface variable (matches input fill) */
+  .chat-sidebar {
+    background: var(--color-chat-surface) !important;
+    border-color: oklch(0.92 0.018 100) !important;
+  }
+  .sidebar-settings-label:hover {
+    background: oklch(0.92 0.018 100) !important;
+  }
+  .sidebar-divider {
+    background: oklch(0.92 0.018 100);
+  }
+  .chat-history-item:hover {
+    background: oklch(0.93 0.02 100) !important;
+  }
+  .chat-history-item.active {
+    background: oklch(0.91 0.025 100) !important;
+  }
+
+  /* Loading screen — uses var(--color-bg) etc., already warm. Ensure spinner/title match. */
+  .loading-screen {
+    background: var(--color-bg) !important;
+  }
+
+  /* Modal overlay and dialog */
+  .modal-overlay {
+    background: rgba(0, 0, 0, 0.4);
+  }
+  .modal-dialog {
+    background: oklch(0.98 0.008 100) !important;
+    box-shadow: 0 20px 60px oklch(0.3 0.02 100 / 0.2);
+  }
+  .modal-header {
+    border-bottom-color: oklch(0.92 0.018 100) !important;
+  }
+  .modal-header h2 {
+    color: var(--color-text) !important;
+  }
+  .modal-close {
+    color: var(--color-text-muted) !important;
+  }
+  .modal-close:hover {
+    color: var(--color-text) !important;
+  }
+  .modal-content {
+    color: var(--color-text);
+  }
+  .modal-footer {
+    border-top-color: oklch(0.92 0.018 100) !important;
+  }
+  .btn-secondary:hover {
+    background: oklch(0.91 0.025 100) !important;
+  }
+
+  /* Setup modal / model downloader / KB manager — shared form/selector styles */
+  .privacy-info {
+    background: oklch(0.95 0.02 100) !important;
+    border-color: oklch(0.9 0.03 100) !important;
+  }
+  .privacy-info p {
+    color: var(--color-text-secondary) !important;
+  }
+  .selector-group label {
+    color: var(--color-text) !important;
+  }
+  .selector-dropdown {
+    background: oklch(0.98 0.008 100) !important;
+    border-color: oklch(0.92 0.018 100) !important;
+    color: var(--color-text) !important;
+  }
+  .selector-dropdown:disabled {
+    background: oklch(0.95 0.01 100) !important;
+  }
+  .selector-description {
+    color: var(--color-text-muted) !important;
+  }
+  .selector-meta {
+    color: var(--color-text-faint) !important;
+  }
+  .status-badge.checking {
+    background: oklch(0.94 0.06 95) !important;
+    color: oklch(0.45 0.08 95) !important;
+  }
+  .status-badge.not-started,
+  .status-badge.error {
+    background: oklch(0.95 0.03 25) !important;
+    color: oklch(0.45 0.1 25) !important;
+  }
+  .status-badge.downloading {
+    background: oklch(0.94 0.04 220) !important;
+    color: oklch(0.4 0.08 220) !important;
+  }
+  .status-badge.downloaded {
+    background: oklch(0.92 0.05 145) !important;
+    color: oklch(0.35 0.08 145) !important;
+  }
+  .progress-bar {
+    background: oklch(0.92 0.018 100) !important;
+  }
+  .progress-text {
+    color: var(--color-text-muted) !important;
+  }
+  .error-message {
+    background: oklch(0.96 0.03 25) !important;
+    border-color: oklch(0.7 0.15 25) !important;
+    color: oklch(0.45 0.12 25) !important;
+  }
+  .existing-models-notice {
+    background: oklch(0.95 0.03 220) !important;
+    border-color: oklch(0.85 0.05 220) !important;
+  }
+  .existing-models-notice p {
+    color: var(--color-text-secondary) !important;
+  }
+  .existing-models-list {
+    background: oklch(0.96 0.012 100) !important;
+    border-color: oklch(0.92 0.018 100) !important;
+  }
+  .existing-models-list h4 {
+    color: var(--color-text) !important;
+  }
+  .existing-model-selector {
+    background: oklch(0.98 0.008 100) !important;
+    border-color: oklch(0.92 0.018 100) !important;
+    color: var(--color-text) !important;
+  }
+  .cancel-button {
+    background: oklch(0.94 0.015 100) !important;
+    color: var(--color-text-muted) !important;
+    border-color: oklch(0.92 0.018 100) !important;
+  }
+  .cancel-button:hover {
+    background: oklch(0.91 0.02 100) !important;
+  }
+
+  /* Language selector (loading screen, modals) */
+  .language-selector {
+    background: oklch(0.96 0.012 100) !important;
+    border-radius: 8px;
+  }
+  .language-label {
+    color: var(--color-text) !important;
+  }
+  .language-select {
+    background: oklch(0.98 0.008 100) !important;
+    border-color: oklch(0.92 0.018 100) !important;
+    color: var(--color-text) !important;
+  }
+  .language-select:focus {
+    border-color: -webkit-focus-ring-color !important;
+    box-shadow: 0 0 0 2px -webkit-focus-ring-color !important;
+  }
+
+  /* User profile card — new user avatar subtle bg */
+  .user-profile-card.new-user .profile-avatar {
+    background: oklch(0.94 0.015 100) !important;
+  }
+
+  /* Chat disabled overlay */
+  .chat-disabled-overlay {
+    background: oklch(0.99 0.005 100 / 0.9) !important;
+  }
+
+  /* Chat blockquote border (light mode) */
+  .message.assistant .message-content blockquote {
+    border-left-color: oklch(0.9 0.02 100) !important;
+  }
+
+  /* Network monitor (setup screens) */
+  .network-monitor {
+    background: oklch(0.96 0.012 100) !important;
+    border-color: oklch(0.92 0.018 100) !important;
+  }
+  .network-monitor .stat-label {
+    color: var(--color-text-muted) !important;
+  }
+}

@@ -11,13 +11,13 @@ export function ConfidantHero() {
     <>
       <ConfidantHeader />
       <main>
-        <section className="bg-background pt-32 pb-24 md:pt-40 md:pb-32">
+        <section className="pt-32 pb-24 md:pt-40 md:pb-32">
           <div className="mx-auto max-w-3xl px-6 text-center">
-            <h1 className="text-balance font-serif text-4xl font-medium sm:text-5xl md:text-6xl">
-              A private AI companion for your mental health. Runs entirely on your device.
+            <h1 className="text-balance font-serif text-4xl font-medium leading-[1.3] sm:text-5xl md:text-6xl">
+              Confidant is a private AI companion for your mental health. It runs entirely on your device.
             </h1>
             <p className="text-muted-foreground mt-6 text-lg text-balance">
-              Chat about gratitude, mindfulness, mood, and stress—with an AI that never leaves your computer. No account. No cloud.
+              Because your thoughts deserve to be heard, not stored.
             </p>
             <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
               <Button asChild size="lg" className="pr-2">

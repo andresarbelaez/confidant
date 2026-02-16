@@ -1,5 +1,5 @@
 :root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
@@ -56,7 +56,9 @@
   --color-send-button-icon: #ffffff;
   --color-tooltip-bg: #1a1a1a;
   --color-tooltip-text: #ffffff;
-  --color-chat-input-wrap-bg: #ffffff;
+  /* Single variable for input and sidebar surface (warm off-white, change here to restyle both) */
+  --color-chat-surface: oklch(0.99 0.004 90);
+  --color-chat-input-wrap-bg: var(--color-chat-surface);
   --color-chat-input-wrap-border: rgba(0, 0, 0, 0.08);
   --color-chat-input-wrap-shadow: 0 1px 1px rgba(0, 0, 0, 0.04), 0 2px 2px rgba(0, 0, 0, 0.03), 0 4px 4px rgba(0, 0, 0, 0.02);
   --color-placeholder: #8e8e8e;
@@ -163,7 +165,8 @@ button:focus-visible {
     --color-send-button-icon: #ffffff;
     --color-tooltip-bg: #1a1a1a;
     --color-tooltip-text: #ffffff;
-    --color-chat-input-wrap-bg: #ffffff;
+    --color-chat-surface: oklch(0.99 0.004 90);
+    --color-chat-input-wrap-bg: var(--color-chat-surface);
     --color-chat-input-wrap-border: #e0e0e0;
     --color-chat-input-wrap-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
     --color-placeholder: #8e8e8e;

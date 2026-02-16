@@ -1,15 +1,16 @@
 import { useState, useEffect, useRef } from 'react';
 import { invoke } from '@tauri-apps/api/core';
-import { ArrowUp, Copy } from 'lucide-react';
+import { ArrowUp, Copy, LogOut, Settings, Trash2 } from 'lucide-react';
 import { DantAgent } from '../agent/dant-agent';
 import ReactMarkdown from 'react-markdown';
 import { useTranslation } from '../i18n/hooks/useTranslation';
-import ChatSidebar from './ChatSidebar';
+import { ChatLayout, ChatSidebarShell, ChatMessages, ChatInputBar } from 'confidant-chat-ui';
 import LogOutConfirmModal from './LogOutConfirmModal';
 import DeleteChatHistoryConfirmModal from './DeleteChatHistoryConfirmModal';
 import UserSettingsModal from './UserSettingsModal';
 import { clearChatHistoryForUser } from '../utils/clearChatHistory';
 import './ChatInterface.css';
+import './ChatSidebar.css';
 
 interface ChatInterfaceProps {
   disabled?: boolean;
@@ -356,30 +357,38 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
     }
   };
 
+  const sidebarItems = [
+    onLogOut && { label: t('ui.logOut'), icon: <LogOut size={20} />, onClick: handleLogOutClick },
+    { label: t('ui.settings'), icon: <Settings size={20} />, onClick: () => setShowUserSettingsModal(true) },
+    { label: t('ui.deleteChatHistory'), icon: <Trash2 size={20} />, onClick: handleDeleteChatHistoryClick },
+  ].filter(Boolean) as Array<{ label: string; icon: React.ReactNode; onClick: () => void }>;
+
+  const modals = (
+    <>
+      {showLogOutModal && (
+        <LogOutConfirmModal onConfirm={handleLogOutConfirm} onCancel={() => setShowLogOutModal(false)} userId={userId} />
+      )}
+      {showDeleteChatHistoryModal && (
+        <DeleteChatHistoryConfirmModal
+          onConfirm={handleDeleteChatHistoryConfirm}
+          onCancel={() => setShowDeleteChatHistoryModal(false)}
+          userId={userId}
+        />
+      )}
+      {showUserSettingsModal && (
+        <UserSettingsModal isOpen={showUserSettingsModal} onClose={() => setShowUserSettingsModal(false)} userId={userId} />
+      )}
+    </>
+  );
+
   if (disabled) {
     return (
-      <div className="chat-interface chat-disabled">
-        {showLogOutModal && (
-          <LogOutConfirmModal onConfirm={handleLogOutConfirm} onCancel={() => setShowLogOutModal(false)} userId={userId} />
-        )}
-        {showDeleteChatHistoryModal && (
-          <DeleteChatHistoryConfirmModal
-            onConfirm={handleDeleteChatHistoryConfirm}
-            onCancel={() => setShowDeleteChatHistoryModal(false)}
-            userId={userId}
-          />
-        )}
-        {showUserSettingsModal && (
-          <UserSettingsModal isOpen={showUserSettingsModal} onClose={() => setShowUserSettingsModal(false)} userId={userId} />
-        )}
-        <ChatSidebar
-          userId={userId}
-          onOpenSettings={onOpenSettings}
-          onOpenUserSettings={() => setShowUserSettingsModal(true)}
-          onLogOut={handleLogOutClick}
-          onDeleteChatHistory={handleDeleteChatHistoryClick}
-        />
-        <div className="chat-main">
+      <>
+        {modals}
+        <ChatLayout
+          sidebar={<ChatSidebarShell items={sidebarItems} aria-label={t('ui.navAccountAndSettings')} />}
+          className="chat-disabled"
+        >
           <div className="chat-disabled-overlay">
             <div className="chat-disabled-content">
               <h3>{t('ui.finishSetup')}</h3>
@@ -417,68 +426,34 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
               </button>
             </div>
           </form>
-        </div>
-      </div>
+        </ChatLayout>
+      </>
     );
   }
 
   if (isInitializing) {
     return (
-      <div className="chat-interface">
-        {showLogOutModal && (
-          <LogOutConfirmModal onConfirm={handleLogOutConfirm} onCancel={() => setShowLogOutModal(false)} userId={userId} />
-        )}
-        {showDeleteChatHistoryModal && (
-          <DeleteChatHistoryConfirmModal
-            onConfirm={handleDeleteChatHistoryConfirm}
-            onCancel={() => setShowDeleteChatHistoryModal(false)}
-            userId={userId}
-          />
-        )}
-        {showUserSettingsModal && (
-          <UserSettingsModal isOpen={showUserSettingsModal} onClose={() => setShowUserSettingsModal(false)} userId={userId} />
-        )}
-        <ChatSidebar
-          userId={userId}
-          onOpenSettings={onOpenSettings}
-          onOpenUserSettings={() => setShowUserSettingsModal(true)}
-          onLogOut={handleLogOutClick}
-          onDeleteChatHistory={handleDeleteChatHistoryClick}
-        />
-        <div className="chat-main">
+      <>
+        {modals}
+        <ChatLayout
+          sidebar={<ChatSidebarShell items={sidebarItems} aria-label={t('ui.navAccountAndSettings')} />}
+        >
           <div className="chat-placeholder">
             <div className="loading-spinner"></div>
             <p>{t('ui.preparingChat')}</p>
           </div>
-        </div>
-      </div>
+        </ChatLayout>
+      </>
     );
   }
 
   if (!isInitialized) {
     return (
-      <div className="chat-interface">
-        {showLogOutModal && (
-          <LogOutConfirmModal onConfirm={handleLogOutConfirm} onCancel={() => setShowLogOutModal(false)} userId={userId} />
-        )}
-        {showDeleteChatHistoryModal && (
-          <DeleteChatHistoryConfirmModal
-            onConfirm={handleDeleteChatHistoryConfirm}
-            onCancel={() => setShowDeleteChatHistoryModal(false)}
-            userId={userId}
-          />
-        )}
-        {showUserSettingsModal && (
-          <UserSettingsModal isOpen={showUserSettingsModal} onClose={() => setShowUserSettingsModal(false)} userId={userId} />
-        )}
-        <ChatSidebar
-          userId={userId}
-          onOpenSettings={onOpenSettings}
-          onOpenUserSettings={() => setShowUserSettingsModal(true)}
-          onLogOut={handleLogOutClick}
-          onDeleteChatHistory={handleDeleteChatHistoryClick}
-        />
-        <div className="chat-main">
+      <>
+        {modals}
+        <ChatLayout
+          sidebar={<ChatSidebarShell items={sidebarItems} aria-label={t('ui.navAccountAndSettings')} />}
+        >
           <div className="chat-placeholder">
             <p>{t('ui.preparingChat')}</p>
             {error && (
@@ -487,102 +462,54 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
               </div>
             )}
           </div>
-        </div>
-      </div>
+        </ChatLayout>
+      </>
     );
   }
 
+  const chatMessagesForPackage = messages.map((msg) => ({
+    role: msg.role,
+    content: msg.role === 'assistant' ? <ReactMarkdown>{msg.content}</ReactMarkdown> : msg.content,
+  }));
+
   return (
-    <div className="chat-interface" ref={containerRef}>
-      {showLogOutModal && (
-        <LogOutConfirmModal onConfirm={handleLogOutConfirm} onCancel={() => setShowLogOutModal(false)} userId={userId} />
-      )}
-      {showDeleteChatHistoryModal && (
-        <DeleteChatHistoryConfirmModal
-          onConfirm={handleDeleteChatHistoryConfirm}
-          onCancel={() => setShowDeleteChatHistoryModal(false)}
-          userId={userId}
-        />
-      )}
-      {showUserSettingsModal && (
-        <UserSettingsModal isOpen={showUserSettingsModal} onClose={() => setShowUserSettingsModal(false)} userId={userId} />
-      )}
-      <ChatSidebar
-        userId={userId}
-        onOpenSettings={onOpenSettings}
-        onOpenUserSettings={() => setShowUserSettingsModal(true)}
-        onLogOut={handleLogOutClick}
-        onDeleteChatHistory={handleDeleteChatHistoryClick}
-      />
-      <div className="chat-main">
-        <div className="chat-messages">
-        {messages.map((msg, idx) => {
-          const isLast = idx === messages.length - 1;
-          const isPlaceholderThinking = isLast && msg.role === 'assistant' && msg.content === '' && isProcessing && showThinking;
-          return (
-          <div key={idx} className={`message ${msg.role}`}>
-            <div className={`message-content${isPlaceholderThinking ? ' thinking-text' : ''}`}>
-              {msg.role === 'assistant' ? (
-                isPlaceholderThinking ? t('ui.thinking') : <ReactMarkdown>{msg.content}</ReactMarkdown>
-              ) : (
-                msg.content
-              )}
+    <>
+      {modals}
+      <div ref={containerRef} className="chat-interface-wrapper">
+        <ChatLayout
+          sidebar={<ChatSidebarShell items={sidebarItems} aria-label={t('ui.navAccountAndSettings')} />}
+        >
+          <ChatMessages
+            messages={chatMessagesForPackage}
+            welcomeTitle={t('ui.welcomeToConfidant')}
+            welcomeSubtitle={t('ui.finishSetupToStart')}
+            showThinking={isProcessing && showThinking}
+            thinkingLabel={t('ui.thinking')}
+            onCopy={handleCopyMessage}
+            copiedIndex={copiedIndex}
+            copyLabel={t('ui.copy')}
+            copiedLabel={t('ui.copied')}
+          />
+          <div ref={messagesEndRef} />
+          {error && (
+            <div className="chat-error" role="alert">
+              {error}
             </div>
-            {msg.role === 'assistant' && !isPlaceholderThinking && (
-              <div className="message-actions">
-                <div className="copy-action-wrap">
-                  <button
-                    type="button"
-                    className="message-action-btn"
-                    onClick={() => handleCopyMessage(msg.content, idx)}
-                    aria-label={copiedIndex === idx ? t('ui.copied') : t('ui.copy')}
-                  >
-                    <Copy size={16} />
-                  </button>
-                  <span className="copy-tooltip" role="status">
-                    {copiedIndex === idx ? t('ui.copied') : t('ui.copy')}
-                  </span>
-                </div>
-              </div>
-            )}
-          </div>
-        );})}
-        
-        <div ref={messagesEndRef} />
-        </div>
-
-        {error && (
-          <div className="chat-error">
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="chat-input-form">
-          <div className="chat-input-wrap">
-            <textarea
-              ref={inputRef}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder={t('ui.askHealthQuestion')}
-              disabled={isProcessing || !isInitialized}
-              rows={1}
-              className="chat-input"
-            />
-            <button
-              type="submit"
-              disabled={!input.trim() || isProcessing || !isInitialized}
-              className="chat-send-button"
-              aria-label={t('ui.send')}
-            >
-              <ArrowUp size={18} />
-            </button>
-          </div>
-        </form>
-        <p className="chat-footer">
-          {t('agent.disclaimer')}
-        </p>
+          )}
+          <ChatInputBar
+            value={input}
+            onChange={setInput}
+            onSubmit={handleSubmit}
+            placeholder={t('ui.askHealthQuestion')}
+            disabled={isProcessing || !isInitialized}
+            sendButtonLabel={t('ui.send')}
+            inputRef={inputRef}
+          />
+          <p className="chat-footer">
+            {t('agent.disclaimer')}
+          </p>
+        </ChatLayout>
       </div>
-    </div>
+    </>
   );
 }

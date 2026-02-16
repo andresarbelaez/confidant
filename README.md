@@ -10,6 +10,7 @@
 - **Privacy-First**: All processing is local; no data is sent to external servers
 - **Mental Health Companion**: Supports gratitude, mindfulness, mood, stress, anxiety, and depression—with RAG over your knowledge base. Not a substitute for therapy or professional care.
 - **Local LLM**: Runs optimized models locally (Llama-3.2-3B default, Mistral-7B option)
+- **Streaming responses**: Chat replies stream token-by-token for a responsive experience
 - **RAG System**: Retrieval Augmented Generation with ChromaDB and sentence-transformers
 - **Open Source**: MIT license; fully auditable codebase
 
@@ -36,11 +37,12 @@ Both models use GGUF quantization and run completely offline via llama.cpp. The 
 This repository contains:
 
 - **`desktop/`** – Desktop app (Tauri 2.0 + React + TypeScript + Rust), **primary application**
+- **`landing/`** – Marketing and download landing page (Next.js, shadcn/ui, Tailark). Built as a static site and deployed to **`docs/`** for [GitHub Pages](docs/GITHUB_PAGES.md). The deploy workflow (`.github/workflows/deploy-landing.yml`) builds `landing/` and copies output into `docs/` on pushes that touch `landing/`.
 - **`scripts/`** – Python scripts for building knowledge bases and downloading models
-- **`docs/`** – Design and migration documentation
+- **`docs/`** – Design and migration documentation; also the **GitHub Pages root** (serves the built landing site)
 - **`archive/`** – Previous implementations (Python, web) and planning docs
 
-The desktop app uses a Rust backend for Tauri and file operations, and calls Python (llama-cpp-python, ChromaDB, sentence-transformers) via subprocess for LLM inference, embeddings, and vector search.
+The desktop app uses a Rust backend for Tauri and file operations, and calls Python (llama-cpp-python, ChromaDB, sentence-transformers) via subprocess for LLM inference, embeddings, and vector search. Chat responses stream token-by-token from the LLM to the UI.
 
 ## Quick Start
 
@@ -61,7 +63,7 @@ See [desktop/SETUP_INSTRUCTIONS.md](desktop/SETUP_INSTRUCTIONS.md) for detailed 
 
 ### Download (Beta)
 
-Pre-built installers for macOS and Windows are available via [GitHub Releases](https://github.com/andresarbelaez/confidant/releases). A small [download page](docs/index.html) is in `docs/` for use with [GitHub Pages](docs/GITHUB_PAGES.md); enable Pages from the `docs/` folder to serve it.
+Pre-built installers for macOS and Windows are available via [GitHub Releases](https://github.com/andresarbelaez/confidant/releases). The project includes a [landing page](landing/README.md) (Next.js, in `landing/`) that is built and served from `docs/` via [GitHub Pages](docs/GITHUB_PAGES.md). Enable Pages with source **Branch: main**, **Folder: /docs** to serve the site.
 
 ## Contributing
 

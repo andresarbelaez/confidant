@@ -11,7 +11,9 @@ import { ConfidantLogo } from './confidant-logo'
 const REPO = 'https://github.com/andresarbelaez/confidant'
 
 const menuItems = [
+  { name: 'Philosophy', href: '#philosophy' },
   { name: 'Features', href: '#features' },
+  { name: 'Try it yourself', href: '#try-it-yourself' },
   { name: 'GitHub', href: REPO, external: true },
 ]
 

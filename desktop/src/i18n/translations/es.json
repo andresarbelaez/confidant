@@ -3,6 +3,8 @@
     "settings": "Ajustes",
     "createUser": "Crear usuario",
     "password": "Contraseña",
+    "showPassword": "Mostrar contraseña",
+    "hidePassword": "Ocultar contraseña",
     "confirmPassword": "Confirmar contraseña",
     "name": "Nombre",
     "profileName": "Nombre del perfil",

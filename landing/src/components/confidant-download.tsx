@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Card } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 
 const REPO = 'https://github.com/andresarbelaez/confidant'
 
@@ -39,25 +39,23 @@ export function ConfidantDownload() {
         </p>
         <div className="grid gap-4 sm:grid-cols-2">
           {downloads.map((d) => (
-            <Link
+            <Button
               key={d.label}
-              href={`${REPO}/releases/latest/download/${d.file}`}
-              className="block"
+              asChild
+              variant="outline"
+              className="h-auto w-full justify-start gap-4 py-4 px-6 rounded-2xl bg-muted border border-border ring-0 transition-colors text-left"
             >
-              <Card
-                variant="mixed"
-                className="p-6 flex items-center gap-4 hover:bg-muted/50 transition-colors"
-              >
+              <Link href={`${REPO}/releases/latest/download/${d.file}`}>
                 <div className="w-10 h-10 shrink-0 flex items-center justify-center text-2xl text-muted-foreground">
                   <PlatformLogo src={`/confidant/${d.logo}`} alt="" />
                   <span style={{ display: 'none' }}>{d.logo.includes('apple') ? '🍎' : '🪟'}</span>
                 </div>
-                <div>
+                <div className="flex flex-col items-start gap-0">
                   <span className="font-medium">{d.label}</span>
-                  <span className="text-muted-foreground text-sm block">{d.file.split('.').pop()}</span>
+                  <span className="text-muted-foreground text-sm">.{d.file.split('.').pop()}</span>
                 </div>
-              </Card>
-            </Link>
+              </Link>
+            </Button>
           ))}
         </div>
         

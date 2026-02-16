@@ -9,18 +9,8 @@
   justify-content: center;
   background: var(--color-bg);
   z-index: 9999;
-  animation: fadeOut 0.5s ease-out forwards;
-  animation-delay: 1s;
-}
-
-@keyframes fadeOut {
-  from {
-    opacity: 1;
-  }
-  to {
-    opacity: 0;
-    pointer-events: none;
-  }
+  /* No fadeOut: stay visible until unmounted. Previously faded to transparent
+     after 1s while init was still running, causing a white-screen gap. */
 }
 
 .loading-content {

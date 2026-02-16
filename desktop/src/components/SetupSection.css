@@ -68,7 +68,11 @@
 
 .selector-dropdown:focus {
   outline: none;
-  border-color: var(--color-primary);
+  border-color: -webkit-focus-ring-color;
+}
+.selector-dropdown:focus-visible {
+  outline: 2px solid -webkit-focus-ring-color;
+  outline-offset: 2px;
 }
 
 .selector-dropdown:disabled {
@@ -266,7 +270,11 @@
 
 .existing-model-selector:focus {
   outline: none;
-  border-color: var(--color-primary);
+  border-color: -webkit-focus-ring-color;
+}
+.existing-model-selector:focus-visible {
+  outline: 2px solid -webkit-focus-ring-color;
+  outline-offset: 2px;
 }
 
 .cancel-button {

@@ -21,7 +21,7 @@ const features = [
 
 export function ConfidantFeatures() {
   return (
-    <section id="features" className="bg-muted/30 py-24">
+    <section id="features" className="py-24">
       <div className="mx-auto max-w-3xl px-6">
         <div className="text-center mb-16">
           <h2 className="text-balance font-serif text-3xl font-medium sm:text-4xl">Built for privacy and reflection</h2>

@@ -2,6 +2,13 @@
 
 Short reference for colors, typography, spacing, and component patterns. Use this to keep UI changes consistent.
 
+## Theme experiments
+
+A warm (cream/yellow) palette can be enabled to match the landing page. It lives in `src/themes/warm.css`.
+
+- **Enable:** Ensure `main.tsx` imports `./themes/warm.css`.
+- **Revert:** Comment out that import in `main.tsx`.
+
 ## Color variables
 
 Defined in `src/index.css` (`:root` and `@media (prefers-color-scheme: light)`). Prefer variables over hardcoded hex/rgba.
@@ -43,7 +50,7 @@ Defined in `src/index.css` (`:root` and `@media (prefers-color-scheme: light)`).
 
 ## Typography
 
-- **Base:** 1rem (16px), line-height 1.5, font-weight 400. Font stack: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif.
+- **Base:** 1rem (16px), line-height 1.5, font-weight 400. Font stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif.
 - **Headings:** Use a clear hierarchy (e.g. one `h1` per view, then `h2` for sections). Heading scale:
   - `h1`: ~3.2em (index.css).
   - Modal/section titles: 1.5em (e.g. `.modal-header h2`).

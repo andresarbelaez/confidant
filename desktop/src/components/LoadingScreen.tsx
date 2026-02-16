@@ -5,9 +5,11 @@ import './LoadingScreen.css';
 
 interface LoadingScreenProps {
   onComplete: () => void;
+  /** Show language selector. Default true for initial load; false for transitions (e.g. user→chat) since language is already set. */
+  showLanguageSelector?: boolean;
 }
 
-export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
+export default function LoadingScreen({ onComplete, showLanguageSelector = true }: LoadingScreenProps) {
   const { t } = useTranslation(null);
   useEffect(() => {
     const minDisplayTime = 800;
@@ -29,9 +31,11 @@ export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
         <p className="loading-subtitle">{t('ui.loadingSubtitle')}</p>
         <p className="loading-tagline">{t('ui.loadingTagline')}</p>
         <div className="loading-spinner"></div>
-        <div className="loading-language-selector">
-          <LanguageSelector userId={null} />
-        </div>
+        {showLanguageSelector && (
+          <div className="loading-language-selector">
+            <LanguageSelector userId={null} />
+          </div>
+        )}
       </div>
     </div>
   );
