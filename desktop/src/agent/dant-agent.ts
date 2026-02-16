@@ -324,6 +324,11 @@ Assistant:`;
         ? `LLM response: ${llmDurationMs}ms total, ${charCount} chars (${charsPerSec} chars/s) | first token: ${timeToFirstTokenMs}ms`
         : `LLM response: ${llmDurationMs}ms total, ${charCount} chars`;
     invoke('log_to_terminal', { message: terminalLine }).catch(() => {});
+    if (timeToFirstTokenMs >= 0) {
+      console.log('[Confidant] Response speed:', { totalMs: llmDurationMs, timeToFirstTokenMs, charsCount, charsPerSec: Number(charsPerSec) });
+    } else {
+      console.log('[Confidant] Response speed:', { totalMs: llmDurationMs, charsCount });
+    }
 
     // Backend sends cleaned "full"; light client-side cleanup if needed
     assistantMessage = (assistantMessage ?? '').trim();

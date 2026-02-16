@@ -1,7 +1,7 @@
 import { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { ArrowUp, Copy, LogOut, Settings, Trash2 } from 'lucide-react';
-import { DantAgent, type ResponseMetrics } from '../agent/dant-agent';
+import { DantAgent } from '../agent/dant-agent';
 import ReactMarkdown from 'react-markdown';
 import { useTranslation } from '../i18n/hooks/useTranslation';
 import { ChatLayout, ChatSidebarShell, ChatMessages, ChatInputBar } from 'confidant-chat-ui';
@@ -27,7 +27,7 @@ interface ChatInterfaceProps {
 
 export default function ChatInterface({ disabled = false, modelReady = false, kbReady = false, chatVisible: _chatVisible = false, onOpenSettings, userId, onSwitchProfile: _onSwitchProfile, onLogOut, onReady }: ChatInterfaceProps) {
   const { t, currentLanguage } = useTranslation(userId);
-  const [messages, setMessages] = useState<Array<{ role: 'user' | 'assistant'; content: string; metrics?: ResponseMetrics }>>([]);
+  const [messages, setMessages] = useState<Array<{ role: 'user' | 'assistant'; content: string }>>([]);
   const [input, setInput] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [showThinking, setShowThinking] = useState(false);
@@ -298,7 +298,7 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
         const next = [...prev];
         const last = next[next.length - 1];
         if (last?.role === 'assistant') {
-          next[next.length - 1] = { ...last, content: response.response, metrics: response.metrics };
+          next[next.length - 1] = { ...last, content: response.response };
         }
         return next;
       });
@@ -471,30 +471,9 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
     );
   }
 
-  const formatMetrics = (m: ResponseMetrics) => {
-    const totalSec = (m.totalMs / 1000).toFixed(1);
-    if (m.timeToFirstTokenMs != null) {
-      const firstSec = (m.timeToFirstTokenMs / 1000).toFixed(1);
-      return t('ui.metricsLine', { first: firstSec, total: totalSec });
-    }
-    return t('ui.metricsTotalOnly', { total: totalSec });
-  };
-
   const chatMessagesForPackage = messages.map((msg) => ({
     role: msg.role,
-    content:
-      msg.role === 'assistant' ? (
-        <>
-          <ReactMarkdown>{msg.content}</ReactMarkdown>
-          {msg.metrics && (
-            <div className="message-metrics" aria-label={formatMetrics(msg.metrics)}>
-              {formatMetrics(msg.metrics)}
-            </div>
-          )}
-        </>
-      ) : (
-        msg.content
-      ),
+    content: msg.role === 'assistant' ? <ReactMarkdown>{msg.content}</ReactMarkdown> : msg.content,
     ...(msg.role === 'assistant' && { copyableText: msg.content }),
   }));
 

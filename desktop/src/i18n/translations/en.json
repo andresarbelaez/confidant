@@ -67,9 +67,7 @@
     "userSettings": "User Settings",
     "settingsFor": "Settings for {{name}}",
     "save": "Save",
-    "navAccountAndSettings": "Account and settings",
-    "metricsLine": "First token: {{first}}s · Total: {{total}}s",
-    "metricsTotalOnly": "{{total}}s"
+    "navAccountAndSettings": "Account and settings"
   },
   "agent": {
     "welcome": "I'm Confidant. I'm here to support your mental health—gratitude, mindfulness, mood, stress—with private, supportive conversation. I'm not a substitute for therapy or professional care.",
