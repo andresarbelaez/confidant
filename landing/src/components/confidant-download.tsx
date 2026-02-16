@@ -6,10 +6,10 @@ import { Button } from '@/components/ui/button'
 const REPO = 'https://github.com/andresarbelaez/confidant'
 
 const downloads = [
-  { label: 'macOS (Apple Silicon)', file: 'Confidant_0.1.0_aarch64.dmg', logo: 'apple-logo.png' },
-  { label: 'Windows (MSI)', file: 'Confidant_0.1.0_x64_en-US.msi', logo: 'windows-logo.png' },
-  { label: 'macOS (Intel)', file: 'Confidant_0.1.0_x64.dmg', logo: 'apple-logo.png' },
-  { label: 'Windows (EXE)', file: 'Confidant_0.1.0_x64_en-US-setup.exe', logo: 'windows-logo.png' },
+  { label: 'macOS (Apple Silicon)', file: 'Confidant_0.1.0_aarch64.dmg', logo: 'apple-logo.png', eventPath: 'download-macos-arm' },
+  { label: 'Windows (MSI)', file: 'Confidant_0.1.0_x64_en-US.msi', logo: 'windows-logo.png', eventPath: 'download-windows-msi' },
+  { label: 'macOS (Intel)', file: 'Confidant_0.1.0_x64.dmg', logo: 'apple-logo.png', eventPath: 'download-macos-intel' },
+  { label: 'Windows (EXE)', file: 'Confidant_0.1.0_x64_en-US-setup.exe', logo: 'windows-logo.png', eventPath: 'download-windows-exe' },
 ]
 
 function PlatformLogo({ src, alt }: { src: string; alt: string }) {
@@ -48,7 +48,14 @@ export function ConfidantDownload() {
               variant="outline"
               className="h-auto w-full justify-start gap-4 py-4 px-6 rounded-2xl bg-muted border border-border ring-0 transition-colors text-left"
             >
-              <Link href={`${REPO}/releases/latest/download/${d.file}`}>
+              <Link
+                href={`${REPO}/releases/latest/download/${d.file}`}
+                onClick={() => {
+                  if (typeof window !== 'undefined' && window.goatcounter?.count) {
+                    window.goatcounter.count({ path: d.eventPath, title: d.label, event: true })
+                  }
+                }}
+              >
                 <div className="w-10 h-10 shrink-0 flex items-center justify-center text-2xl text-muted-foreground">
                   <PlatformLogo src={`/${d.logo}`} alt="" />
                   <span style={{ display: 'none' }}>{d.logo.includes('apple') ? '🍎' : '🪟'}</span>

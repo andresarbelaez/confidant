@@ -26,6 +26,11 @@ jobs:
           cache-dependency-path: landing/package-lock.json
 
       - name: Install and build landing
+        env:
+          NEXT_PUBLIC_ANALYTICS_PROVIDER: ${{ secrets.NEXT_PUBLIC_ANALYTICS_PROVIDER }}
+          NEXT_PUBLIC_ANALYTICS_DOMAIN: ${{ secrets.NEXT_PUBLIC_ANALYTICS_DOMAIN }}
+          NEXT_PUBLIC_GOATCOUNTER_CODE: ${{ secrets.NEXT_PUBLIC_GOATCOUNTER_CODE }}
+          NEXT_PUBLIC_CF_BEACON_TOKEN: ${{ secrets.NEXT_PUBLIC_CF_BEACON_TOKEN }}
         run: |
           cd landing
           npm ci
