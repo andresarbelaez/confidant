@@ -33,10 +33,13 @@ export function ConfidantDownload() {
   return (
     <section id="download" className="py-24">
       <div className="mx-auto max-w-3xl px-6">
-        <h2 className="text-balance font-serif text-4xl font-medium sm:text-5xl text-center">Download</h2>
-        <p className="text-muted-foreground text-center mt-4 mb-12">
-          Free for macOS 11+ and Windows 10+. No account required.
-        </p>
+        <h2 className="text-balance font-serif text-4xl font-medium sm:text-5xl text-left md:text-center">Download</h2>
+        <div className="text-muted-foreground text-left md:text-center mt-4 mb-12">
+          <p>Free for macOS 11+ and Windows 10+. No account required.</p>
+          <p className="md:hidden text-sm mt-2 px-4">
+            On a phone or tablet? Confidant is a desktop app. Use a Mac or Windows PC to download.
+          </p>
+        </div>
         <div className="grid gap-4 sm:grid-cols-2">
           {downloads.map((d) => (
             <Button
@@ -59,12 +62,12 @@ export function ConfidantDownload() {
           ))}
         </div>
         
-        <div className="mt-6 p-4 rounded-lg bg-muted/50 text-center text-sm">
+        <div className="mt-6 p-4 rounded-lg bg-muted/50 text-left md:text-center text-sm">
           <strong>Confidant is currently in Beta.</strong> We'd love your feedback—{' '}
           <Link href={`${REPO}/issues`} className="underline hover:no-underline">share it on GitHub</Link>.
         </div>
-        <h3 className="text-sm font-medium text-foreground mt-8 mb-2 text-center">About security warnings</h3>
-        <p className="text-muted-foreground text-sm text-center">
+        <h3 className="text-sm font-medium text-foreground mt-8 mb-2 text-left md:text-center">About security warnings</h3>
+        <p className="text-muted-foreground text-sm text-left md:text-center">
           Beta builds are unsigned. You may see a security or Gatekeeper warning;{' '}
           <Link href={`${REPO}#readme`} className="underline hover:no-underline">see how to open unsigned apps</Link>.
         </p>

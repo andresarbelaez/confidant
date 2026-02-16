@@ -48,27 +48,22 @@ export function ConfidantChatPreview() {
   return (
     <section id="try-it-yourself" className="py-24">
       <div className="mx-auto max-w-5xl px-6">
-        <h2 className="text-balance font-serif text-4xl font-medium sm:text-5xl text-center">
+        <h2 className="text-balance font-serif text-4xl font-medium sm:text-5xl text-left md:text-center">
           Try it yourself
         </h2>
-        <p className="text-muted-foreground mt-4 text-center text-balance">
+        <p className="text-muted-foreground mt-4 text-left md:text-center text-balance">
           Try the interface below. Download the app to keep your conversations private.
         </p>
 
         <div className="relative mt-10 rounded-xl overflow-hidden border border-border shadow-lg" style={{ height: '480px' }}>
           {/* Mobile: replace chat with message to use a larger screen */}
-          <div className="confidant-chat-preview-theme md:hidden absolute inset-0 flex flex-col items-center justify-center p-6 text-center bg-muted/30">
+          <div className="confidant-chat-preview-theme md:hidden absolute inset-0 flex flex-col items-start justify-center p-6 text-left bg-muted/30">
             <p className="text-foreground text-lg font-medium">
               To see this preview of Confidant, open this website on a larger screen.
             </p>
             <p className="text-muted-foreground text-sm mt-2 max-w-sm">
-              You can still download the app below for the full experience on any device.
+              Confidant is a desktop app for Mac and Windows. Use a computer to try the preview or download.
             </p>
-            <Button asChild className="mt-6" size="lg">
-              <Link href="#download" onClick={(e) => scrollToHash(e, '#download')}>
-                {DOWNLOAD_CTA}
-              </Link>
-            </Button>
           </div>
 
           {/* Desktop/tablet: show chat preview */}

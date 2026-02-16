@@ -23,7 +23,7 @@ export function ConfidantFeatures() {
   return (
     <section id="features" className="py-24">
       <div className="mx-auto max-w-3xl px-6">
-        <div className="text-center mb-16">
+        <div className="text-left md:text-center mb-16">
           <h2 className="text-balance font-serif text-4xl font-medium sm:text-5xl">Built for privacy and reflection</h2>
           <p className="text-muted-foreground mt-4 text-balance">
             Privacy, offline use, and a space to reflect.

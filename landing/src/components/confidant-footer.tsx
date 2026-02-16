@@ -13,11 +13,11 @@ export function ConfidantFooter() {
   return (
     <footer className="border-t py-12">
       <div className="mx-auto max-w-3xl px-6">
-        <div className="flex flex-col items-center gap-6">
+        <div className="flex flex-col items-start md:items-center gap-6">
           <Link href="/" aria-label="Confidant home">
             <ConfidantLogo />
           </Link>
-          <p className="text-muted-foreground text-sm text-center max-w-md">
+          <p className="text-muted-foreground text-sm text-left md:text-center max-w-md">
             Confidant is not a substitute for therapy or professional mental health care. For support, please reach out to a qualified professional. If you&apos;re in crisis, please contact a crisis line or a mental health professional.
           </p>
           <nav className="flex gap-6">
