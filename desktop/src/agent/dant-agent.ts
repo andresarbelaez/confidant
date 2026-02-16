@@ -23,6 +23,13 @@ const LANGUAGE_DISPLAY_NAMES: Record<LanguageCode, string> = {
   ru: 'Russian',
 };
 
+/** Response speed metrics (when available from LLM stream). */
+export interface ResponseMetrics {
+  totalMs: number;
+  timeToFirstTokenMs?: number;
+  charsCount: number;
+}
+
 export interface AgentResponse {
   response: string;
   sources?: Array<{ id: string; text: string; score: number }>;
@@ -30,6 +37,8 @@ export interface AgentResponse {
   isFirstMessage?: boolean;
   /** True when the response came from cache (for UI e.g. fake thinking delay). */
   fromCache?: boolean;
+  /** Response timing and length (for UI metrics). */
+  metrics?: ResponseMetrics;
 }
 
 export interface AgentConfig {
@@ -359,10 +368,20 @@ Assistant:`;
       });
     }
 
+    const metrics: ResponseMetrics | undefined =
+      llmDurationMs >= 0 && charCount >= 0
+        ? {
+            totalMs: llmDurationMs,
+            timeToFirstTokenMs: timeToFirstTokenMs >= 0 ? timeToFirstTokenMs : undefined,
+            charsCount: charCount,
+          }
+        : undefined;
+
     return {
       response: assistantMessage,
       sources: sources.length > 0 ? sources : undefined,
       usedRAG: usedRAGFlag,
+      metrics,
     };
     } catch (err) {
       // Extract the actual error message (stream rejects with string, invoke/timeout throw Error)

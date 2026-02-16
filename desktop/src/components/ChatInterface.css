@@ -324,6 +324,14 @@
   border-bottom-right-radius: 4px;
 }
 
+/* Response speed metrics below assistant message */
+.message-metrics {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  margin-top: 0.5rem;
+  padding-top: 0.25rem;
+}
+
 .message.assistant .message-content {
   background: var(--color-assistant-bubble);
   color: var(--color-assistant-bubble-text);

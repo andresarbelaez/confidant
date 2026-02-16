@@ -1,9 +1,12 @@
 import type { ReactNode } from 'react'
+import type { RefObject } from 'react'
 import { Copy } from 'lucide-react'
 
 export interface ChatMessage {
   role: 'user' | 'assistant'
   content: ReactNode
+  /** When set, copy button uses this string instead of content (for assistant messages where content is ReactNode). */
+  copyableText?: string
 }
 
 interface ChatMessagesProps {
@@ -11,7 +14,7 @@ interface ChatMessagesProps {
   welcomeTitle: string
   welcomeSubtitle: string
   showWelcome?: boolean
-  /** When true, last assistant message with empty content shows thinkingLabel */
+  /** When true, last assistant message shows thinkingLabel (until cleared after first chunk is rendered) */
   showThinking?: boolean
   thinkingLabel?: string
   /** When set, assistant messages with string content show a copy button. */
@@ -19,6 +22,8 @@ interface ChatMessagesProps {
   copiedIndex?: number | null
   copyLabel?: string
   copiedLabel?: string
+  /** Ref for a sentinel div rendered at the end of the list (inside the scroll area) for scroll-into-view. */
+  scrollAnchorRef?: RefObject<HTMLDivElement | null>
 }
 
 export function ChatMessages({
@@ -32,6 +37,7 @@ export function ChatMessages({
   copiedIndex = null,
   copyLabel = 'Copy',
   copiedLabel = 'Copied',
+  scrollAnchorRef,
 }: ChatMessagesProps) {
   return (
     <div className="chat-messages">
@@ -44,11 +50,9 @@ export function ChatMessages({
         messages.map((msg, idx) => {
           const isLast = idx === messages.length - 1
           const isPlaceholderThinking =
-            isLast &&
-            msg.role === 'assistant' &&
-            (msg.content === '' || msg.content == null) &&
-            showThinking
-          const canCopy = msg.role === 'assistant' && !isPlaceholderThinking && typeof msg.content === 'string' && onCopy
+            isLast && msg.role === 'assistant' && showThinking
+          const copyText = msg.copyableText ?? (typeof msg.content === 'string' ? msg.content : null)
+          const canCopy = msg.role === 'assistant' && !isPlaceholderThinking && copyText !== null && onCopy
           return (
             <div key={idx} className={`message ${msg.role}`}>
               <div className={`message-content${isPlaceholderThinking ? ' thinking-text' : ''}`}>
@@ -60,7 +64,7 @@ export function ChatMessages({
                     <button
                       type="button"
                       className="message-action-btn"
-                      onClick={() => onCopy(String(msg.content), idx)}
+                      onClick={() => onCopy(copyText, idx)}
                       aria-label={copiedIndex === idx ? copiedLabel : copyLabel}
                     >
                       <Copy size={16} />
@@ -75,6 +79,7 @@ export function ChatMessages({
           )
         })
       )}
+      <div ref={scrollAnchorRef} aria-hidden="true" />
     </div>
   )
 }

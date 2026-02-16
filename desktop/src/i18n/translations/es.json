@@ -67,7 +67,9 @@
     "userSettings": "Ajustes de usuario",
     "settingsFor": "Ajustes de {{name}}",
     "save": "Guardar",
-    "navAccountAndSettings": "Cuenta y ajustes"
+    "navAccountAndSettings": "Cuenta y ajustes",
+    "metricsLine": "Primer token: {{first}}s · Total: {{total}}s",
+    "metricsTotalOnly": "{{total}}s"
   },
   "agent": {
     "welcome": "Soy Confidant. Estoy aquí para apoyar tu salud mental—gratitud, mindfulness, ánimo, estrés—con conversación privada y de apoyo. No sustituyo la terapia ni la atención profesional.",
