@@ -143,8 +143,10 @@
   margin-bottom: 0;
 }
 
-/* Tighter spacing between consecutive messages from the same sender */
-.message.assistant + .message.assistant,
+/* Spacing between consecutive messages from the same sender */
+.message.assistant + .message.assistant {
+  margin-top: 1.25rem;
+}
 .message.user + .message.user {
   margin-top: -0.15rem;
 }

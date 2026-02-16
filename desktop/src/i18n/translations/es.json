@@ -35,6 +35,8 @@
     "downloadAndSetup": "Descarga y configura el modelo de IA y la base de conocimiento para empezar a chatear. Todo funciona en tu dispositivo: tus datos no salen de tu ordenador.",
     "welcomeToConfidant": "Bienvenido a Confidant",
     "finishSetupToStart": "Completa la configuración para empezar a chatear.",
+    "emptyChatTitle": "Inicia una conversación",
+    "emptyChatSubtitle": "Comparte lo que tienes en mente o haz una pregunta abajo.",
     "openSettingsToFinish": "Abre Ajustes para completar la configuración",
     "preparingChat": "Preparando el chat…",
     "askHealthQuestion": "Cuéntame qué tienes en mente…",

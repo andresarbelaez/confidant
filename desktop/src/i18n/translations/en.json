@@ -35,6 +35,8 @@
     "downloadAndSetup": "Download and set up the AI model and knowledge base to start chatting. Everything runs on your device—your data never leaves your computer.",
     "welcomeToConfidant": "Welcome to Confidant",
     "finishSetupToStart": "Finish setup to start chatting.",
+    "emptyChatTitle": "Start a conversation",
+    "emptyChatSubtitle": "Share what's on your mind or ask a question below.",
     "openSettingsToFinish": "Open Settings to finish setup",
     "preparingChat": "Preparing chat…",
     "askHealthQuestion": "Share what's on your mind…",

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { ArrowUp, Copy, LogOut, Settings, Trash2 } from 'lucide-react';
 import { DantAgent } from '../agent/dant-agent';
@@ -44,7 +44,6 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
   const containerRef = useRef<HTMLDivElement>(null);
   const onReadyCalledRef = useRef(false);
   const sessionFirstMessageContentRef = useRef<string | null>(null);
-
   const resizeInput = () => {
     const el = inputRef.current;
     if (!el) return;
@@ -62,7 +61,8 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
     }
   }, [disabled, modelReady, currentLanguage]);
 
-  useEffect(() => {
+  // Scroll to bottom after messages update (including streaming). useLayoutEffect runs after DOM update so the scroll container has the new height.
+  useLayoutEffect(() => {
     scrollToBottom();
   }, [messages]);
 
@@ -273,12 +273,16 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
         userId,
         language: currentLanguage,
         onStreamChunk: (text) => {
-          setShowThinking(false); // hide "Thinking" as soon as first text arrives
           setMessages(prev => {
             const next = [...prev];
             const last = next[next.length - 1];
             if (last?.role === 'assistant') {
+              const wasEmpty = last.content === '';
               next[next.length - 1] = { ...last, content: last.content + text };
+              // Hide "Thinking" after the first chunk is painted (next frame)
+              if (wasEmpty) {
+                requestAnimationFrame(() => setShowThinking(false));
+              }
             }
             return next;
           });
@@ -481,16 +485,16 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
         >
           <ChatMessages
             messages={chatMessagesForPackage}
-            welcomeTitle={t('ui.welcomeToConfidant')}
-            welcomeSubtitle={t('ui.finishSetupToStart')}
+            welcomeTitle={t('ui.emptyChatTitle')}
+            welcomeSubtitle={t('ui.emptyChatSubtitle')}
             showThinking={isProcessing && showThinking}
             thinkingLabel={t('ui.thinking')}
             onCopy={handleCopyMessage}
             copiedIndex={copiedIndex}
             copyLabel={t('ui.copy')}
             copiedLabel={t('ui.copied')}
+            scrollAnchorRef={messagesEndRef}
           />
-          <div ref={messagesEndRef} />
           {error && (
             <div className="chat-error" role="alert">
               {error}

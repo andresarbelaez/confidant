@@ -308,6 +308,13 @@ Assistant:`;
     if (timeToFirstTokenMs >= 0) {
       logLLMStreamStats(timeToFirstTokenMs, llmDurationMs, charCount);
     }
+    // Surface response time in terminal (where npm run dev is running)
+    const charsPerSec = llmDurationMs > 0 ? (charCount / (llmDurationMs / 1000)).toFixed(1) : '—';
+    const terminalLine =
+      timeToFirstTokenMs >= 0
+        ? `LLM response: ${llmDurationMs}ms total, ${charCount} chars (${charsPerSec} chars/s) | first token: ${timeToFirstTokenMs}ms`
+        : `LLM response: ${llmDurationMs}ms total, ${charCount} chars`;
+    invoke('log_to_terminal', { message: terminalLine }).catch(() => {});
 
     // Backend sends cleaned "full"; light client-side cleanup if needed
     assistantMessage = (assistantMessage ?? '').trim();

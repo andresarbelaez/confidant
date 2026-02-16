@@ -25,6 +25,13 @@ use cache::{read_cache_file, write_cache_file};
 use bundled_defaults::ensure_bundled_defaults_initialized;
 use tauri::Manager;
 
+/// Print a message to stderr so it appears in the terminal when running the app (e.g. dev timing logs).
+#[tauri::command]
+fn log_to_terminal(message: String) -> Result<(), String> {
+    eprintln!("[Confidant] {}", message);
+    Ok(())
+}
+
 fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
@@ -73,6 +80,7 @@ fn main() {
             write_cache_file,
             // Bundled defaults (opinionated setup)
             ensure_bundled_defaults_initialized,
+            log_to_terminal,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

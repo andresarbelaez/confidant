@@ -13,6 +13,12 @@ except ImportError:
     print("ERROR: llama-cpp-python not installed. Install with: pip install llama-cpp-python", file=sys.stderr)
     sys.exit(1)
 
+# Optional: prefix cache for faster prefill when prompts share a common prefix (e.g. system prompt)
+try:
+    from llama_cpp.llama_cache import LlamaRAMCache
+except ImportError:
+    LlamaRAMCache = None
+
 
 # Global model instance
 _model = None
@@ -36,7 +42,7 @@ def load_model(model_path: str):
             optimal_threads = 4
         # Offload to GPU when available: Metal on macOS, CUDA on Linux. Requires llama-cpp-python built with GPU support (e.g. CMAKE_ARGS="-DGGML_METAL=on" on macOS).
         n_gpu_layers = -1  # -1 = all layers to GPU; if build is CPU-only, this is ignored or may error
-        n_batch = 512  # Larger batch = fewer prefill passes = faster time-to-first-token
+        n_batch = 1024  # Larger batch = fewer prefill passes = faster time-to-first-token
         _model = Llama(
             model_path=model_path,
             n_ctx=2048,
@@ -195,6 +201,47 @@ def generate_stream(model_path: str, prompt: str, temperature: float, top_p: flo
         print(json.dumps({"error": str(e)}), flush=True)
 
 
+def run_stream_with_loaded_model(prompt: str, temperature: float, top_p: float, max_tokens: int):
+    """Stream using the already-loaded _model (for serve mode). Same output as generate_stream."""
+    global _model
+    if _model is None:
+        print(json.dumps({"error": "Model not loaded"}), flush=True)
+        return
+    try:
+        stop_sequences = [
+            "User:", "\nUser:", "User: ", "\n\nUser:",
+            "user:", "\nuser:", "user: ", "\n\nuser:",
+            "\n\nAssistant:", "\nAssistant:", " Assistant:",
+            "\n\nassistant:", "\nassistant:", " assistant:",
+            "Doctor:", "\nDoctor:", "Doctor: ", "\n\nDoctor:",
+            "Patient:", "\nPatient:", "Patient: ", "\n\nPatient:",
+        ]
+        full_parts = []
+        stream = _model.create_completion(
+            prompt,
+            temperature=temperature,
+            top_p=top_p,
+            max_tokens=max_tokens,
+            echo=False,
+            stop=stop_sequences,
+            stream=True,
+        )
+        for chunk in stream:
+            text = chunk.get("choices", [{}])[0].get("text", "")
+            if text:
+                full_parts.append(text)
+                print(json.dumps({"text": text}), flush=True)
+        full = "".join(full_parts).strip()
+        import re
+        full = re.sub(r'\s+[Aa]ssistant:\s*.*$', '', full).strip()
+        print(json.dumps({"done": True, "full": full}), flush=True)
+    except Exception as e:
+        print(f"Error in stream: {str(e)}", file=sys.stderr)
+        import traceback
+        traceback.print_exc(file=sys.stderr)
+        print(json.dumps({"error": str(e)}), flush=True)
+
+
 def main():
     if len(sys.argv) < 2:
         print("ERROR: Missing command", file=sys.stderr)
@@ -242,6 +289,48 @@ def main():
                 top_p=config.get("top_p", 0.9),
                 max_tokens=config.get("max_tokens", 512),
             )
+
+        elif command == "serve":
+            if len(sys.argv) < 3:
+                print("ERROR: serve command requires model_path", file=sys.stderr)
+                sys.exit(1)
+            model_path = sys.argv[2]
+            _save_stdout = sys.stdout
+            try:
+                sys.stdout = sys.stderr
+                load_result = load_model(model_path)
+            finally:
+                sys.stdout = _save_stdout
+            if load_result["status"] != "success":
+                print(json.dumps({"error": load_result.get("message", "Failed to load model")}), flush=True)
+                sys.exit(1)
+            # Prefix cache: reuse KV cache for common prompt prefixes (e.g. system prompt) across requests
+            if LlamaRAMCache is not None:
+                try:
+                    _model.set_cache(LlamaRAMCache(capacity_bytes=512 * 1024 * 1024))  # 512 MB
+                except Exception:
+                    pass
+            # One minimal forward pass to warm caches (do not write to stdout)
+            try:
+                _model.create_completion("Hi", max_tokens=1, temperature=0, echo=False)
+            except Exception:
+                pass
+            print(json.dumps({"ready": True}), flush=True)
+            while True:
+                line = sys.stdin.readline()
+                if not line or not line.strip():
+                    break
+                try:
+                    req = json.loads(line.strip())
+                    prompt = req.get("prompt", "")
+                    temperature = float(req.get("temperature", 0.7))
+                    top_p = float(req.get("top_p", 0.9))
+                    max_tokens = int(req.get("max_tokens", 512))
+                    run_stream_with_loaded_model(prompt, temperature, top_p, max_tokens)
+                except json.JSONDecodeError as e:
+                    print(json.dumps({"error": f"Invalid JSON: {e}"}), flush=True)
+                except Exception as e:
+                    print(json.dumps({"error": str(e)}), flush=True)
             
         else:
             print(f"ERROR: Unknown command: {command}", file=sys.stderr)

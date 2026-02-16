@@ -3,8 +3,10 @@
 
 use serde::{Deserialize, Serialize};
 use std::sync::Mutex;
-use std::process::{Command, Stdio};
+use std::process::{Child, Command, Stdio};
 use std::io::{BufRead, BufReader, Read, Write};
+use std::process::ChildStdin;
+use std::process::ChildStdout;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::thread;
@@ -24,6 +26,18 @@ lazy_static::lazy_static! {
         model_path: None,
         is_initialized: false,
     });
+}
+
+/// Long-lived Python process with model already loaded. Reused for each request to avoid reload time.
+struct LlmWorker {
+    _child: Child,
+    stdin: ChildStdin,
+    stdout: BufReader<ChildStdout>,
+    model_path: String,
+}
+
+lazy_static::lazy_static! {
+    static ref LLM_WORKER: Mutex<Option<LlmWorker>> = Mutex::new(None);
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -293,13 +307,155 @@ pub async fn initialize_model(app: AppHandle, model_path: String) -> Result<(), 
     initialize_model_internal(model_path.clone(), bundled).await?;
     
     // Update state after successful initialization
+    let path_for_worker = model_path.clone();
     {
         let mut state = LLM_STATE.lock().map_err(|e| format!("Failed to lock state: {}", e))?;
         state.model_path = Some(model_path);
         state.is_initialized = true;
     }
-    
+
+    // Preload a long-lived worker in the background so the first user message has fast time-to-first-token
+    let app_worker = app.clone();
+    thread::spawn(move || {
+        if let Err(e) = start_llm_worker(&app_worker, &path_for_worker) {
+            #[cfg(debug_assertions)]
+            eprintln!("[LLM] Worker preload failed (streaming will use one-shot): {}", e);
+        } else {
+            #[cfg(debug_assertions)]
+            eprintln!("[LLM] Worker ready (model preloaded for fast first token)");
+        }
+    });
+
     Ok(())
+}
+
+/// Start a long-lived Python process with the model loaded. Called after initialize_model (background).
+fn start_llm_worker(app: &AppHandle, model_path: &str) -> Result<(), String> {
+    let bundled = python_bundle::resolve_bundled_python(app);
+    let (python_cmd, script_path) = resolve_python_and_script(bundled)?;
+
+    let mut child = Command::new(&python_cmd)
+        .arg(&script_path)
+        .arg("serve")
+        .arg(model_path)
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .map_err(|e| format!("Failed to spawn Python worker: {}", e))?;
+
+    // Drain stderr in a background thread so the worker never blocks on pipe backpressure; log for debugging.
+    let stderr = child.stderr.take().ok_or("No stderr from Python worker")?;
+    std::thread::spawn(move || {
+        let mut r = BufReader::new(stderr);
+        let mut line = String::new();
+        while r.read_line(&mut line).unwrap_or(0) > 0 {
+            eprintln!("[LLM Worker] {}", line.trim_end());
+            line.clear();
+        }
+    });
+
+    let stdout = child.stdout.take().ok_or("No stdout from Python worker")?;
+    let mut reader = BufReader::new(stdout);
+    // Read lines until we see {"ready": true} (llama_cpp may write other lines to stdout; skip them).
+    let mut line = String::new();
+    let mut ready = false;
+    for _ in 0..10_000 {
+        line.clear();
+        let n = reader
+            .read_line(&mut line)
+            .map_err(|e| format!("Failed to read from worker: {}", e))?;
+        if n == 0 {
+            return Err("Worker stdout closed before ready.".to_string());
+        }
+        let trimmed = line.trim();
+        if trimmed.is_empty() {
+            continue;
+        }
+        if let Ok(v) = serde_json::from_str::<serde_json::Value>(trimmed) {
+            if v.get("ready").and_then(|r| r.as_bool()) == Some(true) {
+                ready = true;
+                break;
+            }
+            if let Some(err) = v.get("error").and_then(|e| e.as_str()) {
+                return Err(format!("Worker reported error: {}", err));
+            }
+        }
+    }
+    if !ready {
+        return Err("Worker did not send ready in time.".to_string());
+    }
+
+    let stdin = child.stdin.take().ok_or("No stdin from Python worker")?;
+    let worker = LlmWorker {
+        _child: child,
+        stdin,
+        stdout: reader,
+        model_path: model_path.to_string(),
+    };
+
+    let mut guard = LLM_WORKER.lock().map_err(|e| format!("Lock worker: {}", e))?;
+    *guard = Some(worker);
+    Ok(())
+}
+
+/// Run one streaming request through an existing worker. Returns the worker on success so it can be put back.
+fn run_stream_via_worker(
+    app: &AppHandle,
+    stream_id: &str,
+    prompt: &str,
+    config_json: &str,
+    mut worker: LlmWorker,
+) -> Result<LlmWorker, String> {
+    let config: serde_json::Value =
+        serde_json::from_str(config_json).map_err(|e| format!("Config JSON: {}", e))?;
+    let req = serde_json::json!({
+        "prompt": prompt,
+        "temperature": config.get("temperature").and_then(|v| v.as_f64()).unwrap_or(0.7),
+        "top_p": config.get("top_p").and_then(|v| v.as_f64()).unwrap_or(0.9),
+        "max_tokens": config.get("max_tokens").and_then(|v| v.as_u64()).unwrap_or(512) as u32,
+    });
+    let line = serde_json::to_string(&req).map_err(|e| format!("Serialize request: {}", e))?;
+    worker
+        .stdin
+        .write_all(format!("{}\n", line).as_bytes())
+        .map_err(|e| format!("Write to worker: {}", e))?;
+    worker.stdin.flush().map_err(|e| format!("Flush worker: {}", e))?;
+
+    let mut stream_done = false;
+    for line in worker.stdout.by_ref().lines() {
+        let line = line.map_err(|e| format!("Read from worker: {}", e))?;
+        let v: serde_json::Value =
+            serde_json::from_str(&line).map_err(|e| format!("Worker JSON: {}", e))?;
+
+        if let Some(text) = v.get("text").and_then(|t| t.as_str()) {
+            let _ = app.emit(
+                "llm-stream-chunk",
+                serde_json::json!({ "streamId": stream_id, "text": text }),
+            );
+        }
+        if v.get("done").and_then(|d| d.as_bool()) == Some(true) {
+            let full = v.get("full").and_then(|f| f.as_str()).unwrap_or("");
+            let _ = app.emit(
+                "llm-stream-done",
+                serde_json::json!({ "streamId": stream_id, "full": full }),
+            );
+            stream_done = true;
+            break;
+        }
+        if let Some(err) = v.get("error").and_then(|e| e.as_str()) {
+            let _ = app.emit(
+                "llm-stream-error",
+                serde_json::json!({ "streamId": stream_id, "error": err }),
+            );
+            return Err(err.to_string());
+        }
+    }
+
+    if !stream_done {
+        return Err("Worker stream ended without done.".to_string());
+    }
+    Ok(worker)
 }
 
 /// Generate text from the LLM
@@ -388,12 +544,44 @@ pub fn generate_text_stream(
     eprintln!("[LLM] Starting stream {} (prompt len: {} chars)", stream_id, prompt.len());
 
     let app = app.clone();
+    let prompt = prompt.clone();
+    let config_json = config_json.clone();
     thread::spawn(move || {
-        if let Err(e) = run_stream_process(&app, &stream_id, &prompt, &model_path, &config_json) {
-            let _ = app.emit(
-                "llm-stream-error",
-                serde_json::json!({ "streamId": stream_id, "error": e }),
-            );
+        let worker = { LLM_WORKER.lock().ok().and_then(|mut g| g.take()) };
+        let used_worker = match worker {
+            Some(w) if w.model_path == model_path => {
+                match run_stream_via_worker(&app, &stream_id, &prompt, &config_json, w) {
+                    Ok(restored) => {
+                        if let Ok(mut guard) = LLM_WORKER.lock() {
+                            *guard = Some(restored);
+                        }
+                        true
+                    }
+                    Err(e) => {
+                        let _ = app.emit(
+                            "llm-stream-error",
+                            serde_json::json!({ "streamId": stream_id, "error": e }),
+                        );
+                        false
+                    }
+                }
+            }
+            other => {
+                if let Some(w) = other {
+                    if let Ok(mut guard) = LLM_WORKER.lock() {
+                        *guard = Some(w);
+                    }
+                }
+                false
+            }
+        };
+        if !used_worker {
+            if let Err(e) = run_stream_process(&app, &stream_id, &prompt, &model_path, &config_json) {
+                let _ = app.emit(
+                    "llm-stream-error",
+                    serde_json::json!({ "streamId": stream_id, "error": e }),
+                );
+            }
         }
     });
 
