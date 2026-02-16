@@ -163,6 +163,26 @@
 
 html {
   scroll-behavior: smooth;
+  /* Keep landing in light (beige) theme so mobile matches desktop */
+  color-scheme: light;
+}
+
+/* When system prefers dark, still use warm beige so mobile doesn't show grey */
+@media (prefers-color-scheme: dark) {
+  html {
+    --background: var(--warm-50);
+    --foreground: var(--warm-900);
+    --muted: var(--warm-100);
+    --muted-foreground: var(--warm-700);
+    --card: oklch(1 0 0);
+    --card-foreground: var(--warm-900);
+    --border: var(--warm-200);
+    --input: var(--warm-200);
+    --secondary: var(--warm-200);
+    --secondary-foreground: var(--warm-900);
+    --accent: var(--warm-100);
+    --accent-foreground: var(--warm-900);
+  }
 }
 
 @layer base {

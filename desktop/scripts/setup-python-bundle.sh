@@ -98,8 +98,19 @@ SITE_PACKAGES="$PYVER/site-packages"
 echo "  Site-packages: $SITE_PACKAGES"
 
 # --- 6. Install pip dependencies ---
+# Prefer pre-built CPU wheels for llama-cpp-python to avoid ARM i8mm build failures in CI.
+LLAMA_EXTRA_INDEX="https://abetlen.github.io/llama-cpp-python/whl/cpu"
+if [ "$OS" = "Darwin" ] && [ -n "${BUNDLE_PYTHON:-}" ]; then
+  export CMAKE_ARGS="${CMAKE_ARGS:-} -DGGML_METAL=on"
+fi
 echo "Installing pip packages (llama-cpp-python, chromadb, sentence-transformers) ..."
-"$PYTHON_DIR/bin/python3" -m pip install --target "$SITE_PACKAGES" --quiet --disable-pip-version-check \
-  llama-cpp-python chromadb sentence-transformers
+if ! "$PYTHON_DIR/bin/python3" -m pip install --target "$SITE_PACKAGES" --quiet --disable-pip-version-check \
+  --prefer-binary --extra-index-url "$LLAMA_EXTRA_INDEX" \
+  "llama-cpp-python>=0.2.0,<0.4" chromadb sentence-transformers; then
+  echo "Install failed (often ARM i8mm build error in CI). Retrying with pinned llama-cpp-python==0.3.10..."
+  "$PYTHON_DIR/bin/python3" -m pip install --target "$SITE_PACKAGES" --quiet --disable-pip-version-check \
+    --prefer-binary --extra-index-url "$LLAMA_EXTRA_INDEX" \
+    "llama-cpp-python==0.3.10" chromadb sentence-transformers
+fi
 echo "Done. You can run: npm run build"
 echo "Installers will be in $TAURI_DIR/target/release/bundle/"
