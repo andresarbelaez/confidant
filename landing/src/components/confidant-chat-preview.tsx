@@ -55,36 +55,53 @@ export function ConfidantChatPreview() {
           Try the interface below. Download the app to keep your conversations private.
         </p>
 
-        <div className="confidant-chat-preview-theme relative mt-10 rounded-xl overflow-hidden border border-border shadow-lg" style={{ height: '480px' }}>
-          <ChatLayout
-            sidebar={
-              <ChatSidebarShell
-                items={SIDEBAR_ITEMS}
-                aria-label="Chat and account (preview)"
-              />
-            }
-          >
-            <ChatMessages
-              messages={chatMessages as unknown as ChatMessage[]}
-              welcomeTitle={WELCOME_TITLE}
-              welcomeSubtitle={WELCOME_SUBTITLE}
-            />
-            <ChatInputBar
-              value={input}
-              onChange={setInput}
-              onSubmit={handleSubmit}
-              placeholder={INPUT_PLACEHOLDER}
-              sendButtonLabel="Send"
-            />
-            {overlayDismissed && (
-              <p className="text-center text-sm text-muted-foreground py-2">
-                {HINT_AFTER_DISMISS}
-              </p>
-            )}
-            <p className="chat-footer">{FOOTER_DISCLAIMER}</p>
-          </ChatLayout>
+        <div className="relative mt-10 rounded-xl overflow-hidden border border-border shadow-lg" style={{ height: '480px' }}>
+          {/* Mobile: replace chat with message to use a larger screen */}
+          <div className="confidant-chat-preview-theme md:hidden absolute inset-0 flex flex-col items-center justify-center p-6 text-center bg-muted/30">
+            <p className="text-foreground text-lg font-medium">
+              To see this preview of Confidant, open this website on a larger screen.
+            </p>
+            <p className="text-muted-foreground text-sm mt-2 max-w-sm">
+              You can still download the app below for the full experience on any device.
+            </p>
+            <Button asChild className="mt-6" size="lg">
+              <Link href="#download" onClick={(e) => scrollToHash(e, '#download')}>
+                {DOWNLOAD_CTA}
+              </Link>
+            </Button>
+          </div>
 
-          {overlayVisible && (
+          {/* Desktop/tablet: show chat preview */}
+          <div className="confidant-chat-preview-theme relative hidden md:block w-full h-full">
+            <ChatLayout
+              sidebar={
+                <ChatSidebarShell
+                  items={SIDEBAR_ITEMS}
+                  aria-label="Chat and account (preview)"
+                />
+              }
+            >
+              <ChatMessages
+                messages={chatMessages as unknown as ChatMessage[]}
+                welcomeTitle={WELCOME_TITLE}
+                welcomeSubtitle={WELCOME_SUBTITLE}
+              />
+              <ChatInputBar
+                value={input}
+                onChange={setInput}
+                onSubmit={handleSubmit}
+                placeholder={INPUT_PLACEHOLDER}
+                sendButtonLabel="Send"
+              />
+              {overlayDismissed && (
+                <p className="text-center text-sm text-muted-foreground py-2">
+                  {HINT_AFTER_DISMISS}
+                </p>
+              )}
+              <p className="chat-footer">{FOOTER_DISCLAIMER}</p>
+            </ChatLayout>
+
+            {overlayVisible && (
             <div className="absolute inset-0 bg-background/95 backdrop-blur-sm flex items-center justify-center z-10 rounded-xl">
               <div className="relative bg-card border border-border rounded-lg shadow-xl p-6 max-w-md mx-4 text-center">
                 <button
@@ -103,7 +120,8 @@ export function ConfidantChatPreview() {
                 </Button>
               </div>
             </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
     </section>

@@ -4,18 +4,18 @@ import { RiLockFill, RiWifiOffFill, RiHeartFill } from 'react-icons/ri'
 const features = [
   {
     icon: RiLockFill,
-    title: 'Privacy first',
-    description: 'Everything stays on your device. Your conversations stay there.',
+    title: 'Free & private',
+    description: 'No subscription or account. Everything stays on your device—nothing uploaded or stored online.',
   },
   {
     icon: RiWifiOffFill,
-    title: 'Works offline',
-    description: 'By design, Confidant never interacts with the internet. You can use it any time, anywhere.',
+    title: 'Use it anywhere',
+    description: 'Works offline. No internet required—by design.',
   },
   {
     icon: RiHeartFill,
     title: 'Thoughtful support',
-    description: "A space to process what's on your mind, meant to complement — not replace — professional care.",
+    description: "A companion for what's on your mind. Meant to complement, not replace, professional care.",
   },
 ]
 
