@@ -23,7 +23,7 @@ interface ChatMessagesProps {
   copyLabel?: string
   copiedLabel?: string
   /** Ref for a sentinel div rendered at the end of the list (inside the scroll area) for scroll-into-view. */
-  scrollAnchorRef?: RefObject<HTMLDivElement | null>
+  scrollAnchorRef?: RefObject<HTMLDivElement>
 }
 
 export function ChatMessages({
