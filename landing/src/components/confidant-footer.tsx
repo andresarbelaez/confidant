@@ -18,7 +18,7 @@ export function ConfidantFooter() {
             <ConfidantLogo />
           </Link>
           <p className="text-muted-foreground text-sm text-center max-w-md">
-            Confidant is not a substitute for therapy or professional mental health care.
+            Confidant is not a substitute for therapy or professional mental health care. For support, please reach out to a qualified professional. If you&apos;re in crisis, please contact a crisis line or a mental health professional.
           </p>
           <nav className="flex gap-6">
             {links.map((link) => (

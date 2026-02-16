@@ -14,7 +14,7 @@ export function ConfidantHero() {
         <section className="pt-32 pb-24 md:pt-40 md:pb-32">
           <div className="mx-auto max-w-3xl px-6 text-center">
             <h1 className="text-balance font-serif text-4xl font-medium leading-[1.3] sm:text-5xl md:text-6xl">
-              Confidant is a private AI companion for your mental health. It runs entirely on your device.
+              Confidant is a free, private AI companion for your mental health. It runs entirely on your device.
             </h1>
             <p className="text-muted-foreground mt-6 text-lg text-balance">
               Because your thoughts deserve to be heard, not stored.
@@ -32,6 +32,9 @@ export function ConfidantHero() {
                 </Link>
               </Button>
             </div>
+            <p className="text-muted-foreground text-sm mt-4">
+              No sign-up. No account.
+            </p>
           </div>
         </section>
       </main>

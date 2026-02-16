@@ -33,7 +33,7 @@ export function ConfidantDownload() {
   return (
     <section id="download" className="py-24">
       <div className="mx-auto max-w-3xl px-6">
-        <h2 className="text-balance font-serif text-3xl font-medium sm:text-4xl text-center">Download</h2>
+        <h2 className="text-balance font-serif text-4xl font-medium sm:text-5xl text-center">Download</h2>
         <p className="text-muted-foreground text-center mt-4 mb-12">
           Free for macOS 11+ and Windows 10+. No account required.
         </p>
@@ -60,10 +60,11 @@ export function ConfidantDownload() {
         </div>
         
         <div className="mt-6 p-4 rounded-lg bg-muted/50 text-center text-sm">
-          <strong>Confidant is currently in Beta.</strong> We'd love your feedback.{' '}
-          <Link href={`${REPO}/issues`} className="underline hover:no-underline">Share feedback on GitHub</Link>.
+          <strong>Confidant is currently in Beta.</strong> We'd love your feedback—{' '}
+          <Link href={`${REPO}/issues`} className="underline hover:no-underline">share it on GitHub</Link>.
         </div>
-        <p className="text-muted-foreground text-sm text-center mt-8">
+        <h3 className="text-sm font-medium text-foreground mt-8 mb-2 text-center">About security warnings</h3>
+        <p className="text-muted-foreground text-sm text-center">
           Beta builds are unsigned. You may see a security or Gatekeeper warning;{' '}
           <Link href={`${REPO}#readme`} className="underline hover:no-underline">see how to open unsigned apps</Link>.
         </p>

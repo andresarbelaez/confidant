@@ -5,7 +5,7 @@ const features = [
   {
     icon: RiLockFill,
     title: 'Privacy first',
-    description: 'Everything runs on your device. Your conversations stay there.',
+    description: 'Everything stays on your device. Your conversations stay there.',
   },
   {
     icon: RiWifiOffFill,
@@ -24,9 +24,9 @@ export function ConfidantFeatures() {
     <section id="features" className="py-24">
       <div className="mx-auto max-w-3xl px-6">
         <div className="text-center mb-16">
-          <h2 className="text-balance font-serif text-3xl font-medium sm:text-4xl">Built for privacy and reflection</h2>
+          <h2 className="text-balance font-serif text-4xl font-medium sm:text-5xl">Built for privacy and reflection</h2>
           <p className="text-muted-foreground mt-4 text-balance">
-            Designed for reflection, not distraction.
+            Privacy, offline use, and a space to reflect.
           </p>
         </div>
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">

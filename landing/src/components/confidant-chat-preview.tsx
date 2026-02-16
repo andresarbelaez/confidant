@@ -11,8 +11,8 @@ import 'confidant-chat-ui/styles.css'
 const WELCOME_TITLE = 'Welcome to Confidant'
 const WELCOME_SUBTITLE = 'Ask a question or share what\'s on your mind. This preview is not private—download the app for real conversations.'
 const INPUT_PLACEHOLDER = 'Share what\'s on your mind…'
-const FOOTER_DISCLAIMER = "I'm not a substitute for therapy or professional mental health care. For support, please reach out to a qualified professional."
-const OVERLAY_MESSAGE = 'This is a website—not a safe place for private conversations. Download the app to get your answer in full privacy.'
+const FOOTER_DISCLAIMER = 'Confidant is not a substitute for therapy or professional mental health care. For support, please reach out to a qualified professional.'
+const OVERLAY_MESSAGE = 'This is only a preview. Your message isn\'t private here. Download the app to chat in full privacy.'
 const DOWNLOAD_CTA = 'Download Confidant'
 const HINT_AFTER_DISMISS = 'Download for private answers'
 
@@ -48,11 +48,11 @@ export function ConfidantChatPreview() {
   return (
     <section id="try-it-yourself" className="py-24">
       <div className="mx-auto max-w-5xl px-6">
-        <h2 className="text-balance font-serif text-3xl font-medium sm:text-4xl text-center">
-          Try It Yourself
+        <h2 className="text-balance font-serif text-4xl font-medium sm:text-5xl text-center">
+          Try it yourself
         </h2>
         <p className="text-muted-foreground mt-4 text-center text-balance">
-          See the interface below—then download the app for private conversations.
+          Try the interface below. Download the app to keep your conversations private.
         </p>
 
         <div className="confidant-chat-preview-theme relative mt-10 rounded-xl overflow-hidden border border-border shadow-lg" style={{ height: '480px' }}>
