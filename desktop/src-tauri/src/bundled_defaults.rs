@@ -296,6 +296,8 @@ pub async fn ensure_bundled_defaults_initialized(app: AppHandle) -> Result<Bundl
         return Ok(BundledDefaultsStatus {
             model_ready: is_model_loaded().await?,
             kb_ready: false,
+            default_model_download_url: None,
+            default_model_output_path: None,
         });
     }
 
