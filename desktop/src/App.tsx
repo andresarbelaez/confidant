@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import SetupModal from './components/SetupModal';
 import ChatInterface from './components/ChatInterface';
 import LoadingScreen from './components/LoadingScreen';
+import DownloadingModelScreen from './components/DownloadingModelScreen';
 import UserProfileSelector from './components/UserProfileSelector';
 import ErrorScreen from './components/ErrorScreen';
 import { useAppState } from './hooks/useAppState';
@@ -27,6 +28,8 @@ function App() {
     setupStatus,
     showSettingsModal,
     transitionToChat,
+    transitionToUserSelection,
+    transitionToError,
     closeSettings,
     switchProfile,
     handleModelReady,
@@ -113,6 +116,19 @@ function App() {
 
   // Render based on current view state
   switch (view.type) {
+    case 'downloading-model':
+      return (
+        <DownloadingModelScreen
+          url={view.url}
+          outputPath={view.outputPath}
+          onComplete={async () => {
+            handleModelReady(view.outputPath);
+            await transitionToUserSelection();
+          }}
+          onError={(message) => transitionToError(message)}
+        />
+      );
+
     case 'user-selection':
       return (
         <div className={`App ${showSettingsModal ? 'dimmed' : ''}`}>

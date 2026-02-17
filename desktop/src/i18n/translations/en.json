@@ -62,6 +62,8 @@
     "appName": "Confidant",
     "loadingSubtitle": "Your offline AI assistant",
     "loadingTagline": "Mental health support that stays private",
+    "downloadingModelTitle": "Downloading default model",
+    "downloadingModelSubtitle": "First-time setup. This may take a few minutes (~2.5 GB).",
     "modelManagerPrompt": "Please initialize a model first in the Model Manager tab.",
     "userFallback": "User",
     "userSettings": "User Settings",

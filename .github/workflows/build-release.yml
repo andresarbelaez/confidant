@@ -47,10 +47,12 @@ jobs:
           cd desktop
           npm ci
 
+      # SKIP_MODEL=1 keeps DMG/MSI under GitHub's 2 GB release asset limit; users download model in Settings.
       - name: Setup full bundle (Python + default model + KB)
         env:
           BUNDLE_PYTHON: 1
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SKIP_MODEL: 1
         run: |
           cd desktop
           bash scripts/setup-full-bundle.sh

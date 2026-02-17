@@ -22,18 +22,23 @@ bash "$DESKTOP_DIR/scripts/setup-python-bundle.sh"
 echo ""
 
 # --- 2. Default model into resources/models/ ---
+# Set SKIP_MODEL=1 in CI to keep release assets under GitHub's 2 GB limit; users download model in Settings.
 echo "Step 2/3: Default model (for bundled DMG) ..."
-mkdir -p "$MODELS_DIR"
-if [ -f "$DEFAULT_MODEL_PATH" ]; then
-  echo "  Model already present at $DEFAULT_MODEL_PATH"
+if [ -n "${SKIP_MODEL:-}" ]; then
+  echo "  SKIP_MODEL is set; skipping model download (installer will stay under 2 GB; users can download in Settings)."
 else
-  echo "  Downloading default model (~2.5 GB) to $DEFAULT_MODEL_PATH"
-  echo "  This may take a while."
-  if curl -# -L -o "$DEFAULT_MODEL_PATH" "$DEFAULT_MODEL_URL"; then
-    echo "  Model downloaded."
+  mkdir -p "$MODELS_DIR"
+  if [ -f "$DEFAULT_MODEL_PATH" ]; then
+    echo "  Model already present at $DEFAULT_MODEL_PATH"
   else
-    echo "  Download failed. Delete any partial file and re-run, or run without model (first launch will open Settings)."
-    exit 1
+    echo "  Downloading default model (~2.5 GB) to $DEFAULT_MODEL_PATH"
+    echo "  This may take a while."
+    if curl -# -L -o "$DEFAULT_MODEL_PATH" "$DEFAULT_MODEL_URL"; then
+      echo "  Model downloaded."
+    else
+      echo "  Download failed. Delete any partial file and re-run, or run without model (first launch will open Settings)."
+      exit 1
+    fi
   fi
 fi
 echo ""
@@ -53,4 +58,8 @@ fi
 echo ""
 
 echo "Full bundle ready. Run: npm run build"
-echo "Installers (DMG etc.) will include the model and KB; first launch will not show Settings."
+if [ -n "${SKIP_MODEL:-}" ]; then
+  echo "Installers will include Python and KB; download the model once in Settings."
+else
+  echo "Installers (DMG etc.) will include the model and KB; first launch will not show Settings."
+fi

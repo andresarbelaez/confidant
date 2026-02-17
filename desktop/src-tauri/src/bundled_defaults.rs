@@ -25,6 +25,9 @@ const DEFAULT_MODEL_ID: &str = "llama-3.2-3b-instruct-q4_k_m";
 /// Filename used when downloading default model from URL (last segment of HuggingFace URL).
 const DEFAULT_MODEL_DOWNLOAD_FILENAME: &str = "Llama-3.2-3B-Instruct-Q4_K_M.gguf";
 
+/// URL for the default model (same as in setup-full-bundle.sh). Used for first-run auto-download.
+const DEFAULT_MODEL_URL: &str = "https://huggingface.co/bartowski/Llama-3.2-3B-Instruct-GGUF/resolve/main/Llama-3.2-3B-Instruct-Q4_K_M.gguf";
+
 /// Relative path to bundled KB JSON in resources (same format as URL-loaded package: manifest, documents, embeddings).
 const BUNDLED_KB_FILENAME: &str = "default_kb.json";
 
@@ -32,6 +35,12 @@ const BUNDLED_KB_FILENAME: &str = "default_kb.json";
 pub struct BundledDefaultsStatus {
     pub model_ready: bool,
     pub kb_ready: bool,
+    /// When packaged and no model found: URL to download the default model on first run.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub default_model_download_url: Option<String>,
+    /// When packaged and no model found: path where the default model should be saved (app data).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub default_model_output_path: Option<String>,
 }
 
 /// Find project root (directory that contains "data" and ideally "desktop") for dev fallback.
@@ -77,6 +86,26 @@ fn resolve_bundled_model_path(app: &AppHandle) -> Option<PathBuf> {
             let p = base.join("models").join(BUNDLED_MODEL_FILENAME);
             if p.exists() {
                 return Some(p);
+            }
+        }
+    }
+    // App data (e.g. after first-run auto-download or Settings download)
+    if let Some(base) = app.path().app_data_dir().ok() {
+        let models_dir = base.join("data").join("models");
+        let id_gguf = format!("{}.gguf", DEFAULT_MODEL_ID);
+        for name in [
+            DEFAULT_MODEL_DOWNLOAD_FILENAME,
+            BUNDLED_MODEL_FILENAME,
+            id_gguf.as_str(),
+        ] {
+            let p = models_dir.join(name);
+            if p.exists() {
+                if let Ok(metadata) = fs::metadata(&p) {
+                    let size_gb = metadata.len() as f64 / (1024.0 * 1024.0 * 1024.0);
+                    if size_gb >= 1.0 {
+                        return Some(p);
+                    }
+                }
             }
         }
     }
@@ -215,8 +244,25 @@ async fn ingest_kb_from_path(app: &AppHandle, path: &Path) -> Result<(), String>
     Ok(())
 }
 
+/// When packaged (resource dir present) and no model exists, return (url, output_path) for first-run auto-download.
+fn default_model_download_info(app: &AppHandle) -> Option<(String, PathBuf)> {
+    if resolve_bundled_model_path(app).is_some() {
+        return None;
+    }
+    let resource_dir = app.path().resource_dir().ok()?;
+    if !resource_dir.exists() {
+        return None;
+    }
+    let base = app.path().app_data_dir().ok()?;
+    let models_dir = base.join("data").join("models");
+    let _ = fs::create_dir_all(&models_dir);
+    let output_path = models_dir.join(DEFAULT_MODEL_DOWNLOAD_FILENAME);
+    Some((DEFAULT_MODEL_URL.to_string(), output_path))
+}
+
 /// Ensure the default model and global KB are initialized from bundled resources when possible.
 /// Call this once after loading; then check setup status (model_ready, kb_ready).
+/// When no model is found in a packaged build, returns default_model_download_url/output_path for first-run auto-download.
 #[tauri::command]
 pub async fn ensure_bundled_defaults_initialized(app: AppHandle) -> Result<BundledDefaultsStatus, String> {
     // 1. Model: if not loaded, try bundled model path
@@ -231,10 +277,11 @@ pub async fn ensure_bundled_defaults_initialized(app: AppHandle) -> Result<Bundl
                 }
             }
             None => {
+                #[cfg(debug_assertions)]
                 if let Ok(rd) = app.path().resource_dir() {
                     let expected = rd.join("models").join(BUNDLED_MODEL_FILENAME);
                     eprintln!(
-                        "[Confidant] No bundled model found. Expected at: {} (add resources/models/default_model.gguf and rebuild)",
+                        "[Confidant] No bundled model. Auto-download on first run or add resources/models/default_model.gguf. Expected: {}",
                         expected.display()
                     );
                 }
@@ -287,8 +334,18 @@ pub async fn ensure_bundled_defaults_initialized(app: AppHandle) -> Result<Bundl
         .map(|n| n > 0)
         .unwrap_or(false);
 
+    let (default_model_download_url, default_model_output_path) = if !model_ready {
+        default_model_download_info(&app)
+            .map(|(url, path)| (Some(url), Some(path.to_string_lossy().to_string())))
+            .unwrap_or((None, None))
+    } else {
+        (None, None)
+    };
+
     Ok(BundledDefaultsStatus {
         model_ready,
         kb_ready,
+        default_model_download_url,
+        default_model_output_path,
     })
 }

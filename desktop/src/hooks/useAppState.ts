@@ -11,6 +11,7 @@ export interface AppUser {
 
 export type AppView =
   | { type: 'loading' }
+  | { type: 'downloading-model'; url: string; outputPath: string }
   | { type: 'user-selection'; preloadedUsers?: AppUser[] | null }
   | { type: 'chat', userId: string }
   | { type: 'error', message: string, retry?: () => void; onContinue?: () => void };
@@ -242,11 +243,34 @@ export function useAppState() {
         if (!setupStatus.modelReady || !setupStatus.globalKBReady) {
           try {
             logAppTiming('ensure_bundled_defaults_initialized start');
-            await invoke<{ model_ready: boolean; kb_ready: boolean }>(
-              'ensure_bundled_defaults_initialized'
-            );
-            setupStatus = await checkSetup();
+            const bundled = await invoke<{
+              model_ready: boolean;
+              kb_ready: boolean;
+              default_model_download_url?: string;
+              default_model_output_path?: string;
+            }>('ensure_bundled_defaults_initialized');
             logAppTiming('ensure_bundled_defaults_initialized done');
+
+            // If no model but we can auto-download, show downloading screen
+            if (
+              !bundled.model_ready &&
+              bundled.default_model_download_url &&
+              bundled.default_model_output_path
+            ) {
+              logViewEntered('downloading-model');
+              setState(prev => ({
+                ...prev,
+                view: {
+                  type: 'downloading-model',
+                  url: bundled.default_model_download_url,
+                  outputPath: bundled.default_model_output_path,
+                },
+                setupStatus: { ...prev.setupStatus, isChecking: false },
+              }));
+              return;
+            }
+
+            setupStatus = await checkSetup();
           } catch (err) {
             console.warn('Bundled defaults init failed:', err);
           }

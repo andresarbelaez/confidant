@@ -62,6 +62,8 @@
     "appName": "Confidant",
     "loadingSubtitle": "Tu asistente de IA sin conexión",
     "loadingTagline": "Apoyo en salud mental que se queda en privado",
+    "downloadingModelTitle": "Descargando modelo predeterminado",
+    "downloadingModelSubtitle": "Configuración inicial. Puede tardar unos minutos (~2,5 GB).",
     "modelManagerPrompt": "Inicializa primero un modelo en la pestaña del Gestor de modelos.",
     "userFallback": "Usuario",
     "userSettings": "Ajustes de usuario",
