@@ -49,15 +49,19 @@ jobs:
 
       - name: Setup Python bundle (macOS)
         if: matrix.platform == 'macos-latest'
+        env:
+          BUNDLE_PYTHON: 1
         run: |
           cd desktop
-          BUNDLE_PYTHON=1 bash scripts/setup-python-bundle.sh
+          bash scripts/setup-python-bundle.sh
 
       - name: Setup Python bundle (Windows)
         if: matrix.platform == 'windows-latest'
+        env:
+          BUNDLE_PYTHON: 1
         run: |
           cd desktop
-          BUNDLE_PYTHON=1 bash scripts/setup-python-bundle.sh
+          bash scripts/setup-python-bundle.sh
 
       - name: Build frontend
         run: |

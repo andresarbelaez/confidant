@@ -49,7 +49,8 @@ esac
 echo "Resolving latest python-build-standalone ($TRIPLE) ..."
 API_URL="https://api.github.com/repos/$REPO/releases/latest"
 if command -v jq &>/dev/null; then
-  ASSET_URL=$(curl -sL "$API_URL" | jq -r --arg t "$TRIPLE" '.assets[] | select(.name | test("install_only")) | select(.name | test($t)) | .browser_download_url' | head -1)
+  # (.assets // []) handles API errors or rate limits where .assets may be null
+  ASSET_URL=$(curl -sL "$API_URL" | jq -r --arg t "$TRIPLE" '(.assets // [])[] | select(.name | test("install_only")) | select(.name | test($t)) | .browser_download_url' | head -1)
 else
   ASSET_URL=$(curl -sL "$API_URL" | grep -o '"browser_download_url": "[^"]*install_only[^"]*'"$TRIPLE"'[^"]*"' | head -1 | sed 's/.*: "\(.*\)".*/\1/')
 fi

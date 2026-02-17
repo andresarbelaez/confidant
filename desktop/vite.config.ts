@@ -1,8 +1,16 @@
+import path from 'node:path'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  resolve: {
+    // When building, confidant-chat-ui (file:../packages/...) is linked; resolve its deps from desktop node_modules
+    dedupe: ['react', 'react-dom', 'lucide-react'],
+    alias: {
+      'lucide-react': path.resolve(__dirname, 'node_modules/lucide-react'),
+    },
+  },
   // Tauri expects a fixed port, fail if that port is not available
   server: {
     port: 1420,
