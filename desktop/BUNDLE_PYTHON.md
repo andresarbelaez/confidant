@@ -37,7 +37,7 @@ src-tauri/
 
   Adjust `python3.12` (or `site-packages`) to match the Python version you extracted (e.g. 3.11 → `lib/python3.11/site-packages`).
 
-  **CI / `setup-python-bundle.sh`:** The script prefers pre-built CPU wheels (`--prefer-binary --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/cpu`) to avoid ARM build failures. If the first install fails (e.g. no wheel for that Python/platform), it retries with `llama-cpp-python==0.3.10`.
+  **CI / `setup-python-bundle.sh`:** The script supports macOS, Linux, and Windows (run from Git Bash or CI). It prefers pre-built CPU wheels (`--prefer-binary --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/cpu`) to avoid ARM build failures. If the first install fails (e.g. no wheel for that Python/platform), it retries with `llama-cpp-python==0.3.10`.
 
 ## One-time setup per platform
 

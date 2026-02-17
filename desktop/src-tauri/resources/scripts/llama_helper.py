@@ -40,7 +40,8 @@ def load_model(model_path: str):
             optimal_threads = max(2, cpu_count - 1)
         except Exception:
             optimal_threads = 4
-        n_gpu_layers = -1  # Use GPU when available (Metal on macOS; requires Metal-built llama-cpp-python)
+        # Offload to GPU when available: Metal on macOS, CUDA on Linux. Requires llama-cpp-python built with GPU support (e.g. CMAKE_ARGS="-DGGML_METAL=on" on macOS).
+        n_gpu_layers = -1  # -1 = all layers to GPU; if build is CPU-only, this is ignored or may error
         n_batch = 1024  # Larger batch = fewer prefill passes = faster time-to-first-token
         _model = Llama(
             model_path=model_path,
@@ -174,6 +175,7 @@ def generate_stream(model_path: str, prompt: str, temperature: float, top_p: flo
             "Patient:", "\nPatient:", "Patient: ", "\n\nPatient:",
         ]
         full_parts = []
+        # llama-cpp-python: create_completion(..., stream=True) returns an iterator of completion chunks
         stream = _model.create_completion(
             prompt,
             temperature=temperature,
@@ -289,15 +291,10 @@ def main():
             )
 
         elif command == "serve":
-            # Long-lived process: load model once, then read JSON requests from stdin (one per line).
-            # Each request: {"prompt": "...", "temperature": 0.7, "top_p": 0.9, "max_tokens": 512}
-            # Response: same as generate_stream (multiple {"text": "..."} then {"done": true, "full": "..."})
             if len(sys.argv) < 3:
                 print("ERROR: serve command requires model_path", file=sys.stderr)
                 sys.exit(1)
             model_path = sys.argv[2]
-            # Redirect stdout during load so llama_cpp C output doesn't mix with our ready JSON
-            import os
             _save_stdout = sys.stdout
             try:
                 sys.stdout = sys.stderr
@@ -334,7 +331,7 @@ def main():
                     print(json.dumps({"error": f"Invalid JSON: {e}"}), flush=True)
                 except Exception as e:
                     print(json.dumps({"error": str(e)}), flush=True)
-
+            
         else:
             print(f"ERROR: Unknown command: {command}", file=sys.stderr)
             sys.exit(1)

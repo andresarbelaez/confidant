@@ -1,0 +1,23 @@
+{
+  "expo": {
+    "name": "Confidant",
+    "slug": "confidant-mobile",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "scheme": "confidant",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "ai.confidant.mobile"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "ai.confidant.mobile"
+    },
+    "plugins": []
+  }
+}

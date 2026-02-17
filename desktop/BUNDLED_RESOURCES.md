@@ -48,6 +48,11 @@ To ship the default model and KB with the app, add them to the bundle resources 
 
 Then configure the path so they are exposed as `models/default_model.gguf` and `default_kb.json` (or `kb/default_kb.json`). See [Tauri 2 resources](https://v2.tauri.app/develop/resources) for exact path mapping.
 
+## Why Settings may show "Not Downloaded" and "Coming Soon"
+
+- **Knowledge base:** The repo includes `src-tauri/resources/default_kb.json`, so the file is bundled when you run `tauri build`. The app still shows "Not Downloaded" for the KB if **ingest** fails: ingesting the bundled JSON into ChromaDB requires the **Python bundle** (ChromaDB runs via bundled Python). If you built the DMG without running the full-bundle setup (e.g. no `resources/python/`), the app finds `default_kb.json` but cannot run ChromaDB to load it, so the KB appears not ready and Settings shows "Not Downloaded".
+- **"Coming Soon" on the KB button:** The download button in Settings shows "Coming Soon" when the selected KB option has no `url` (see [src/config/kb-options.ts](src/config/kb-options.ts)). Manual download from a URL is not wired up yet; the intended path for the default KB is **bundled** `default_kb.json` + Python bundle so it is ingested on first launch. To get the KB working in the built app, use the **full bundle** flow: run `bash scripts/setup-full-bundle.sh` (which ensures Python + model + `resources/default_kb.json`), then `npm run build`. The resulting DMG will include Python and the default KB; on first launch the app will ingest the KB and show it as ready.
+
 ## Development without bundling
 
 - Set `CONFIDANT_BUNDLED_MODEL_PATH` to an existing GGUF path (e.g. in `data/models/`).

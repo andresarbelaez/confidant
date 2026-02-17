@@ -75,8 +75,8 @@ export function ConfidantDownload() {
         </div>
         <h3 className="text-sm font-medium text-foreground mt-8 mb-2 text-left md:text-center">About security warnings</h3>
         <p className="text-muted-foreground text-sm text-left md:text-center">
-          Beta builds are unsigned. You may see a security or Gatekeeper warning;{' '}
-          <Link href={`${REPO}#readme`} className="underline hover:no-underline">see how to open unsigned apps</Link>.
+          Beta builds are unsigned. macOS may say the app is &quot;damaged&quot;—it isn&apos;t; right‑click the app → Open, then click Open again.{' '}
+          <Link href={`${REPO}#readme`} className="underline hover:no-underline">More ways to open unsigned apps</Link>.
         </p>
       </div>
     </section>

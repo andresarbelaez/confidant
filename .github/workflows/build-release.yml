@@ -47,22 +47,13 @@ jobs:
           cd desktop
           npm ci
 
-      - name: Setup Python bundle (macOS)
-        if: matrix.platform == 'macos-latest'
+      - name: Setup full bundle (Python + default model + KB)
         env:
           BUNDLE_PYTHON: 1
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cd desktop
-          bash scripts/setup-python-bundle.sh
-
-      - name: Setup Python bundle (Windows)
-        if: matrix.platform == 'windows-latest'
-        env:
-          BUNDLE_PYTHON: 1
-        run: |
-          cd desktop
-          bash scripts/setup-python-bundle.sh
+          bash scripts/setup-full-bundle.sh
 
       - name: Build frontend
         run: |

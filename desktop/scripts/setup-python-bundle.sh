@@ -1,6 +1,7 @@
 #!/bin/bash
 # One-time setup for Option A: bundle Python so beta testers don't need to install it.
 # Run from desktop/:  bash scripts/setup-python-bundle.sh
+# Supports: macOS (x86_64/arm64), Linux (x86_64/aarch64), Windows (x64, in Git Bash or CI).
 # Requires: curl, (optional) jq for parsing GitHub API. Network access for download and pip.
 
 set -e
@@ -37,9 +38,7 @@ case "$OS" in
     esac ;;
   MINGW*|MSYS*|CYGWIN*)
     TRIPLE="x86_64-pc-windows-msvc"
-    echo "Windows: run pip install manually; see BUNDLE_PYTHON.md"
-    echo "Scripts copied. Download and extract python-build-standalone install_only for $TRIPLE into $PYTHON_DIR"
-    exit 0
+    IS_WINDOWS=1
     ;;
   *)
     echo "Unsupported OS: $OS"; exit 1 ;;
@@ -86,33 +85,68 @@ mkdir -p "$RESOURCES"
 tar -xzf "$TARBALL" -C "$RESOURCES"
 rm -f "$TARBALL"
 # Tarball usually has top-level "python/"; some have versioned root (e.g. cpython-3.12.x+date-triple)
-if [ -x "$PYTHON_DIR/bin/python3" ]; then
-  : # already correct
-else
-  for d in "$RESOURCES"/python "$RESOURCES"/python-* "$RESOURCES"/cpython-*; do
-    if [ -d "$d" ] && [ -x "$d/bin/python3" ] 2>/dev/null; then
-      if [ "$d" != "$PYTHON_DIR" ]; then
-        rm -rf "$PYTHON_DIR"
-        mv "$d" "$PYTHON_DIR"
+if [ -n "${IS_WINDOWS:-}" ]; then
+  # Windows: look for python.exe (-f not -x: extract may not set executable bit)
+  if [ -f "$PYTHON_DIR/python.exe" ]; then
+    : # already correct
+  else
+    for d in "$RESOURCES"/python "$RESOURCES"/python-* "$RESOURCES"/cpython-*; do
+      if [ -d "$d" ] && [ -f "$d/python.exe" ]; then
+        if [ "$d" != "$PYTHON_DIR" ]; then
+          rm -rf "$PYTHON_DIR"
+          mv "$d" "$PYTHON_DIR"
+        fi
+        break
       fi
-      break
-    fi
-  done
+    done
+  fi
+  if [ ! -f "$PYTHON_DIR/python.exe" ]; then
+    echo "Expected $PYTHON_DIR/python.exe after extract. Check $RESOURCES layout."
+    exit 1
+  fi
+  PYTHON_EXE="$PYTHON_DIR/python.exe"
+  echo "  Python at $PYTHON_EXE"
+else
+  if [ -x "$PYTHON_DIR/bin/python3" ]; then
+    : # already correct
+  else
+    for d in "$RESOURCES"/python "$RESOURCES"/python-* "$RESOURCES"/cpython-*; do
+      if [ -d "$d" ] && [ -x "$d/bin/python3" ] 2>/dev/null; then
+        if [ "$d" != "$PYTHON_DIR" ]; then
+          rm -rf "$PYTHON_DIR"
+          mv "$d" "$PYTHON_DIR"
+        fi
+        break
+      fi
+    done
+  fi
+  if [ ! -x "$PYTHON_DIR/bin/python3" ]; then
+    echo "Expected $PYTHON_DIR/bin/python3 after extract. Check $RESOURCES layout."
+    exit 1
+  fi
+  PYTHON_EXE="$PYTHON_DIR/bin/python3"
+  echo "  Python at $PYTHON_EXE"
 fi
-if [ ! -x "$PYTHON_DIR/bin/python3" ]; then
-  echo "Expected $PYTHON_DIR/bin/python3 after extract. Check $RESOURCES layout."
-  exit 1
-fi
-echo "  Python at $PYTHON_DIR/bin/python3"
 
 # --- 5. Detect site-packages path ---
-LIB="$PYTHON_DIR/lib"
-PYVER=$(ls -d "$LIB"/python3.* 2>/dev/null | head -1)
-if [ -z "$PYVER" ]; then
-  echo "Could not find $LIB/python3.*"
-  exit 1
+if [ -n "${IS_WINDOWS:-}" ]; then
+  LIB="$PYTHON_DIR/Lib"
+  if [ -d "$LIB/site-packages" ]; then
+    SITE_PACKAGES="$LIB/site-packages"
+  else
+    PYVER=$(ls -d "$LIB"/python3.* 2>/dev/null | head -1)
+    [ -z "$PYVER" ] && { echo "Could not find $LIB/site-packages or $LIB/python3.*"; exit 1; }
+    SITE_PACKAGES="$PYVER/site-packages"
+  fi
+else
+  LIB="$PYTHON_DIR/lib"
+  PYVER=$(ls -d "$LIB"/python3.* 2>/dev/null | head -1)
+  if [ -z "$PYVER" ]; then
+    echo "Could not find $LIB/python3.*"
+    exit 1
+  fi
+  SITE_PACKAGES="$PYVER/site-packages"
 fi
-SITE_PACKAGES="$PYVER/site-packages"
 echo "  Site-packages: $SITE_PACKAGES"
 
 # --- 6. Install pip dependencies ---
@@ -142,10 +176,10 @@ if [ "$OS" = "Darwin" ] && [ -n "${BUNDLE_PYTHON:-}" ]; then
 fi
 echo "Installing pip packages (llama-cpp-python, chromadb, sentence-transformers) ..."
 PIP_OPTS="--target $SITE_PACKAGES --quiet --disable-pip-version-check --prefer-binary --extra-index-url $LLAMA_EXTRA_INDEX"
-if ! "$PYTHON_DIR/bin/python3" -m pip install $PIP_OPTS \
+if ! "$PYTHON_EXE" -m pip install $PIP_OPTS \
   "llama-cpp-python>=0.2.0,<0.4" chromadb sentence-transformers; then
   echo "Install failed (often ARM i8mm build error in CI). Retrying with pinned llama-cpp-python==0.3.10..."
-  "$PYTHON_DIR/bin/python3" -m pip install $PIP_OPTS "llama-cpp-python==0.3.10" chromadb sentence-transformers
+  "$PYTHON_EXE" -m pip install $PIP_OPTS "llama-cpp-python==0.3.10" chromadb sentence-transformers
 fi
 echo "Done. You can run: npm run build"
 echo "Installers will be in $TAURI_DIR/target/release/bundle/"
