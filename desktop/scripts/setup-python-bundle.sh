@@ -102,15 +102,32 @@ echo "  Site-packages: $SITE_PACKAGES"
 LLAMA_EXTRA_INDEX="https://abetlen.github.io/llama-cpp-python/whl/cpu"
 if [ "$OS" = "Darwin" ] && [ -n "${BUNDLE_PYTHON:-}" ]; then
   export CMAKE_ARGS="${CMAKE_ARGS:-} -DGGML_METAL=on"
+  # Force +i8mm so ARM quants.c (vmmlaq_s32) compiles when CMake detects noi8mm on the runner.
+  # Use a compiler wrapper so +i8mm is appended after the project's -mcpu=...noi8mm (last flag wins).
+  if [ "$ARCH" = "arm64" ]; then
+    WRAPPER_DIR="$TAURI_DIR/resources/build_wrappers"
+    mkdir -p "$WRAPPER_DIR"
+    for lang in C CXX; do
+      if [ "$lang" = "C" ]; then
+        REAL="/usr/bin/clang"
+        W="$WRAPPER_DIR/clang_wrapper.sh"
+      else
+        REAL="/usr/bin/clang++"
+        W="$WRAPPER_DIR/clang++_wrapper.sh"
+      fi
+      printf '#!/bin/sh\nexec "%s" "$@" -Xclang -target-feature -Xclang +i8mm\n' "$REAL" > "$W"
+      chmod +x "$W"
+    done
+    export CC="$WRAPPER_DIR/clang_wrapper.sh"
+    export CXX="$WRAPPER_DIR/clang++_wrapper.sh"
+  fi
 fi
 echo "Installing pip packages (llama-cpp-python, chromadb, sentence-transformers) ..."
-if ! "$PYTHON_DIR/bin/python3" -m pip install --target "$SITE_PACKAGES" --quiet --disable-pip-version-check \
-  --prefer-binary --extra-index-url "$LLAMA_EXTRA_INDEX" \
+PIP_OPTS="--target $SITE_PACKAGES --quiet --disable-pip-version-check --prefer-binary --extra-index-url $LLAMA_EXTRA_INDEX"
+if ! "$PYTHON_DIR/bin/python3" -m pip install $PIP_OPTS \
   "llama-cpp-python>=0.2.0,<0.4" chromadb sentence-transformers; then
   echo "Install failed (often ARM i8mm build error in CI). Retrying with pinned llama-cpp-python==0.3.10..."
-  "$PYTHON_DIR/bin/python3" -m pip install --target "$SITE_PACKAGES" --quiet --disable-pip-version-check \
-    --prefer-binary --extra-index-url "$LLAMA_EXTRA_INDEX" \
-    "llama-cpp-python==0.3.10" chromadb sentence-transformers
+  "$PYTHON_DIR/bin/python3" -m pip install $PIP_OPTS "llama-cpp-python==0.3.10" chromadb sentence-transformers
 fi
 echo "Done. You can run: npm run build"
 echo "Installers will be in $TAURI_DIR/target/release/bundle/"
