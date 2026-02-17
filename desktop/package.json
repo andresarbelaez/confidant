@@ -13,7 +13,7 @@
     "build": "bash scripts/tauri-build.sh",
     "build:installer": "BUNDLE_PYTHON=1 bash scripts/tauri-build.sh",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "tauri": "bash -c 'export PATH=\"$HOME/.cargo/bin:$PATH\" && npx tauri'"
+    "tauri": "npx tauri"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.0.0",
