@@ -51,6 +51,7 @@ jobs:
         if: matrix.platform == 'macos-latest'
         env:
           BUNDLE_PYTHON: 1
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cd desktop
           bash scripts/setup-python-bundle.sh
