@@ -48,11 +48,16 @@ esac
 # --- 3. Resolve latest install_only tarball URL ---
 echo "Resolving latest python-build-standalone ($TRIPLE) ..."
 API_URL="https://api.github.com/repos/$REPO/releases/latest"
+# Use GITHUB_TOKEN in CI to avoid rate limits (unauthenticated = 60/hr)
+CURL_API=(curl -sL)
+if [ -n "${GITHUB_TOKEN:-}" ]; then
+  CURL_API+=(-H "Authorization: Bearer $GITHUB_TOKEN")
+fi
 if command -v jq &>/dev/null; then
   # (.assets // []) handles API errors or rate limits where .assets may be null
-  ASSET_URL=$(curl -sL "$API_URL" | jq -r --arg t "$TRIPLE" '(.assets // [])[] | select(.name | test("install_only")) | select(.name | test($t)) | .browser_download_url' | head -1)
+  ASSET_URL=$("${CURL_API[@]}" "$API_URL" | jq -r --arg t "$TRIPLE" '(.assets // [])[] | select(.name | test("install_only")) | select(.name | test($t)) | .browser_download_url' | head -1)
 else
-  ASSET_URL=$(curl -sL "$API_URL" | grep -o '"browser_download_url": "[^"]*install_only[^"]*'"$TRIPLE"'[^"]*"' | head -1 | sed 's/.*: "\(.*\)".*/\1/')
+  ASSET_URL=$("${CURL_API[@]}" "$API_URL" | grep -o '"browser_download_url": "[^"]*install_only[^"]*'"$TRIPLE"'[^"]*"' | head -1 | sed 's/.*: "\(.*\)".*/\1/')
 fi
 if [ -z "$ASSET_URL" ] || [ "$ASSET_URL" = "null" ]; then
   echo "Could not find install_only asset for $TRIPLE. Check https://github.com/$REPO/releases"
