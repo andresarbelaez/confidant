@@ -11,21 +11,32 @@ npm install
 
 Add app icons for production builds: place `icon.png` (1024×1024) and `adaptive-icon.png` (1024×1024) in `./assets/`. Expo will use defaults in development if missing.
 
-## Run
+## Run (development build required)
+
+This app uses **RunAnywhere** (llama.cpp) for on-device LLM, so it needs a **development build**, not Expo Go.
+
+### First-time: create native projects and run on iOS
+
+**Prerequisite:** CocoaPods (for iOS native deps). Install with `brew install cocoapods` or `sudo gem install cocoapods` if you don’t have it.
+
+```bash
+npx expo prebuild
+cd ios && pod install && cd ..
+npx expo run:ios
+```
+
+Then start Metro (if not already running):
 
 ```bash
 npm start
 ```
 
-Then press `i` for iOS simulator or `a` for Android emulator, or scan the QR code with Expo Go.
+Use **`npx expo run:ios`** to build and run the app in the iOS simulator or on a device. The first run will download the SmolLM2 360M model when you tap “Download model” in the chat screen.
 
-## Development build (for native modules, e.g. llama.cpp)
-
-When integrating @runanywhere/llamacpp or llama.rn, create a development build:
+### Android
 
 ```bash
-npx expo install expo-dev-client
-npx expo prebuild
+npx expo run:android
 ```
 
-Then build and run with Xcode (iOS) or Android Studio (Android).
+(Android emulator may not support the native LLM; use a physical ARM64 device if you see native library errors.)

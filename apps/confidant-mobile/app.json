@@ -9,7 +9,12 @@
     "scheme": "confidant",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "ai.confidant.mobile"
+      "bundleIdentifier": "ai.confidant.mobile",
+      "infoPlist": {
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": true
+        }
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -18,6 +23,15 @@
       },
       "package": "ai.confidant.mobile"
     },
-    "plugins": []
+    "plugins": [
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "deploymentTarget": "15.5"
+          }
+        }
+      ]
+    ]
   }
 }
