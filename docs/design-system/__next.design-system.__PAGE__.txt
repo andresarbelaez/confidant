@@ -1,0 +1,89 @@
+1:"$Sreact.fragment"
+2:I[2831,["690","static/chunks/690-57464533d852096e.js","253","static/chunks/app/design-system/page-683507b16689860a.js"],"DesignSystemClientLayout"]
+8:I[484,[],"OutletBoundary"]
+9:"$Sreact.suspense"
+:HL["/_next/static/css/2c3bfb5d5e52928b.css","style"]
+:HL["/_next/static/css/59a5eed3bfc07b21.css","style"]
+:HL["/_next/static/css/c0349ef8bf9bb1f8.css","style"]
+3:T1069,# Confidant Design System
+
+> A single source of truth for Confidant UI
+
+---
+
+## Table of Contents
+
+1. [Color Palette](#color-palette)
+2. [Typography](#typography)
+3. [Spacing & Touch Targets](#spacing--touch-targets)
+4. [Buttons](#buttons)
+5. [Form Elements](#form-elements)
+6. [Component Patterns](#component-patterns)
+7. [Accessibility](#accessibility)
+
+---
+
+## Color Palette
+
+Colors are defined as CSS custom properties. Confidant has one theme: light, with beige/cream surface tones. The tokens below are the canonical palette.
+
+**Surface group** includes: `--color-bg`, `--color-surface`, `--color-surface-subtle`, `--color-surface-input`, `--color-sidebar-hover`, `--color-sidebar-selected`. Sidebar hover and selected are used for nav/TOC states so hover stays lighter than selected. **Overlay** includes `--color-overlay`, `--color-overlay-strong`, `--color-overlay-light` (e.g. disabled-state overlays). **Spinner** (on primary/dark buttons): `--color-spinner-track`, `--color-spinner-icon`. **Logo gradient** (when not uniColor): `--color-logo-gradient-start`, `--color-logo-gradient-end`.
+
+### Color efficiency
+
+- **Reuse first:** Prefer existing tokens (e.g. surface, surface-subtle, text-muted) over new ones when the intent is the same. For warning-style UI use `--color-surface` and `--color-text-muted`. Add a new token only when you need a distinct semantic role. Confidant has one theme; there are no theme overrides.
+- **Production use:** All listed tokens are used in desktop, landing, or shared chat-ui. If a token is unused in production, remove it or replace usages with an existing token.
+
+---
+
+## Typography
+
+Font family, line height, and weights used across the app. Use rem (or em) for font sizes and spacing to respect user font-size preferences. Tokens and samples below.
+
+---
+
+## Spacing & Touch Targets
+
+Minimum touch target for primary actions (WCAG). Tokens and reference below.
+
+---
+
+## Buttons
+
+Primary, secondary, and danger variants. Each uses the tokens listed below. Use native `<button>`; add `aria-label` when the label is only an icon.
+
+---
+
+## Form Elements
+
+Inputs and labels use the tokens shown. Use `<label htmlFor="id">` or `aria-label`, not both when the label is visible. Focus: use a visible focus indicator (e.g. 2px solid `--color-primary`, offset 2px); prefer `:focus-visible` so mouse users don’t get a redundant ring. Placeholder uses `--color-placeholder`. For field errors use `--color-error-*` and `role="alert"` so errors are announced.
+
+---
+
+## Component Patterns
+
+Cards, lists, and modal/overlay patterns. Token usage per pattern below.
+
+**Loading and error states:** Use `--color-primary` for spinners; use `--color-error-*` for error text and borders. Ensure loading and errors are announced: use `role="alert"` for errors that appear dynamically, and `aria-live` or `aria-busy` for loading states.
+
+---
+
+## Accessibility
+
+- **Contrast:** Text on background must meet WCAG 2.1 AA (4.5:1 normal text, 3:1 large text). Token pairs (e.g. `--color-text` on `--color-bg`, primary with white text) are chosen for AA; verify new combinations with a contrast checker. `--color-text-faint` is for placeholders and hints only; do not use for primary body text.
+- **Focus:** All focusable elements must have a visible focus indicator; use the same pattern as Form Elements (e.g. outline 2px solid primary, offset 2px) and `:focus-visible` where appropriate.
+- **Touch targets:** Primary actions use at least `--touch-target-min` (2.75rem / 44px). See Spacing & Touch Targets.
+- **Semantic HTML & ARIA:** Use semantic elements (`<button>`, `<a>`, `<label>`, `<nav>`, etc.). Decorative images/icons: `alt=""` or `aria-hidden`. Meaningful images: descriptive alt. For dynamic errors use `role="alert"`; for loading consider `aria-live`/`aria-busy`.
+- **Motion:** Respect `prefers-reduced-motion: reduce`; use short, purposeful transitions (e.g. 0.2s) for feedback.
+
+For a full audit and recommendations, see [DESIGN_SYSTEM_ACCESSIBILITY_AUDIT.md](./DESIGN_SYSTEM_ACCESSIBILITY_AUDIT.md).
+
+---
+
+*This spec is maintained alongside the implementation. Tokens are exported from `confidant-design-tokens`; live demos are at confidant.one/design-system.*
+0:{"buildId":"rkl7eqcF2U1YL2hh91xye","rsc":["$","$1","c",{"children":[["$","$L2",null,{"content":"$3"}],["$L4","$L5","$L6"],"$L7"]}],"loading":null,"isPartial":false}
+4:["$","link","0",{"rel":"stylesheet","href":"/_next/static/css/2c3bfb5d5e52928b.css","precedence":"next"}]
+5:["$","link","1",{"rel":"stylesheet","href":"/_next/static/css/59a5eed3bfc07b21.css","precedence":"next"}]
+6:["$","link","2",{"rel":"stylesheet","href":"/_next/static/css/c0349ef8bf9bb1f8.css","precedence":"next"}]
+7:["$","$L8",null,{"children":["$","$9",null,{"name":"Next.MetadataOutlet","children":"$@a"}]}]
+a:null
