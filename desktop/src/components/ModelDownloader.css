@@ -60,44 +60,42 @@
   line-height: 1.5;
 }
 
-@media (prefers-color-scheme: light) {
-  .model-downloader {
-    background: var(--color-surface);
-    border-color: var(--color-border-subtle);
-  }
+.model-downloader {
+  background: var(--color-surface);
+  border-color: var(--color-border-subtle);
+}
 
-  .model-selector select {
-    border-color: var(--color-border);
-    background: var(--color-surface-input);
-  }
+.model-selector select {
+  border-color: var(--color-border);
+  background: var(--color-surface-input);
+}
 
-  .model-info {
-    background: var(--color-surface-subtle);
-  }
+.model-info {
+  background: var(--color-surface-subtle);
+}
 
-  .model-info p {
-    color: var(--color-text-secondary);
-  }
+.model-info p {
+  color: var(--color-text-secondary);
+}
 
-  .info-note {
-    background: var(--color-info-bg);
-    border-color: var(--color-info-border);
-  }
+.info-note {
+  background: var(--color-info-bg);
+  border-color: var(--color-info-border);
+}
 
-  .info-note p {
-    color: var(--color-text-secondary);
-  }
+.info-note p {
+  color: var(--color-text-secondary);
+}
 
-  .error-message {
-    background: var(--color-error-bg);
-    border-color: var(--color-error-border);
-    color: var(--color-error-text);
-  }
+.error-message {
+  background: var(--color-error-bg);
+  border-color: var(--color-error-border);
+  color: var(--color-error-text);
+}
 
-  .button-spinner {
-    border-color: var(--color-border);
-    border-top-color: var(--color-text);
-  }
+.button-spinner {
+  border-color: var(--color-border);
+  border-top-color: var(--color-text);
 }
 
 .error-message {

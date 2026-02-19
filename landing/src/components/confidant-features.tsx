@@ -31,7 +31,7 @@ export function ConfidantFeatures() {
         </div>
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {features.map((feature) => (
-            <Card key={feature.title} variant="mixed" className="p-6 bg-warm-100 dark:bg-neutral-900/30 border-border">
+            <Card key={feature.title} variant="mixed" className="p-6 bg-warm-100 border-border">
               <feature.icon className="size-8 text-primary mb-4" />
               <h3 className="font-medium text-lg">{feature.title}</h3>
               <p className="text-muted-foreground text-sm mt-2">{feature.description}</p>

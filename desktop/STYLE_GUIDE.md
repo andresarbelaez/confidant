@@ -2,12 +2,11 @@
 
 Short reference for colors, typography, spacing, and component patterns. Use this to keep UI changes consistent.
 
-## Theme experiments
+**Canonical design system:** The single source of truth is [docs/confidant-design-system.md](../docs/confidant-design-system.md) and the `confidant-design-tokens` package. For how to keep new UI aligned with the design system, see [docs/DESIGN_SYSTEM_ADHERENCE.md](../docs/DESIGN_SYSTEM_ADHERENCE.md).
 
-A warm (cream/yellow) palette can be enabled to match the landing page. It lives in `src/themes/warm.css`.
+## Theme
 
-- **Enable:** Ensure `main.tsx` imports `./themes/warm.css`.
-- **Revert:** Comment out that import in `main.tsx`.
+Confidant has one theme: light, with beige/cream surface tones. Token values are set in `src/index.css` and the theme stylesheet in `src/themes/`.
 
 ## Color variables
 
@@ -37,8 +36,7 @@ Defined in `src/index.css` (`:root` and `@media (prefers-color-scheme: light)`).
 - **`--color-success`**, **`--color-success-bg`**, **`--color-success-text`** – Success states.
 - **`--color-error`**, **`--color-error-bg`**, **`--color-error-text`**, **`--color-error-border`** – Errors, validation.
 - **`--color-danger-bg`**, **`--color-danger-text`**, **`--color-danger-hover`**, **`--color-danger-active`** – Destructive actions (e.g. Log out).
-- **`--color-warning-bg`**, **`--color-warning-text`** – Warnings.
-- **`--color-info-bg`**, **`--color-info-border`** – Informational.
+- **`--color-info-bg`**, **`--color-info-border`**, **`--color-info-text`** – Informational. For warning-style UI use **`--color-surface`** and **`--color-text-muted`**.
 
 ### Overlay / modal
 - **`--color-overlay`**, **`--color-overlay-strong`** – Backdrops.

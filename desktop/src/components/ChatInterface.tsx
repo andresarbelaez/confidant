@@ -5,6 +5,8 @@ import { DantAgent } from '../agent/dant-agent';
 import ReactMarkdown from 'react-markdown';
 import { useTranslation } from '../i18n/hooks/useTranslation';
 import { ChatLayout, ChatSidebarShell, ChatMessages, ChatInputBar } from 'confidant-chat-ui';
+import 'confidant-chat-ui/styles.css';
+import sidebarLogoUrl from '../assets/sidebar-logo.png';
 import LogOutConfirmModal from './LogOutConfirmModal';
 import DeleteChatHistoryConfirmModal from './DeleteChatHistoryConfirmModal';
 import UserSettingsModal from './UserSettingsModal';
@@ -390,7 +392,7 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
       <>
         {modals}
         <ChatLayout
-          sidebar={<ChatSidebarShell items={sidebarItems} aria-label={t('ui.navAccountAndSettings')} />}
+          sidebar={<ChatSidebarShell items={sidebarItems} aria-label={t('ui.navAccountAndSettings')} headerLogo={sidebarLogoUrl} />}
           className="chat-disabled"
         >
           <div className="chat-disabled-overlay">
@@ -440,7 +442,7 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
       <>
         {modals}
         <ChatLayout
-          sidebar={<ChatSidebarShell items={sidebarItems} aria-label={t('ui.navAccountAndSettings')} />}
+          sidebar={<ChatSidebarShell items={sidebarItems} aria-label={t('ui.navAccountAndSettings')} headerLogo={sidebarLogoUrl} />}
         >
           <div className="chat-placeholder">
             <div className="loading-spinner"></div>
@@ -456,7 +458,7 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
       <>
         {modals}
         <ChatLayout
-          sidebar={<ChatSidebarShell items={sidebarItems} aria-label={t('ui.navAccountAndSettings')} />}
+          sidebar={<ChatSidebarShell items={sidebarItems} aria-label={t('ui.navAccountAndSettings')} headerLogo={sidebarLogoUrl} />}
         >
           <div className="chat-placeholder">
             <p>{t('ui.preparingChat')}</p>
@@ -482,7 +484,7 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
       {modals}
       <div ref={containerRef} className="chat-interface-wrapper">
         <ChatLayout
-          sidebar={<ChatSidebarShell items={sidebarItems} aria-label={t('ui.navAccountAndSettings')} />}
+          sidebar={<ChatSidebarShell items={sidebarItems} aria-label={t('ui.navAccountAndSettings')} headerLogo={sidebarLogoUrl} />}
         >
           <ChatMessages
             messages={chatMessagesForPackage}

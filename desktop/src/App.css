@@ -50,14 +50,12 @@
   display: none;
 }
 
-@media (prefers-color-scheme: light) {
-  .subtitle {
-    color: var(--color-text-muted);
-  }
+.subtitle {
+  color: var(--color-text-muted);
+}
 
-  .tagline {
-    color: var(--color-text-faint);
-  }
+.tagline {
+  color: var(--color-text-faint);
 }
 
 /* Responsive: stack vertically on smaller screens */

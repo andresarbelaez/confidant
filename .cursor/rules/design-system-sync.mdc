@@ -1,0 +1,17 @@
+---
+description: After editing the design system doc, sync to landing so the design-system page stays in sync
+globs: docs/confidant-design-system.md
+alwaysApply: false
+---
+
+# Design system doc → landing sync
+
+When you **edit** `docs/confidant-design-system.md`, always run the sync so the live design-system page is updated:
+
+```bash
+cd landing && npm run sync:design-system
+```
+
+(or from repo root: `npm run sync:design-system`)
+
+This updates `landing/src/content/design-system.md` from the spec. Run it in the same session after any change to the design system doc.

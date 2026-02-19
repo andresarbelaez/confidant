@@ -55,6 +55,8 @@ Thank you for your interest in contributing to Confidant. This document explains
 - **Rust**: Use `cargo fmt` and `cargo clippy` in `desktop/src-tauri/`.
 - **Logging**: Verbose logs are compiled only in debug builds (`cargo build`); release builds stay quiet.
 - **Docs**: Update README or relevant docs when adding user-facing behavior or setup steps.
+- **Design system**: For UI work on the desktop (and future mobile) app, follow the shared design system so colors, typography, and components stay consistent. See **[docs/DESIGN_SYSTEM_ADHERENCE.md](docs/DESIGN_SYSTEM_ADHERENCE.md)** for rules and single source of truth. Optionally run **`npm run check:design-tokens`** from the repo root before PRs to see a report of hardcoded colors; prefer `var(--color-*)` and the `confidant-design-tokens` package.
+- **Accessibility**: Run accessibility checks (e.g. axe-core or eslint-plugin-jsx-a11y) in CI or before release where possible. See [docs/DESIGN_SYSTEM_ACCESSIBILITY_AUDIT.md](docs/DESIGN_SYSTEM_ACCESSIBILITY_AUDIT.md) for the design-system audit.
 
 ## Areas for contribution
 

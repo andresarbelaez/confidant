@@ -44,7 +44,7 @@ Several inputs and controls use `outline: none` on `:focus` with no visible repl
 | PasswordPrompt.css | `.form-input:focus` | `outline: none` |
 | SetupScreen.css | `.selector-dropdown:focus` | `outline: none` |
 | SetupSection.css | `.selector-dropdown:focus`, `.existing-model-selector:focus` | `outline: none` |
-| LanguageSelector.css | `.language-select:focus` | `outline: none` (warm.css adds box-shadow) |
+| LanguageSelector.css | `.language-select:focus` | `outline: none` (theme.css adds focus-visible) |
 
 **Recommendation:** Add `:focus-visible` styles: `outline: 2px solid var(--color-primary); outline-offset: 2px` or equivalent. Reserve `outline: none` only for cases where another visible focus style exists.
 
@@ -100,14 +100,14 @@ The loading spinner is decorative and has no accessible alternative.
 
 ### Medium
 
-#### 7. Potential color contrast in warm theme
-Warm palette uses oklch. Verify contrast ratios:
+#### 7. Potential color contrast
+Theme uses oklch. Verify contrast ratios:
 
 - **--color-text-muted** (oklch 0.48 0.035 100) on **--color-bg** (0.985 0.008 100) — may be close to 4.5:1
 - **--color-text-faint** (0.55) — may fall below 4.5:1 for normal text
 - **Assistant bubble** — Very low contrast by design; may not meet 1.4.3 for users with low vision
 
-**Recommendation:** Run a contrast checker on warm theme combinations. Consider bumping `--color-text-muted` and `--color-text-faint` chroma/lightness if needed.
+**Recommendation:** Run a contrast checker on theme combinations. Consider bumping `--color-text-muted` and `--color-text-faint` chroma/lightness if needed.
 
 ---
 
@@ -136,7 +136,7 @@ Multiple screens use `h1` or `h2`. Ensure a single `h1` per view and a logical o
 |----------|--------|
 | 1.1.1 Non-text content | Partial — icons have aria-hidden where decorative |
 | 1.3.1 Info and relationships | Issues — chat input, password input need labels |
-| 1.4.3 Contrast (minimum) | Verify — warm theme, assistant bubble |
+| 1.4.3 Contrast (minimum) | Verify — theme, assistant bubble |
 | 2.1.1 Keyboard | Pass — modals, forms keyboard accessible |
 | 2.4.7 Focus visible | Fail — many focus outlines removed |
 | 4.1.2 Name, role, value | Partial — several inputs need accessible names |
@@ -150,4 +150,4 @@ Multiple screens use `h1` or `h2`. Ensure a single `h1` per view and a logical o
 2. ~~Add `aria-label` or label to chat textarea and PasswordPrompt input.~~ **Done**
 3. ~~Make password visibility toggles keyboard accessible and add `aria-label`.~~ **Done**
 4. ~~Add `role="alert"` to the chat error container.~~ **Done**
-5. Run contrast checks on the warm theme and tweak if needed.
+5. Run contrast checks on the theme and tweak if needed.

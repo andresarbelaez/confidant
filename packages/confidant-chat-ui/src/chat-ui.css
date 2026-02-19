@@ -183,6 +183,8 @@
   transition: color 0.15s, background 0.15s;
 }
 .message-action-btn:hover { color: var(--color-text); background: var(--color-surface-subtle); }
+.message-action-btn:focus { outline: none; }
+.message-action-btn:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
 .message-action-btn svg { flex-shrink: 0; }
 
 .chat-input-form {
@@ -227,7 +229,7 @@
 }
 .chat-input::placeholder { color: var(--color-placeholder); }
 .chat-input:focus { outline: none; }
-.chat-input:focus-visible { outline: 2px solid -webkit-focus-ring-color; outline-offset: 2px; }
+.chat-input:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
 .chat-input:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .chat-send-button {
@@ -250,6 +252,8 @@
 .chat-send-button svg { display: block; flex-shrink: 0; }
 .chat-send-button:hover:not(:disabled) { opacity: 0.9; }
 .chat-send-button:disabled { opacity: 0.4; cursor: not-allowed; }
+.chat-send-button:focus { outline: none; }
+.chat-send-button:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
 
 .chat-footer {
   text-align: center;
@@ -278,11 +282,60 @@
   box-sizing: border-box;
 }
 
+.sidebar-header {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.sidebar-header-logo {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-surface-subtle);
+}
+
+.sidebar-header-logo-placeholder {
+  width: 100%;
+  height: 100%;
+  background: var(--color-primary);
+  opacity: 0.9;
+}
+
+.sidebar-header-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.sidebar-header-logo svg {
+  width: 18px;
+  height: 18px;
+  color: var(--color-text);
+}
+
+.sidebar-header-label {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text);
+  letter-spacing: -0.01em;
+}
+
 .sidebar-content {
   padding: 1rem;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  flex: 1;
+  min-height: 0;
 }
 
 .sidebar-settings-label {
@@ -313,7 +366,25 @@
   justify-content: center;
 }
 
+/* Hover: subtle so it’s distinct from selected */
 .sidebar-settings-label:hover {
-  background: rgba(0, 0, 0, 0.08);
+  background: var(--color-sidebar-hover);
   color: var(--color-text);
 }
+
+/* Anchor variant: same look as button */
+a.sidebar-settings-label {
+  text-decoration: none;
+  color: var(--color-text);
+}
+
+/* Selected: stronger background + heavier text so “you are here” is clear */
+.sidebar-settings-label-active,
+a.sidebar-settings-label[aria-current="location"] {
+  background: var(--color-sidebar-selected);
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.sidebar-settings-label:focus { outline: none; }
+.sidebar-settings-label:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }

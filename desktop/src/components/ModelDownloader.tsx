@@ -75,14 +75,14 @@ export default function ModelDownloader() {
             width: '100%',
             padding: '0.75rem',
             borderRadius: '6px',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            background: 'rgba(255, 255, 255, 0.05)',
+            border: '1px solid var(--color-border-subtle)',
+            background: 'var(--color-surface-subtle)',
             color: 'inherit',
             fontSize: '1rem',
             fontFamily: 'monospace',
           }}
         />
-        <p style={{ fontSize: '0.85rem', color: 'rgba(255, 255, 255, 0.6)', marginTop: '0.5rem' }}>
+        <p style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', marginTop: '0.5rem' }}>
           Enter the full path to your GGUF model file.
         </p>
       </div>
@@ -97,7 +97,7 @@ export default function ModelDownloader() {
           </span>
         </p>
         {isModelLoaded && (
-          <p style={{ color: '#4ade80', marginTop: '0.5rem' }}>
+          <p style={{ color: 'var(--color-success-text)', marginTop: '0.5rem' }}>
             Model is loaded and ready to use.
           </p>
         )}

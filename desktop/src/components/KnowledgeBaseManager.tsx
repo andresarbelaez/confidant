@@ -132,7 +132,7 @@ export default function KnowledgeBaseManager() {
           </div>
           <div className="stat-item">
             <span className="stat-label">{t('setup.statusLabel')}</span>
-            <span className="stat-value" style={{ color: '#4ade80' }}>{t('setup.readyStatus')}</span>
+            <span className="stat-value" style={{ color: 'var(--color-success)' }}>{t('setup.readyStatus')}</span>
           </div>
         </div>
       </div>

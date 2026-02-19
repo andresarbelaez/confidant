@@ -92,15 +92,13 @@
   background: var(--color-surface-subtle);
 }
 
-@media (prefers-color-scheme: light) {
-  .settings-button {
-    color: var(--color-text-muted);
-  }
+.settings-button {
+  color: var(--color-text-muted);
+}
 
-  .settings-button:hover {
-    color: var(--color-text);
-    background: var(--color-surface-subtle);
-  }
+.settings-button:hover {
+  color: var(--color-text);
+  background: var(--color-surface-subtle);
 }
 
 .chat-messages {
@@ -412,7 +410,7 @@
   border: 1px solid var(--color-chat-input-wrap-border);
   border-radius: 9999px;
   box-sizing: border-box;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  box-shadow: 0 1px 2px var(--color-border-subtle);
 }
 
 .chat-input {
@@ -442,7 +440,7 @@
   outline: none;
 }
 .chat-input:focus-visible {
-  outline: 2px solid -webkit-focus-ring-color;
+  outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
 
@@ -500,8 +498,8 @@
 }
 
 .guest-mode-banner .info-note.warning {
-  background: var(--color-warning-bg);
-  border: 1px solid var(--color-warning-text);
+  background: var(--color-surface);
+  border: 1px solid var(--color-text-muted);
   border-radius: 8px;
   padding: 1rem;
   margin: 0;
@@ -509,7 +507,7 @@
 
 .guest-mode-banner .info-note.warning p {
   margin: 0;
-  color: var(--color-warning-text);
+  color: var(--color-text-muted);
   font-size: 0.9rem;
   line-height: 1.5;
 }
@@ -545,105 +543,96 @@
   line-height: 1.5;
 }
 
-@media (prefers-color-scheme: light) {
-  .chat-interface {
-    background: var(--color-bg);
-  }
+.chat-interface {
+  background: var(--color-bg);
+}
 
-  .chat-welcome {
-    color: var(--color-text-secondary);
-  }
+.chat-welcome {
+  color: var(--color-text-secondary);
+}
 
-  .welcome-note {
-    color: var(--color-text-faint);
-  }
+.welcome-note {
+  color: var(--color-text-faint);
+}
 
-  .message.assistant .message-content {
-    background: var(--color-assistant-bubble);
-    color: var(--color-assistant-bubble-text);
-  }
+.message.assistant .message-content {
+  background: var(--color-assistant-bubble);
+  color: var(--color-assistant-bubble-text);
+}
 
-  .message.assistant .message-content blockquote {
-    border-left-color: #e0e0e0;
-  }
+.message.assistant .message-content blockquote {
+  border-left-color: var(--color-border-subtle);
+}
 
-  .message.assistant .message-content h1 {
-    border-bottom-color: var(--color-border);
-  }
+.message.assistant .message-content h1 {
+  border-bottom-color: var(--color-border);
+}
 
-  .message.assistant .message-content pre {
-    background: var(--color-border-subtle);
-  }
+.message.assistant .message-content pre {
+  background: var(--color-border-subtle);
+}
 
-  .message.assistant .message-content code {
-    background: var(--color-border-subtle);
-  }
+.message.assistant .message-content code {
+  background: var(--color-border-subtle);
+}
 
-  .message.assistant .message-content a {
-    color: var(--color-primary);
-  }
+.message.assistant .message-content a {
+  color: var(--color-primary);
+}
 
-  .message.assistant .message-content blockquote {
-    border-left-color: var(--color-border);
-  }
+.message.assistant .message-content blockquote {
+  border-left-color: var(--color-border);
+}
 
-  .message.assistant .message-content hr {
-    border-top-color: var(--color-border);
-  }
+.message.assistant .message-content hr {
+  border-top-color: var(--color-border);
+}
 
-  .message.assistant .message-content th,
-  .message.assistant .message-content td {
-    border-color: var(--color-border);
-  }
+.message.assistant .message-content th,
+.message.assistant .message-content td {
+  border-color: var(--color-border);
+}
 
-  .message.assistant .message-content th {
-    background: var(--color-border-subtle);
-  }
+.message.assistant .message-content th {
+  background: var(--color-border-subtle);
+}
 
-  .chat-input-form {
-    background: var(--color-bg);
-  }
+.chat-input-form {
+  background: var(--color-bg);
+}
 
-  .chat-input-wrap {
-    background: var(--color-chat-input-wrap-bg);
-    border-color: var(--color-chat-input-wrap-border);
-  }
+.chat-input-wrap {
+  background: var(--color-chat-input-wrap-bg);
+  border-color: var(--color-chat-input-wrap-border);
+}
 
-  .info-note {
-    background: var(--color-info-bg);
-    border-color: var(--color-info-border);
-  }
+.info-note {
+  background: var(--color-info-bg);
+  border-color: var(--color-info-border);
+}
 
-  .info-note p {
-    color: var(--color-text-secondary);
-  }
+.info-note p {
+  color: var(--color-text-secondary);
+}
 
-  .chat-placeholder {
-    color: var(--color-text-muted);
-  }
+.chat-placeholder {
+  color: var(--color-text-muted);
+}
 
-  .chat-placeholder .error-message {
-    background: var(--color-error-bg);
-    border-color: var(--color-error-border);
-    color: var(--color-error-text);
-  }
+.chat-placeholder .error-message {
+  background: var(--color-error-bg);
+  border-color: var(--color-error-border);
+  color: var(--color-error-text);
+}
 
-  .chat-placeholder .loading-spinner {
-    border-color: var(--color-border-subtle);
-    border-top-color: var(--color-primary);
-  }
-
+.chat-placeholder .loading-spinner {
+  border-color: var(--color-border-subtle);
+  border-top-color: var(--color-primary);
 }
 
 .thinking-text {
-  color: var(--color-text-muted);
+  color: var(--color-text-faint);
   font-style: italic;
-}
-
-@media (prefers-color-scheme: light) {
-  .thinking-text {
-    color: var(--color-text-faint);
-  }
 }
 
 .chat-disabled .chat-main {
@@ -701,8 +690,8 @@
 }
 
 .status-item.pending {
-  background: var(--color-warning-bg);
-  color: var(--color-warning-text);
+  background: var(--color-surface);
+  color: var(--color-text-muted);
 }
 
 .status-icon {
@@ -742,26 +731,24 @@
   transform: scale(0.98);
 }
 
-@media (prefers-color-scheme: light) {
-  .chat-disabled-overlay {
-    background: rgba(255, 255, 255, 0.9);
-  }
+.chat-disabled-overlay {
+  background: var(--color-overlay-light);
+}
 
-  .chat-disabled-content h3 {
-    color: var(--color-text-secondary);
-  }
+.chat-disabled-content h3 {
+  color: var(--color-text-secondary);
+}
 
-  .status-item.ready {
-    background: var(--color-success-bg);
-    color: var(--color-success-text);
-  }
+.status-item.ready {
+  background: var(--color-success-bg);
+  color: var(--color-success-text);
+}
 
-  .status-item.pending {
-    background: var(--color-warning-bg);
-    color: var(--color-warning-text);
-  }
+.status-item.pending {
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+}
 
-  .disabled-message {
-    color: var(--color-text-secondary);
-  }
+.disabled-message {
+  color: var(--color-text-secondary);
 }

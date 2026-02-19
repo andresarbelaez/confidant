@@ -1,0 +1,15 @@
+{
+  "name": "confidant-design-tokens",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "main": "./src/tokens.ts",
+  "types": "./src/tokens.ts",
+  "exports": {
+    ".": {
+      "import": "./src/tokens.ts",
+      "types": "./src/tokens.ts"
+    },
+    "./styles.css": "./src/tokens.css"
+  }
+}

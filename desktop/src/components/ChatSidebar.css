@@ -1,55 +1,4 @@
-.chat-sidebar {
-  width: 240px;
-  min-width: 240px;
-  height: calc(100% - 2rem);
-  align-self: center;
-  margin: 1rem 0 1rem 1rem;
-  background: var(--color-chat-surface, #fff);
-  border: 1px solid var(--color-chat-input-wrap-border);
-  border-radius: 12px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
-  box-sizing: border-box;
-}
-
-.sidebar-content {
-  padding: 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.sidebar-settings-label {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.75rem 1rem;
-  min-height: var(--touch-target-min);
-  min-width: var(--touch-target-min);
-  background: transparent;
-  border: none;
-  color: var(--color-text);
-  font-size: 0.95rem;
-  font-weight: 500;
-  text-align: left;
-  cursor: pointer;
-  border-radius: 6px;
-  transition: background 0.2s, color 0.2s;
-  font-family: inherit;
-}
-
-.sidebar-settings-icon {
-  flex-shrink: 0;
-  width: 1.25rem;
-  height: 1.25rem;
-}
-
-.sidebar-settings-label:hover {
-  background: rgba(0, 0, 0, 0.08);
-  color: var(--color-text);
-}
+/* Sidebar shell styles live in confidant-chat-ui/styles.css (single source of truth). */
 
 .sidebar-divider {
   height: 1px;
@@ -101,19 +50,4 @@
   background: var(--color-surface-subtle);
   color: var(--color-text);
   font-weight: 500;
-}
-
-@media (prefers-color-scheme: light) {
-  .chat-sidebar {
-    background: var(--color-chat-surface, #fff);
-    border-color: var(--color-chat-input-wrap-border);
-  }
-
-  .chat-history-item:hover {
-    background: var(--color-surface-subtle);
-  }
-
-  .chat-history-item.active {
-    background: var(--color-surface-subtle);
-  }
 }

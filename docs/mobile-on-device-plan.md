@@ -134,10 +134,8 @@ Answer these to lock scope, unblock Phase 1–2, and prioritize work. You can ad
 ### Step 6: One-platform LLM proof-of-concept
 
 - [x] **Pick first platform:** iOS first. See Decisions.
-- [ ] **Integrate LLM runtime:** Build and integrate llama.cpp (or MLX on iOS) for that platform:
-  - Native module or bridge exposing e.g. `loadModel(path)` and `generate(prompt, options, onToken)`.
-  - Use a small GGUF model (bundled for PoC or from a fixed path).
-- [ ] **Wire to UI:** “Generate” in the app calls the native LLM and displays streamed tokens. Goal: real on-device completion with no server.
+- [x] **Integrate LLM runtime:** @runanywhere/llamacpp integrated via expo-dev-client and prebuild. Model: SmolLM2 360M Q8 (download on first use). See `apps/confidant-mobile` (LLMService, LLMContext).
+- [x] **Wire to UI:** “Generate” calls RunAnywhere.generateStream; tokens stream into the chat UI. “Download model” flow and “Stop” for cancel. Goal: real on-device completion with no server.
 
 ### Step 7: Optional – Embeddings + vector search spike
 

@@ -1,6 +1,5 @@
 import { LogoIcon } from '@/components/logo'
 import Link from 'next/link'
-import { ThemeSwitcher } from './theme-switcher'
 
 const links = [
     { label: 'Features', href: '#' },
@@ -34,8 +33,6 @@ export default function Footer() {
                             </Link>
                         ))}
                     </nav>
-
-                    <ThemeSwitcher />
 
                     <p className="text-muted-foreground mt-2 border-t pt-6 text-sm">&copy; {new Date().getFullYear()} Veil. </p>
                 </div>

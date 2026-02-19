@@ -3,8 +3,7 @@ import ReactDOM from 'react-dom/client'
 import App from './App.tsx'
 import { initializeI18n } from './i18n'
 import './index.css'
-/* Warm palette experiment — comment out to revert to default (cool grey): */
-import './themes/warm.css'
+import './themes/theme.css'
 
 // Load translations before first paint so t() has keys (e.g. LoadingScreen)
 initializeI18n(null).then(() => {

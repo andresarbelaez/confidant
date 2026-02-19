@@ -1,25 +1,22 @@
 /**
- * Warm palette experiment — cream/golden yellow tones, Confidant purple accents.
- * To revert to the default (cool grey) palette: comment out the import in main.tsx
- *
- * Hue 100 = warmer yellow (less green than 90). Confidant purple: #4f46e5
+ * Confidant theme — light, beige/cream surface tones, Confidant purple accents.
+ * This is the only theme. Hue 100 = golden yellow. Primary: #4f46e5
  */
 
-@media (prefers-color-scheme: light) {
-  :root {
-    /* Warm scale: hue 100 = golden yellow, less green */
+:root {
+    /* Beige/cream scale */
     --color-bg: oklch(0.985 0.008 100);
     --color-surface: oklch(0.96 0.012 100);
     --color-surface-subtle: oklch(0.96 0.012 100);
     --color-surface-input: oklch(0.92 0.018 100);
+    --color-sidebar-hover: oklch(0.96 0.012 100);
+    --color-sidebar-selected: oklch(0.93 0.018 100);
     --color-border: oklch(0.92 0.018 100);
     --color-border-subtle: oklch(0.92 0.012 100);
     --color-text: oklch(0.25 0.03 100);
     --color-text-secondary: oklch(0.35 0.025 100);
     --color-text-muted: oklch(0.48 0.035 100);
     --color-text-faint: oklch(0.55 0.02 100);
-    --color-warning-bg: oklch(0.96 0.03 100);
-    --color-warning-text: oklch(0.48 0.035 100);
     --color-info-bg: oklch(0.95 0.025 280);
     --color-info-border: oklch(0.88 0.05 280);
     --color-success-bg: oklch(0.92 0.06 145);
@@ -63,7 +60,7 @@
     background: oklch(0.91 0.025 100) !important;
   }
 
-  /* Loading screen — uses var(--color-bg) etc., already warm. Ensure spinner/title match. */
+  /* Loading screen */
   .loading-screen {
     background: var(--color-bg) !important;
   }
@@ -192,9 +189,10 @@
     border-color: oklch(0.92 0.018 100) !important;
     color: var(--color-text) !important;
   }
-  .language-select:focus {
-    border-color: -webkit-focus-ring-color !important;
-    box-shadow: 0 0 0 2px -webkit-focus-ring-color !important;
+  .language-select:focus { outline: none; }
+  .language-select:focus-visible {
+    outline: 2px solid var(--color-primary) !important;
+    outline-offset: 2px;
   }
 
   /* User profile card — new user avatar subtle bg */
@@ -207,7 +205,7 @@
     background: oklch(0.99 0.005 100 / 0.9) !important;
   }
 
-  /* Chat blockquote border (light mode) */
+  /* Chat blockquote border */
   .message.assistant .message-content blockquote {
     border-left-color: oklch(0.9 0.02 100) !important;
   }
@@ -220,4 +218,3 @@
   .network-monitor .stat-label {
     color: var(--color-text-muted) !important;
   }
-}

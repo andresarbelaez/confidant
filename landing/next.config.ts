@@ -6,7 +6,7 @@ const nextConfig: NextConfig = {
   basePath: '',
   images: { unoptimized: true },
   // Resolve and transpile the local confidant-chat-ui package (file:../packages/confidant-chat-ui)
-  transpilePackages: ['confidant-chat-ui'],
+  transpilePackages: ['confidant-chat-ui', 'confidant-design-tokens'],
 };
 
 export default nextConfig;

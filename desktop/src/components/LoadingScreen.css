@@ -90,21 +90,3 @@
   100% { transform: rotate(360deg); }
 }
 
-@media (prefers-color-scheme: dark) {
-  .loading-screen {
-    background: var(--color-bg);
-  }
-
-  .loading-subtitle {
-    color: var(--color-text-muted);
-  }
-
-  .loading-tagline {
-    color: var(--color-text-faint);
-  }
-
-  .loading-spinner {
-    border-color: var(--color-border);
-    border-top-color: var(--color-primary);
-  }
-}

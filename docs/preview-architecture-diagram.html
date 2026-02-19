@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Confidant desktop — architecture</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <script>
+    mermaid.initialize({ startOnLoad: true, theme: 'neutral' });
+  </script>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 1rem; background: #fafafa; }
+    h1 { font-size: 1.1rem; color: #333; }
+    .mermaid { background: #fff; padding: 1rem; border-radius: 8px; }
+  </style>
+</head>
+<body>
+  <h1>Confidant desktop app — architecture</h1>
+  <pre class="mermaid">
+flowchart TB
+  subgraph UI["Frontend (React + Vite + TypeScript)"]
+    App[App.tsx]
+    Chat[ChatInterface]
+    Agent[agent/dant-agent.ts]
+    Setup[SetupModal / SetupScreen]
+    KB[KnowledgeBaseManager]
+    App --> Chat
+    App --> Setup
+    App --> KB
+    Chat --> Agent
+  end
+
+  subgraph Bridge["Tauri IPC"]
+    Invoke["invoke()"]
+  end
+
+  subgraph Rust["Rust backend (Tauri 2)"]
+    Commands[Commands]
+    LLM_CMD[llm: init, generate, stream, download]
+    VS_CMD[vector_store: init, add, search]
+    EMB_CMD[embeddings: generate]
+    USER_CMD[user_management: users, chat, language]
+    CACHE_CMD[cache: read/write]
+    BUNDLE_CMD[bundled_defaults]
+    Commands --> LLM_CMD
+    Commands --> VS_CMD
+    Commands --> EMB_CMD
+    Commands --> USER_CMD
+    Commands --> CACHE_CMD
+    Commands --> BUNDLE_CMD
+  end
+
+  subgraph Python["Python subprocesses"]
+    LLM_PY[llama_helper.py<br/>llama-cpp-python]
+    CHROMA[chromadb_helper.py<br/>ChromaDB]
+    EMB_PY[embeddings_helper.py<br/>sentence-transformers]
+  end
+
+  subgraph Data["Local data (app data dir)"]
+    GGUF[GGUF models]
+    ChromaDB[(ChromaDB)]
+    Users[(User store<br/>chat history)]
+    Cache[(Response cache)]
+  end
+
+  Agent --> Invoke
+  Setup --> Invoke
+  KB --> Invoke
+  Invoke --> Commands
+
+  LLM_CMD --> LLM_PY
+  VS_CMD --> CHROMA
+  EMB_CMD --> EMB_PY
+
+  LLM_PY --> GGUF
+  CHROMA --> ChromaDB
+  LLM_CMD --> Users
+  USER_CMD --> Users
+  CACHE_CMD --> Cache
+  </pre>
+</body>
+</html>

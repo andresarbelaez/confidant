@@ -1,7 +1,7 @@
 .language-selector {
   margin: 1.5rem 0;
   padding: 1rem;
-  background: var(--bg-secondary, #f5f5f5);
+  background: var(--color-surface-subtle);
   border-radius: 8px;
 }
 
@@ -9,24 +9,21 @@
   display: block;
   margin-bottom: 0.5rem;
   font-weight: 500;
-  color: var(--text-primary, #333);
+  color: var(--color-text);
 }
 
 .language-select {
   width: 100%;
   padding: 0.5rem;
-  border: 1px solid var(--border-color, #ddd);
+  border: 1px solid var(--color-border-subtle);
   border-radius: 4px;
-  background: white;
+  background: var(--color-bg);
   font-size: 1rem;
-  color: var(--text-primary, #333);
+  color: var(--color-text);
 }
 
-.language-select:focus {
-  outline: none;
-  border-color: -webkit-focus-ring-color;
-}
+.language-select:focus { outline: none; }
 .language-select:focus-visible {
-  outline: 2px solid -webkit-focus-ring-color;
+  outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }

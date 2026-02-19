@@ -66,13 +66,3 @@
   100% { transform: rotate(360deg); }
 }
 
-@media (prefers-color-scheme: dark) {
-  .downloading-model-subtitle {
-    color: var(--color-text-muted);
-  }
-
-  .downloading-model-spinner {
-    border-color: var(--color-border);
-    border-top-color: var(--color-primary);
-  }
-}

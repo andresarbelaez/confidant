@@ -70,8 +70,8 @@
 }
 
 .info-note.warning {
-  background: var(--color-warning-bg);
-  border: 1px solid var(--color-warning-text);
+  background: var(--color-surface);
+  border: 1px solid var(--color-text-muted);
   border-radius: 8px;
   padding: 1rem;
   margin-bottom: 1rem;
@@ -79,7 +79,7 @@
 
 .info-note.warning p {
   margin: 0.5rem 0;
-  color: var(--color-warning-text);
+  color: var(--color-text-muted);
 }
 
 .info-note.warning p:first-child {

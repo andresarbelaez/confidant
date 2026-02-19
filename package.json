@@ -1,0 +1,15 @@
+{
+  "name": "confidant",
+  "private": true,
+  "description": "Confidant monorepo: desktop, landing, packages",
+  "scripts": {
+    "prepare": "husky",
+    "sync:design-system": "cd landing && npm run sync:design-system",
+    "check:design-tokens": "node scripts/check-design-tokens.mjs",
+    "export-logo-png": "node scripts/export-logo-png.mjs"
+  },
+  "devDependencies": {
+    "husky": "^9.0.12",
+    "sharp": "^0.33.5"
+  }
+}

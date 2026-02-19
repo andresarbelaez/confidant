@@ -16,7 +16,7 @@ const Supabase = (props: SVGProps<SVGSVGElement>) => (
         />
         <path
             d="M45.317 2.07103C48.1765 -1.53037 53.9745 0.442937 54.0434 5.041L54.4849 72.2922H9.83113C1.64038 72.2922 -2.92775 62.8321 2.1655 56.4175L45.317 2.07103Z"
-            fill="#3ECF8E"
+            fill="currentColor"
         />
         <defs>
             <linearGradient
@@ -26,10 +26,10 @@ const Supabase = (props: SVGProps<SVGSVGElement>) => (
                 x2="94.1635"
                 y2="71.8295"
                 gradientUnits="userSpaceOnUse">
-                <stop stopColor="#249361" />
+                <stop stopColor="var(--color-primary)" />
                 <stop
                     offset="1"
-                    stopColor="#3ECF8E"
+                    stopColor="var(--color-primary-hover)"
                 />
             </linearGradient>
             <linearGradient

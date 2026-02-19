@@ -63,16 +63,14 @@
   color: var(--color-primary);
 }
 
-@media (prefers-color-scheme: light) {
-  .profile-avatar {
-    background: var(--color-surface-input);
-  }
+.profile-avatar {
+  background: var(--color-surface-input);
+}
 
-  .user-profile-card:hover .profile-avatar {
-    background: var(--color-surface-subtle);
-  }
+.user-profile-card:hover .profile-avatar {
+  background: var(--color-surface-subtle);
+}
 
-  .user-profile-card.new-user .profile-avatar {
-    background: rgba(0, 0, 0, 0.03);
-  }
+.user-profile-card.new-user .profile-avatar {
+  background: var(--color-surface-subtle);
 }
