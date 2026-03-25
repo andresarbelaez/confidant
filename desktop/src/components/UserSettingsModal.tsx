@@ -11,12 +11,14 @@ interface UserSettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
   userId: string;
+  /** Called after language is saved (before close). Use to refresh parent language state so UI updates. */
+  onLanguageSaved?: () => void | Promise<void>;
 }
 
-export default function UserSettingsModal({ isOpen, onClose, userId }: UserSettingsModalProps) {
+export default function UserSettingsModal({ isOpen, onClose, userId, onLanguageSaved }: UserSettingsModalProps) {
   const { t, setLanguage } = useTranslation(userId);
   const [userName, setUserName] = useState<string>('');
-  const [pendingLanguage, setPendingLanguage] = useState<LanguageCode>(getCurrentLanguage());
+  const [pendingLanguage, setPendingLanguage] = useState<LanguageCode | undefined>(getCurrentLanguage());
 
   useEffect(() => {
     if (!isOpen || !userId) return;
@@ -39,7 +41,8 @@ export default function UserSettingsModal({ isOpen, onClose, userId }: UserSetti
   }, [isOpen]);
 
   const handleSave = async () => {
-    await setLanguage(pendingLanguage);
+    await setLanguage(pendingLanguage ?? getCurrentLanguage());
+    await onLanguageSaved?.();
     onClose();
   };
 
@@ -63,7 +66,12 @@ export default function UserSettingsModal({ isOpen, onClose, userId }: UserSetti
         </div>
         <div className="modal-content">
           <div className="user-settings-section">
-            <LanguageSelector userId={userId} value={pendingLanguage} onChange={setPendingLanguage} />
+            <LanguageSelector
+              userId={userId}
+              value={pendingLanguage}
+              onChange={setPendingLanguage}
+              clickOutsideBoundaryRef={dialogRef}
+            />
           </div>
           <div className="modal-actions">
             <button type="button" className="btn btn-secondary" onClick={onClose}>

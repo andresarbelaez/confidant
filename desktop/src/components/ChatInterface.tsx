@@ -1,6 +1,6 @@
 import { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { invoke } from '@tauri-apps/api/core';
-import { ArrowUp, Copy, LogOut, Settings, Trash2 } from 'lucide-react';
+import { ArrowUp, Copy, LogOut, Phone, Settings, Trash2 } from 'lucide-react';
 import { DantAgent } from '../agent/dant-agent';
 import ReactMarkdown from 'react-markdown';
 import { useTranslation } from '../i18n/hooks/useTranslation';
@@ -10,6 +10,7 @@ import sidebarLogoUrl from '../assets/sidebar-logo.png';
 import LogOutConfirmModal from './LogOutConfirmModal';
 import DeleteChatHistoryConfirmModal from './DeleteChatHistoryConfirmModal';
 import UserSettingsModal from './UserSettingsModal';
+import CallForHelpModal from './CallForHelpModal';
 import { clearChatHistoryForUser } from '../utils/clearChatHistory';
 import './ChatInterface.css';
 import './ChatSidebar.css';
@@ -28,7 +29,7 @@ interface ChatInterfaceProps {
 }
 
 export default function ChatInterface({ disabled = false, modelReady = false, kbReady = false, chatVisible: _chatVisible = false, onOpenSettings, userId, onSwitchProfile: _onSwitchProfile, onLogOut, onReady }: ChatInterfaceProps) {
-  const { t, currentLanguage } = useTranslation(userId);
+  const { t, currentLanguage, refreshLanguage } = useTranslation(userId);
   const [messages, setMessages] = useState<Array<{ role: 'user' | 'assistant'; content: string }>>([]);
   const [input, setInput] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -40,12 +41,25 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
   const [showLogOutModal, setShowLogOutModal] = useState(false);
   const [showDeleteChatHistoryModal, setShowDeleteChatHistoryModal] = useState(false);
   const [showUserSettingsModal, setShowUserSettingsModal] = useState(false);
+  const [showCallForHelpModal, setShowCallForHelpModal] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const loadedUserIdRef = useRef<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const onReadyCalledRef = useRef(false);
   const sessionFirstMessageContentRef = useRef<string | null>(null);
+  // Demo: for Tauri (no URL bar), set override here to 'streaming' or 'all-at-once'; then run the app and send a message.
+  // In a browser you can use ?demo=streaming or ?demo=all-at-once in the address bar (e.g. http://localhost:1420?demo=all-at-once).
+  const DEMO_MODE_OVERRIDE = 'streaming';
+  const demoMode = (() => {
+    try {
+      const q = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+      if (q?.get('demo') === 'all-at-once') return 'all-at-once' as const;
+      if (q?.get('demo') === 'streaming') return 'streaming' as const;
+    } catch (_) {}
+    return DEMO_MODE_OVERRIDE;
+  })();
+  const [lastDemoMetric, setLastDemoMetric] = useState<string | null>(null);
   const resizeInput = () => {
     const el = inputRef.current;
     if (!el) return;
@@ -274,7 +288,8 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
         useRAG: useRAGForQuery,
         userId,
         language: currentLanguage,
-        onStreamChunk: (text) => {
+        ...(demoMode && { demoMode }),
+        onStreamChunk: demoMode === 'all-at-once' ? undefined : (text) => {
           setMessages(prev => {
             const next = [...prev];
             const last = next[next.length - 1];
@@ -290,6 +305,15 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
           });
         },
       });
+
+      if (demoMode && response.metrics) {
+        const m = response.metrics;
+        if (demoMode === 'streaming' && m.timeToFirstTokenMs != null) {
+          setLastDemoMetric(`Time to first token: ${m.timeToFirstTokenMs}ms`);
+        } else if (demoMode === 'all-at-once') {
+          setLastDemoMetric(`Time to full response: ${m.totalMs}ms`);
+        }
+      }
 
       if (response.fromCache) {
         const delayMs = 500 + Math.random() * 500;
@@ -366,6 +390,7 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
   const sidebarItems = [
     onLogOut && { label: t('ui.logOut'), icon: <LogOut size={20} />, onClick: handleLogOutClick },
     { label: t('ui.settings'), icon: <Settings size={20} />, onClick: () => setShowUserSettingsModal(true) },
+    { label: t('ui.callForHelp'), icon: <Phone size={20} />, onClick: () => setShowCallForHelpModal(true) },
     { label: t('ui.deleteChatHistory'), icon: <Trash2 size={20} />, onClick: handleDeleteChatHistoryClick },
   ].filter(Boolean) as Array<{ label: string; icon: React.ReactNode; onClick: () => void }>;
 
@@ -382,7 +407,15 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
         />
       )}
       {showUserSettingsModal && (
-        <UserSettingsModal isOpen={showUserSettingsModal} onClose={() => setShowUserSettingsModal(false)} userId={userId} />
+        <UserSettingsModal
+          isOpen={showUserSettingsModal}
+          onClose={() => setShowUserSettingsModal(false)}
+          userId={userId}
+          onLanguageSaved={refreshLanguage}
+        />
+      )}
+      {showCallForHelpModal && (
+        <CallForHelpModal isOpen={showCallForHelpModal} onClose={() => setShowCallForHelpModal(false)} userId={userId} />
       )}
     </>
   );
@@ -501,6 +534,11 @@ export default function ChatInterface({ disabled = false, modelReady = false, kb
           {error && (
             <div className="chat-error" role="alert">
               {error}
+            </div>
+          )}
+          {demoMode && lastDemoMetric && (
+            <div className="chat-demo-metric" role="status">
+              {lastDemoMetric}
             </div>
           )}
           <ChatInputBar

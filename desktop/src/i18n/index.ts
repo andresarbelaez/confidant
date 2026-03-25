@@ -1,11 +1,18 @@
 /**
  * Internationalization (i18n) System
- * Handles language detection, translation loading, and language switching
+ * Handles language detection, translation loading, and language switching.
  */
 
 import { invoke } from '@tauri-apps/api/core';
 
 export type LanguageCode = 'en' | 'es' | 'fr' | 'de' | 'it' | 'pt' | 'ja' | 'zh' | 'ko' | 'ru';
+
+const VALID_LANGUAGE_CODES: LanguageCode[] = ['en', 'es', 'fr', 'de', 'it', 'pt', 'ja', 'zh', 'ko', 'ru'];
+
+function storedToCode(stored: string): LanguageCode {
+  const code = stored.split('-')[0]?.toLowerCase();
+  return (VALID_LANGUAGE_CODES.includes(code as LanguageCode) ? code : 'en') as LanguageCode;
+}
 
 export interface Language {
   code: LanguageCode;
@@ -30,7 +37,6 @@ export const SUPPORTED_LANGUAGES: Language[] = [
 let translationsCache: Record<string, any> = {};
 let currentLanguage: LanguageCode = 'en';
 
-// Listeners notified when setLanguage() completes (so UI can re-render)
 const languageChangeListeners: Array<(newLang: LanguageCode) => void> = [];
 
 export function subscribeToLanguageChange(callback: (newLang: LanguageCode) => void): () => void {
@@ -80,46 +86,38 @@ async function loadTranslations(lang: LanguageCode): Promise<Record<string, any>
 }
 
 /**
- * Initialize i18n system
- * Detects language from user preference or system locale
+ * Initialize i18n system. Backend may return a locale string (e.g. "en-US"); we normalize to LanguageCode.
  */
 export async function initializeI18n(userId?: string | null): Promise<LanguageCode> {
-  let lang: LanguageCode = 'en';
+  let code: LanguageCode = 'en';
 
-  // Try to get user's language preference
   if (userId) {
     try {
-      const userLang = await invoke<LanguageCode | null>('get_user_language', { userId });
-      if (userLang && SUPPORTED_LANGUAGES.some(l => l.code === userLang)) {
-        lang = userLang;
-      }
+      const stored = await invoke<string | null>('get_user_language', { userId });
+      if (stored && typeof stored === 'string') code = storedToCode(stored);
     } catch (err) {
       console.warn('[i18n] Failed to get user language preference:', err);
     }
   }
 
-  // Fallback to system language if no user preference
-  if (lang === 'en' && !userId) {
-    lang = detectSystemLanguage();
+  if (code === 'en' && !userId) {
+    code = detectSystemLanguage();
   }
 
-  // Load translations
-  translationsCache = await loadTranslations(lang);
-  currentLanguage = lang;
-
-  return lang;
+  translationsCache = await loadTranslations(code);
+  currentLanguage = code;
+  return code;
 }
 
 /**
- * Set language and reload translations
+ * Set language and reload translations.
  */
 export async function setLanguage(lang: LanguageCode, userId?: string | null): Promise<void> {
-  if (!SUPPORTED_LANGUAGES.some(l => l.code === lang)) {
-    console.warn(`[i18n] Unsupported language: ${lang}`);
+  if (!VALID_LANGUAGE_CODES.includes(lang)) {
+    console.warn('[i18n] Unsupported language:', lang);
     return;
   }
 
-  // Save user preference if userId is provided
   if (userId) {
     try {
       await invoke('set_user_language', { userId, language: lang });
@@ -128,14 +126,13 @@ export async function setLanguage(lang: LanguageCode, userId?: string | null): P
     }
   }
 
-  // Load translations
   translationsCache = await loadTranslations(lang);
   currentLanguage = lang;
   languageChangeListeners.forEach((fn) => fn(lang));
 }
 
 /**
- * Get current language
+ * Get current language code.
  */
 export function getCurrentLanguage(): LanguageCode {
   return currentLanguage;

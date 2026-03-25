@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { ChatLayout, ChatSidebarShell, ChatMessages, ChatInputBar, type ChatMessage } from 'confidant-chat-ui'
 import { LogOut, Settings, Trash2, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { FadeInUp } from '@/components/fade-in-up'
 import { scrollToHash } from '@/lib/scroll-to-hash'
 import 'confidant-chat-ui/styles.css'
 
@@ -48,14 +49,19 @@ export function ConfidantChatPreview() {
   return (
     <section id="try-it-yourself" className="py-24">
       <div className="mx-auto max-w-5xl px-6">
-        <h2 className="text-balance font-serif text-4xl font-medium sm:text-5xl text-left md:text-center">
-          Try it yourself
-        </h2>
-        <p className="text-muted-foreground mt-4 text-left md:text-center text-balance">
-          Try the interface below. Download the app to keep your conversations private.
-        </p>
+        <FadeInUp>
+          <h2 className="text-balance font-serif text-4xl font-medium sm:text-5xl text-left">
+            Try it yourself
+          </h2>
+        </FadeInUp>
+        <FadeInUp delay={0.07} className="mt-4">
+          <p className="text-muted-foreground text-left text-balance">
+            Try the interface below. Download the app to keep your conversations private.
+          </p>
+        </FadeInUp>
 
-        <div className="relative mt-10 rounded-xl overflow-hidden border border-border shadow-lg" style={{ height: '480px' }}>
+        <FadeInUp delay={0.12} className="relative mt-10 rounded-xl overflow-hidden border border-border shadow-lg" y={32}>
+          <div className="relative" style={{ height: '480px' }}>
           {/* Mobile: replace chat with message to use a larger screen */}
           <div className="confidant-chat-preview-theme md:hidden absolute inset-0 flex flex-col items-start justify-center p-6 text-left bg-muted/30">
             <p className="text-foreground text-lg font-medium">
@@ -117,7 +123,8 @@ export function ConfidantChatPreview() {
             </div>
             )}
           </div>
-        </div>
+          </div>
+        </FadeInUp>
       </div>
     </section>
   )

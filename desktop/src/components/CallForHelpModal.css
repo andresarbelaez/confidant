@@ -1,0 +1,110 @@
+/* Call For Help modal – form and table, design tokens only */
+
+.call-for-help-intro {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.95rem;
+  line-height: 1.45;
+  color: var(--color-text-muted);
+}
+
+.call-for-help-modal .modal-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  overflow: auto;
+}
+
+.call-for-help-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* Keep country grid and postal field the same width */
+.call-for-help-form .call-for-help-form-field {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.call-for-help-form .call-for-help-form-field label {
+  display: block;
+  margin-bottom: 0.25rem;
+  color: var(--color-text);
+  font-size: 0.95rem;
+}
+
+.call-for-help-form .call-for-help-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 8px;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-size: 1rem;
+}
+
+.call-for-help-input:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.call-for-help-unsupported {
+  margin: 0.5rem 0 0 0;
+  font-size: 0.9rem;
+  color: var(--color-error-text);
+}
+
+.call-for-help-results {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.call-for-help-section-title {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.1rem;
+  color: var(--color-text);
+}
+
+.call-for-help-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.call-for-help-table th,
+.call-for-help-table td {
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  border: 1px solid var(--color-border-subtle);
+  color: var(--color-text);
+}
+
+.call-for-help-table th {
+  background: var(--color-bg-subtle);
+  font-weight: 600;
+}
+
+.call-for-help-table td {
+  background: var(--color-bg);
+}
+
+.call-for-help-error {
+  padding: 0.75rem;
+  border-radius: 8px;
+  background: var(--color-error-bg, rgba(200, 80, 80, 0.15));
+  color: var(--color-text);
+}
+
+.call-for-help-empty {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+.call-for-help-actions-bottom {
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-border-subtle);
+}

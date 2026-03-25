@@ -5,6 +5,7 @@ use std::path::{Path, PathBuf};
 use std::fs;
 use tauri::{AppHandle, Manager};
 
+use crate::embeddings::generate_embeddings_batch;
 use crate::llm::{initialize_model, is_model_loaded};
 use crate::vector_store::{
     initialize_vector_store,
@@ -30,6 +31,10 @@ const DEFAULT_MODEL_URL: &str = "https://huggingface.co/bartowski/Llama-3.2-3B-I
 
 /// Relative path to bundled KB JSON in resources (same format as URL-loaded package: manifest, documents, embeddings).
 const BUNDLED_KB_FILENAME: &str = "default_kb.json";
+
+/// Phone book collection and seed file.
+const PHONEBOOK_COLLECTION: &str = "dant_phonebook";
+const PHONEBOOK_SEED_FILENAME: &str = "phonebook_seed.json";
 
 #[derive(Debug, Serialize)]
 pub struct BundledDefaultsStatus {
@@ -189,6 +194,104 @@ fn resolve_bundled_kb_path(app: &AppHandle) -> Option<PathBuf> {
     None
 }
 
+/// Resolve path to bundled phone book seed JSON.
+fn resolve_phonebook_seed_path(app: &AppHandle) -> Option<PathBuf> {
+    if let Ok(env_path) = std::env::var("CONFIDANT_BUNDLED_PHONEBOOK_SEED_PATH") {
+        let p = PathBuf::from(&env_path);
+        if p.exists() {
+            return Some(p);
+        }
+    }
+    if let Some(resource_dir) = app.path().resource_dir().ok() {
+        for base in [resource_dir.clone(), resource_dir.join("resources")] {
+            let p = base.join(PHONEBOOK_SEED_FILENAME);
+            if p.exists() {
+                return Some(p);
+            }
+        }
+    }
+    // Dev fallback
+    if let Some(mut current) = std::env::current_dir().ok() {
+        for _ in 0..6 {
+            let p = current.join("src-tauri").join("resources").join(PHONEBOOK_SEED_FILENAME);
+            if p.exists() {
+                return Some(p);
+            }
+            let p = current.join("desktop").join("src-tauri").join("resources").join(PHONEBOOK_SEED_FILENAME);
+            if p.exists() {
+                return Some(p);
+            }
+            if let Some(parent) = current.parent() {
+                current = parent.to_path_buf();
+            } else {
+                break;
+            }
+        }
+    }
+    None
+}
+
+/// Load phone book seed JSON and ingest into dant_phonebook (generates embeddings at load time).
+async fn ingest_phonebook_from_path(app: &AppHandle, path: &Path) -> Result<(), String> {
+    let content = fs::read_to_string(path)
+        .map_err(|e| format!("Failed to read phonebook seed: {}", e))?;
+    let entries: Vec<serde_json::Value> = serde_json::from_str(&content)
+        .map_err(|e| format!("Invalid phonebook seed JSON: {}", e))?;
+
+    if entries.is_empty() {
+        return Ok(());
+    }
+
+    let texts: Vec<String> = entries
+        .iter()
+        .map(|e| {
+            let name = e["name"].as_str().unwrap_or("");
+            let profession = e["profession"].as_str().unwrap_or("");
+            let phone = e["phone"].as_str().unwrap_or("");
+            format!("{} — {}, {}", name, profession, phone)
+        })
+        .collect();
+
+    let embeddings = generate_embeddings_batch(app.clone(), texts.clone()).await?;
+
+    const BATCH_SIZE: usize = 20;
+    for chunk_start in (0..entries.len()).step_by(BATCH_SIZE) {
+        let chunk_end = (chunk_start + BATCH_SIZE).min(entries.len());
+        let batch_entries = &entries[chunk_start..chunk_end];
+        let batch_texts = &texts[chunk_start..chunk_end];
+        let batch_embeddings = &embeddings[chunk_start..chunk_end];
+
+        let batch_docs: Vec<VectorDocument> = batch_entries
+            .iter()
+            .zip(batch_texts.iter())
+            .zip(batch_embeddings.iter())
+            .enumerate()
+            .map(|(i, ((e, text), emb))| {
+                let id = format!("phonebook_{}_{}", chunk_start + i, e["name"].as_str().unwrap_or("").replace(' ', "_"));
+                let metadata = serde_json::json!({
+                    "country": e["country"].as_str().unwrap_or(""),
+                    "postal_code": e["postal_code"].as_str().unwrap_or(""),
+                    "profession": e["profession"].as_str().unwrap_or(""),
+                    "name": e["name"].as_str().unwrap_or(""),
+                    "phone": e["phone"].as_str().unwrap_or(""),
+                    "address": e.get("address").and_then(|v| v.as_str()).unwrap_or(""),
+                    "city": e.get("city").and_then(|v| v.as_str()).unwrap_or(""),
+                    "state": e.get("state").and_then(|v| v.as_str()).unwrap_or(""),
+                });
+                VectorDocument {
+                    id,
+                    text: text.clone(),
+                    embedding: emb.clone(),
+                    metadata,
+                }
+            })
+            .collect();
+        add_documents_to_collection(app.clone(), PHONEBOOK_COLLECTION.to_string(), batch_docs).await?;
+    }
+
+    Ok(())
+}
+
 /// Load bundled KB JSON and ingest into global collection.
 /// Expects same format as frontend KnowledgeBasePackage: { manifest, documents: [{ id, text, metadata }], embeddings: number[][] }.
 async fn ingest_kb_from_path(app: &AppHandle, path: &Path) -> Result<(), String> {
@@ -326,6 +429,23 @@ pub async fn ensure_bundled_defaults_initialized(app: AppHandle) -> Result<Bundl
                 }
             }
         }
+    }
+
+    // 4. Phone book: ensure dant_phonebook collection exists; if empty, ingest from seed
+    if initialize_vector_store(app.clone(), PHONEBOOK_COLLECTION.to_string(), None).await.is_ok() {
+        let pb_stats = get_collection_stats_by_name(app.clone(), PHONEBOOK_COLLECTION.to_string()).await;
+        let pb_count: u64 = pb_stats.ok().and_then(|v| v["document_count"].as_u64()).unwrap_or(0);
+        if pb_count == 0 {
+            if let Some(seed_path) = resolve_phonebook_seed_path(&app) {
+                #[cfg(debug_assertions)]
+                eprintln!("[Bundled] Ingesting phone book from: {:?}", seed_path);
+                if let Err(e) = ingest_phonebook_from_path(&app, &seed_path).await {
+                    eprintln!("[Confidant] Phone book ingest failed: {}", e);
+                }
+            }
+        }
+        // Restore global KB as current collection
+        let _ = initialize_vector_store(app.clone(), GLOBAL_KB_COLLECTION.to_string(), None).await;
     }
 
     let model_ready = is_model_loaded().await?;

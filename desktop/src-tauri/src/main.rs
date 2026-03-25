@@ -13,6 +13,7 @@ use llm::{initialize_model, generate_text, generate_text_stream, is_model_loaded
 use vector_store::{
     initialize_vector_store, add_documents, add_documents_to_collection,
     search_similar, search_collection, get_collection_stats, get_collection_stats_by_name,
+    get_documents_by_filter,
     initialize_user_vector_store, delete_user_knowledge_base,
 };
 use embeddings::{generate_embedding, generate_embeddings_batch};
@@ -58,6 +59,7 @@ fn main() {
             search_collection,
             get_collection_stats,
             get_collection_stats_by_name,
+            get_documents_by_filter,
             initialize_user_vector_store,
             delete_user_knowledge_base,
             // Embeddings commands

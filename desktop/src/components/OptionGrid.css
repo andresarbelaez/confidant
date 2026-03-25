@@ -1,0 +1,129 @@
+/* OptionGrid – grid selector for modals, design tokens only */
+
+.option-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.option-grid .option-grid-label + .option-grid-scroll {
+  margin-top: 0.25rem;
+}
+
+.option-grid-label {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.option-grid-scroll {
+  max-height: 14rem;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding-bottom: 2px;
+  padding-right: 2px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.option-grid-scroll::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.option-grid-scroll::-webkit-scrollbar-track {
+  background: var(--color-surface-subtle);
+  border-radius: 3px;
+}
+
+.option-grid-scroll::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 3px;
+}
+
+/* Max 5 cells per row; wraps to further rows (e.g. 10 languages = 2 rows of 5) */
+.option-grid-row {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(5.5rem, 1fr));
+  column-gap: 0.5rem;
+  row-gap: 0.75rem;
+}
+
+.option-grid-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  min-width: 0;
+  min-height: var(--touch-target-min, 2.75rem);
+  padding: 0.5rem 0.75rem;
+  border: 2px solid var(--color-border-subtle);
+  border-radius: 8px;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-size: 0.85rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.option-grid-cell:hover {
+  border-color: var(--color-border);
+  background: var(--color-surface-subtle);
+}
+
+.option-grid-cell:focus {
+  outline: none;
+}
+
+/* Use box-shadow so focus ring isn’t clipped by scroll container and stays on top */
+.option-grid-cell:focus-visible {
+  box-shadow: 0 0 0 2px var(--color-bg), 0 0 0 4px var(--color-primary);
+  z-index: 1;
+  position: relative;
+}
+
+/* Selected: strong affordance (fill + contrast) so it’s clearly distinct from focus (outline only) */
+.option-grid-cell-selected {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: var(--color-bg);
+}
+
+.option-grid-cell-selected:hover {
+  border-color: var(--color-primary);
+  background: var(--color-primary-hover, var(--color-primary));
+  color: var(--color-bg);
+}
+
+.option-grid-cell-selected .option-grid-cell-label,
+.option-grid-cell-selected .option-grid-cell-acronym {
+  color: var(--color-bg);
+}
+
+.option-grid-cell-flag {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.option-grid-cell-acronym {
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  color: inherit;
+}
+
+.option-grid-cell-label {
+  text-align: center;
+  line-height: 1.2;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .option-grid-cell {
+    transition: none;
+  }
+}

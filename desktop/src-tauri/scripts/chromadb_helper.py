@@ -141,6 +141,38 @@ def get_stats(db_path: str, collection_name: str):
         }
 
 
+def get_by_filter(db_path: str, collection_name: str, where_json: str):
+    """Get documents by metadata filter only (no query embedding). Used for phone book lookup."""
+    client = get_chroma_client(db_path)
+    collection = client.get_collection(name=collection_name)
+    where = json.loads(where_json)
+    result = collection.get(
+        where=where,
+        include=["documents", "metadatas"]
+    )
+    ids = result.get("ids") or []
+    documents = result.get("documents") or []
+    metadatas = result.get("metadatas") or []
+    # Chroma may return ids/documents/metadatas as list-of-lists for some APIs; flatten if needed
+    if ids and isinstance(ids[0], list):
+        ids = ids[0]
+    if documents and isinstance(documents[0], list):
+        documents = documents[0]
+    if metadatas and isinstance(metadatas[0], list):
+        metadatas = metadatas[0]
+    items = []
+    for i in range(len(ids)):
+        items.append({
+            "id": ids[i] if i < len(ids) else "",
+            "text": documents[i] if i < len(documents) else "",
+            "metadata": metadatas[i] if i < len(metadatas) else {}
+        })
+    return {
+        "status": "success",
+        "documents": items
+    }
+
+
 def delete_collection(db_path: str, collection_name: str):
     """Delete a ChromaDB collection"""
     try:
@@ -206,6 +238,16 @@ def main():
             result = get_stats(db_path, collection_name)
             print(json.dumps(result))
             
+        elif command == "get_by_filter":
+            if len(sys.argv) < 5:
+                print("ERROR: Missing arguments for get_by_filter command", file=sys.stderr)
+                sys.exit(1)
+            db_path = sys.argv[2]
+            collection_name = sys.argv[3]
+            where_json = sys.argv[4]
+            result = get_by_filter(db_path, collection_name, where_json)
+            print(json.dumps(result))
+
         elif command == "delete_collection":
             if len(sys.argv) < 4:
                 print("ERROR: Missing arguments for delete_collection command", file=sys.stderr)

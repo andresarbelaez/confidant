@@ -79,7 +79,7 @@
 
 .info-note.warning p {
   margin: 0.5rem 0;
-  color: var(--color-text-muted);
+  color: var(--color-error-text);
 }
 
 .info-note.warning p:first-child {

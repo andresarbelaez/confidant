@@ -59,6 +59,12 @@
   font-size: 1.2em;
 }
 
+.warning-text {
+  color: var(--color-error-text);
+  font-size: 0.9rem;
+  margin: 0.5rem 0 0 0;
+}
+
 .info-note {
   margin-top: 2rem;
   padding: 1rem;

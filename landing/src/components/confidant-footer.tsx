@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { FadeInUp } from '@/components/fade-in-up'
 import { ConfidantLogo } from './confidant-logo'
 
 const REPO = 'https://github.com/andresarbelaez/confidant'
@@ -12,29 +13,31 @@ const links = [
 export function ConfidantFooter() {
   return (
     <footer className="border-t py-12">
-      <div className="mx-auto max-w-3xl px-6">
-        <div className="flex flex-col items-start md:items-center gap-6">
-          <Link href="/" aria-label="Confidant home">
-            <ConfidantLogo />
-          </Link>
-          <p className="text-muted-foreground text-sm text-left md:text-center max-w-md">
-            Confidant is not a substitute for therapy or professional mental health care. For support, please reach out to a qualified professional. If you&apos;re in crisis, please contact a crisis line or a mental health professional.
-          </p>
-          <nav className="flex gap-6">
-            {links.map((link) => (
-              <Link
-                key={link.label}
-                href={link.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-              >
-                {link.label}
-              </Link>
-            ))}
-          </nav>
-          <p className="text-muted-foreground text-xs">&copy; {new Date().getFullYear()} Confidant</p>
-        </div>
+      <div className="mx-auto max-w-5xl px-6">
+        <FadeInUp>
+          <div className="flex flex-col items-start gap-6">
+            <Link href="/" aria-label="Confidant home">
+              <ConfidantLogo />
+            </Link>
+            <p className="text-muted-foreground text-sm text-left max-w-md">
+              Confidant is not a substitute for therapy or professional mental health care. For support, please reach out to a qualified professional. If you&apos;re in crisis, please contact a crisis line or a mental health professional.
+            </p>
+            <nav className="flex gap-6">
+              {links.map((link) => (
+                <Link
+                  key={link.label}
+                  href={link.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </nav>
+            <p className="text-muted-foreground text-xs">&copy; {new Date().getFullYear()} Confidant</p>
+          </div>
+        </FadeInUp>
       </div>
     </footer>
   )

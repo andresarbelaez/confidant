@@ -51,11 +51,15 @@ Primary, secondary, and danger variants. Each uses the tokens listed below. Use 
 
 Inputs and labels use the tokens shown. Use `<label htmlFor="id">` or `aria-label`, not both when the label is visible. Focus: use a visible focus indicator (e.g. 2px solid `--color-primary`, offset 2px); prefer `:focus-visible` so mouse users don’t get a redundant ring. Placeholder uses `--color-placeholder`. For field errors use `--color-error-*` and `role="alert"` so errors are announced.
 
+**Select (dropdown):** Use the shared **Confidant Select** component for all dropdowns (e.g. country selector in Call For Help modal, language selector in Settings). It is a custom component—not the native `<select>`—so appearance is consistent across platforms and uses design tokens only (`--color-bg`, `--color-border-subtle`, `--color-text`, `--color-text-muted`, `--color-surface-subtle`, `--color-primary`, `--color-overlay-strong`). Implementation: trigger button with current value and chevron; listbox with options; keyboard (Enter/Space to open, ArrowDown/ArrowUp to move, Enter to select, Escape to close); ARIA: `aria-haspopup="listbox"`, `aria-expanded`, `role="listbox"` / `role="option"`, `aria-selected`, `aria-activedescendant` for keyboard. Touch target: trigger uses at least `--touch-target-min`. Used in: Call For Help modal (country), User Settings (language), and any future dropdown use cases.
+
 ---
 
 ## Component Patterns
 
 Cards, lists, and modal/overlay patterns. Token usage per pattern below.
+
+**Call For Help modal:** A two-step modal (form then table) opened from the sidebar. Title/label: "Call For Help". State 1: form with Country (dropdown, ISO 3166-1 alpha-2) and Postal code (text); buttons Cancel and Show Phone Book. State 2: table view with "National hotlines" and "Local resources" sections; columns Name, Profession, Phone, Address; Back button returns to form. Use SharedModal structure (`modal-overlay`, `modal-dialog`, `modal-header`, `modal-content`, `modal-actions`). Tables use design tokens for borders and text (`--color-border-subtle`, `--color-text`, `--color-bg`, `--color-bg-subtle`). Empty state: "No entries found for this location." Error state: short message with Back. Accessibility: `role="dialog"`, `aria-modal="true"`, focus trap; table uses `<th scope="col">` and semantic `<table>`.
 
 **Loading and error states:** Use `--color-primary` for spinners; use `--color-error-*` for error text and borders. Ensure loading and errors are announced: use `role="alert"` for errors that appear dynamically, and `aria-live` or `aria-busy` for loading states.
 

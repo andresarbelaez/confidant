@@ -41,10 +41,6 @@
   margin: 0;
   font-size: 1.5em;
   color: var(--color-text);
-  background: var(--color-primary);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
 }
 
 .modal-close {
@@ -92,12 +88,17 @@
   border: none;
 }
 
-.btn:hover {
+.btn:hover:not(:disabled) {
   opacity: 0.9;
 }
 
-.btn:active {
+.btn:active:not(:disabled) {
   transform: scale(0.98);
+}
+
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .btn-primary {
@@ -105,9 +106,20 @@
   color: white;
 }
 
+.btn-primary:disabled {
+  background: var(--color-surface-subtle);
+  color: var(--color-text-muted);
+  opacity: 1;
+}
+
 .btn-secondary {
   background: var(--color-surface-subtle);
   color: var(--color-text);
+}
+
+.btn-secondary:disabled {
+  color: var(--color-text-muted);
+  opacity: 1;
 }
 
 .btn-secondary:hover {

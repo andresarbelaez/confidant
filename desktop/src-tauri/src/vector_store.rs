@@ -39,6 +39,14 @@ pub struct SearchResult {
     pub metadata: serde_json::Value,
 }
 
+/// Document returned by filter-only get (no score).
+#[derive(Debug, Serialize, Deserialize)]
+pub struct FilterDocument {
+    pub id: String,
+    pub text: String,
+    pub metadata: serde_json::Value,
+}
+
 /// Get the app data directory for storing ChromaDB. Uses Tauri's writable app data dir
 /// so the packaged app can write when run from DMG.
 fn get_app_data_dir(app: &AppHandle) -> Result<PathBuf, String> {
@@ -443,6 +451,55 @@ pub async fn get_collection_stats(app: AppHandle) -> Result<serde_json::Value, S
         .map_err(|e| format!("Failed to parse Python response: {}", e))?;
     
     Ok(result)
+}
+
+/// Get documents by metadata filter only (no query embedding). Used for phone book lookup.
+#[tauri::command]
+pub async fn get_documents_by_filter(
+    app: AppHandle,
+    collection_name: String,
+    where_json: String,
+) -> Result<Vec<FilterDocument>, String> {
+    let bundled = crate::python_bundle::resolve_bundled_python(&app);
+    let state = VECTOR_STORE_STATE.lock()
+        .map_err(|e| format!("Failed to lock state: {}", e))?;
+
+    if !state.is_initialized {
+        return Err("Vector store not initialized. Call initialize_vector_store first.".to_string());
+    }
+
+    let db_path = state.db_path.as_ref()
+        .ok_or("Database path not set")?
+        .to_str()
+        .ok_or("Invalid database path")?;
+
+    let result_json = call_python_helper(
+        bundled,
+        "get_by_filter",
+        &[db_path, &collection_name, &where_json],
+        None,
+    )?;
+    let result: serde_json::Value = serde_json::from_str(&result_json)
+        .map_err(|e| format!("Failed to parse Python response: {}", e))?;
+
+    if result["status"].as_str() != Some("success") {
+        return Err(format!("get_documents_by_filter failed: {:?}", result));
+    }
+
+    let docs_array = result["documents"]
+        .as_array()
+        .ok_or("Invalid response: missing documents")?;
+    let documents: Result<Vec<FilterDocument>, _> = docs_array
+        .iter()
+        .map(|d| {
+            Ok(FilterDocument {
+                id: d["id"].as_str().unwrap_or("").to_string(),
+                text: d["text"].as_str().unwrap_or("").to_string(),
+                metadata: d["metadata"].clone(),
+            })
+        })
+        .collect();
+    documents.map_err(|e: serde_json::Error| format!("Failed to parse documents: {}", e))
 }
 
 /// Get statistics for a specific collection

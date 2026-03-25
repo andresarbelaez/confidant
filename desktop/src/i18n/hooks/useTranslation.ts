@@ -9,28 +9,26 @@ export interface UseTranslationReturn {
   t: (key: string, params?: Record<string, string | number>) => string;
   currentLanguage: LanguageCode;
   setLanguage: (lang: LanguageCode) => Promise<void>;
+  refreshLanguage: () => Promise<void>;
   supportedLanguages: typeof SUPPORTED_LANGUAGES;
 }
 
 /**
  * React hook for translations
- * Provides translation function and language management
  */
 export function useTranslation(userId?: string | null): UseTranslationReturn {
   const [lang, setLang] = useState<LanguageCode>(getCurrentLanguage());
   const [, setIsInitialized] = useState(false);
 
-  // Initialize i18n on mount
   useEffect(() => {
     const init = async () => {
-      const detectedLang = await initializeI18n(userId);
-      setLang(detectedLang);
+      const detected = await initializeI18n(userId);
+      setLang(detected);
       setIsInitialized(true);
     };
     init();
   }, [userId]);
 
-  // Re-render when language is changed elsewhere (e.g. User Settings modal)
   useEffect(() => {
     const unsubscribe = subscribeToLanguageChange((newLang) => {
       setLang(newLang);
@@ -38,21 +36,26 @@ export function useTranslation(userId?: string | null): UseTranslationReturn {
     return unsubscribe;
   }, []);
 
-  // Translation function
+  // Depend on lang so t reference changes when language changes; ensures consumers re-render and see new strings
   const t = useCallback((key: string, params?: Record<string, string | number>) => {
     return translate(key, params);
-  }, []);
+  }, [lang]);
 
-  // Language setter
   const handleSetLanguage = useCallback(async (newLang: LanguageCode) => {
     await setLanguage(newLang, userId);
     setLang(newLang);
+  }, [userId]);
+
+  const refreshLanguage = useCallback(async () => {
+    const detected = await initializeI18n(userId);
+    setLang(detected);
   }, [userId]);
 
   return {
     t,
     currentLanguage: lang,
     setLanguage: handleSetLanguage,
+    refreshLanguage,
     supportedLanguages: SUPPORTED_LANGUAGES,
   };
 }

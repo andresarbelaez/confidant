@@ -481,6 +481,16 @@
   cursor: not-allowed;
 }
 
+/* Demo: time-to-first-token (streaming) or time-to-full-response (all-at-once) */
+.chat-demo-metric {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  padding: 0.25rem 1rem;
+  margin: 0;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
 .chat-footer {
   text-align: center;
   font-size: 0.75rem;
@@ -507,7 +517,7 @@
 
 .guest-mode-banner .info-note.warning p {
   margin: 0;
-  color: var(--color-text-muted);
+  color: var(--color-error-text);
   font-size: 0.9rem;
   line-height: 1.5;
 }

@@ -1,0 +1,32 @@
+[
+  {
+    "country": "US",
+    "postal_code": "NATIONAL",
+    "profession": "crisis hotline",
+    "name": "National Suicide Prevention Lifeline",
+    "phone": "988",
+    "address": "",
+    "city": "",
+    "state": ""
+  },
+  {
+    "country": "US",
+    "postal_code": "NATIONAL",
+    "profession": "crisis hotline",
+    "name": "National Suicide Prevention Lifeline (toll-free)",
+    "phone": "1-800-273-8255",
+    "address": "",
+    "city": "",
+    "state": ""
+  },
+  {
+    "country": "US",
+    "postal_code": "NATIONAL",
+    "profession": "crisis hotline",
+    "name": "Crisis Text Line",
+    "phone": "Text HOME to 741741",
+    "address": "",
+    "city": "",
+    "state": ""
+  }
+]
